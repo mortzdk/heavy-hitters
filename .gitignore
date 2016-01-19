@@ -1,0 +1,9 @@
+*.swp
+*.swo
+build/
+bin/test_*
+*.pyc
+main
+prof
+gmon.out
+callgrind.*.*
