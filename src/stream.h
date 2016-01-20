@@ -8,6 +8,7 @@
 typedef struct {
 	size_t   type;
 	uint32_t size;
+	uint32_t length;
 	void    *data;
 } data_t;
 
@@ -30,7 +31,9 @@ void stream_set_data_size(stream_t *s, uint32_t const data_size);
 
 void stream_set_type(stream_t *s, size_t type);
 
-char *stream_read(stream_t *s);
+void *stream_read(stream_t *s);
+
+bool stream_eof(stream_t *s);
 
 void stream_close(stream_t *s);
 

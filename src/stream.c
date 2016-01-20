@@ -29,6 +29,7 @@ stream_t *stream_open(char const *filename) {
 	data_t * d = &s->data;
 	d->type   = sizeof(char);
 	d->size   = DATA_SIZE;
+	d->length = 0;
 	d->data   = xmalloc( d->type * d->size );
 
     /* Advise the kernel of our access pattern.  */
@@ -60,35 +61,37 @@ void stream_set_type(stream_t *s, size_t type) {
 	}
 }
 
-char *stream_read(stream_t *s){
+void *stream_read(stream_t *s){
 	int      err;
-	char     buf[s->buffer_size];
-	uint32_t offset = 0;
-	data_t * d      = &s->data;
+	uint32_t buf_size = s->buffer_size;
+	data_t  *d        = &s->data;
+	char    *data     = d->data;
+	char     buf[buf_size];
 
 	memset(d->data, '\0', d->size * d->type);
+	d->length = 0;
 
 	s->eof = false;
 
-    while ( (err = read(s->fd, buf, s->buffer_size)) != 0 && 
-			(offset+s->buffer_size < d->size) ) {
+    while ( (d->length+buf_size <= d->size) && 
+			(err = read(s->fd, buf, buf_size)) != 0 ) {
         if ( unlikely(err == -1) ) {
 			xerror(strerror(errno), __LINE__, __FILE__);
 		}
 
-		memcpy(&d->data+offset, buf, s->buffer_size);
-		offset += s->buffer_size;
+		memcpy(&data[d->length], buf, err);
+		d->length += err;
     }
 
-	if ( offset < d->size && err != 0 ) {
-		err = read(s->fd, buf, d->size-offset);
+	if ( d->length < d->size && err != 0 ) {
+		err = read(s->fd, buf, d->size-d->length);
 
         if ( unlikely(err == -1) ) {
 			xerror(strerror(errno), __LINE__, __FILE__);
 		}
 
 		if ( likely(err > 0) ) {
-			memcpy(&d->data+offset, buf, d->size-offset);
+			memcpy(&data[d->length], buf, err);
 		}
 	}
 
@@ -100,6 +103,10 @@ char *stream_read(stream_t *s){
 	}
 
 	return d->data;
+}
+
+bool stream_eof(stream_t *s) {
+	return s->eof;
 }
 
 void stream_close(stream_t *s) {
