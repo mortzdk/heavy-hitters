@@ -29,7 +29,7 @@ void stream_set_buffer_size(stream_t *s, uint32_t const buffer_size);
 
 void stream_set_data_size(stream_t *s, uint32_t const data_size);
 
-void stream_set_type(stream_t *s, size_t type);
+void stream_set_data_type(stream_t *s, size_t type);
 
 void *stream_read(stream_t *s);
 

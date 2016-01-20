@@ -55,9 +55,10 @@ void stream_set_data_size(stream_t *s, uint32_t const data_size) {
 	}
 }
 
-void stream_set_type(stream_t *s, size_t type) {
+void stream_set_data_type(stream_t *s, size_t type) {
 	if (type > 0) {
 		s->data.type = type;
+		s->data.data = xrealloc(s->data.data, s->data.size*s->data.type);
 	}
 }
 
@@ -73,7 +74,7 @@ void *stream_read(stream_t *s){
 
 	s->eof = false;
 
-    while ( (d->length+buf_size <= d->size) && 
+    while ( (d->length+buf_size <= d->size*d->type) && 
 			(err = read(s->fd, buf, buf_size)) != 0 ) {
         if ( unlikely(err == -1) ) {
 			xerror(strerror(errno), __LINE__, __FILE__);
@@ -83,8 +84,8 @@ void *stream_read(stream_t *s){
 		d->length += err;
     }
 
-	if ( d->length < d->size && err != 0 ) {
-		err = read(s->fd, buf, d->size-d->length);
+	if ( d->length < d->size*d->type && err != 0 ) {
+		err = read(s->fd, buf, d->size*d->type - d->length);
 
         if ( unlikely(err == -1) ) {
 			xerror(strerror(errno), __LINE__, __FILE__);
@@ -117,7 +118,9 @@ void stream_close(stream_t *s) {
 
 		if ( NULL != s->data.data ) {
 			free(s->data.data);
+			s->data.data = NULL;
 		}
 		free(s);
+		s = NULL;
 	}
 }
