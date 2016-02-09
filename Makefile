@@ -29,7 +29,7 @@ TESTS_FOLDER = tests
 
 # FLAGS
 FLAGS_GENERAL = -I.
-FLAGS_LD      = -Wl,-z,relro -Wl,-z,now
+FLAGS_LD      = -Wl,-z,relro -Wl,-z,now -lm
 LD_TEST       = -lcriterion
 FLAGS_TEST    = -I ${SRC_FOLDER}
 

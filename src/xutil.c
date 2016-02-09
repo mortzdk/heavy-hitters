@@ -59,7 +59,7 @@ void *xrealloc(void *ptr, size_t size) {
 	p = realloc(ptr, size);
 
 	if (p == NULL) {
-		xerror("Unable to m-allocate memory", __LINE__, __FILE__);
+		xerror("Unable to r-allocate memory", __LINE__, __FILE__);
 	}
 
 	return p;
