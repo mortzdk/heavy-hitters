@@ -1,9 +1,10 @@
 #include <criterion/criterion.h>
 
+#include "hash.h"
 #include "sketch.h"
 
 Test(sketch, expected_d, .disabled=0) {
-	sketch_t *s = sketch_create(2, 0.25, 0.2);
+	sketch_t *s = sketch_create(2, 0.25, 0.2, &hash31);
 
 	cr_assert_eq(s->d, 3, "Wrong d value");
 
@@ -11,7 +12,7 @@ Test(sketch, expected_d, .disabled=0) {
 }
 
 Test(sketch, expected_w_16, .disabled=0) {
-	sketch_t *s = sketch_create(2, 0.25, 0.2);
+	sketch_t *s = sketch_create(2, 0.25, 0.2, &hash31);
 
 	cr_assert_eq(s->w, 16, "Wrong w value");
 
@@ -19,7 +20,7 @@ Test(sketch, expected_w_16, .disabled=0) {
 }
 
 Test(sketch, update_point, .disabled=0) {
-	sketch_t *s = sketch_create(2, 0.3, 0.2);
+	sketch_t *s = sketch_create(2, 0.3, 0.2, &hash31);
 
 	sketch_update(s, 9, 42);
 	uint32_t estimate = sketch_point(s, 9);
@@ -44,18 +45,29 @@ Test(sketch, update_point_2, .disabled=0) {
 		{327, 78}
 	};
 
-	sketch_t *s = sketch_create(2, 0.25, 0.2);
+	sketch_t *s0 = sketch_create(2, 0.25, 0.2, &hash31);
+	sketch_t *s1 = sketch_create(2, 0.25, 0.2, &hash31p2);
+	sketch_t *s2 = sketch_create(2, 0.25, 0.2, &multiplyShift);
 
 	for (int i = 0; i < 10; i++) {
-		sketch_update(s, A[i][0], A[i][1]);
+		sketch_update(s0, A[i][0], A[i][1]);
+		sketch_update(s1, A[i][0], A[i][1]);
+		sketch_update(s2, A[i][0], A[i][1]);
 	}
 
 	for (int i = 0; i < 10; i++) {
-		estimate = sketch_point(s, A[i][0]);
+		estimate = sketch_point(s0, A[i][0]);
+		cr_assert_geq(estimate, A[i][1], "Estimate (%d) should be %d", estimate, A[i][1]);
+
+		estimate = sketch_point(s1, A[i][0]);
+		cr_assert_geq(estimate, A[i][1], "Estimate (%d) should be %d", estimate, A[i][1]);
+		estimate = sketch_point(s2, A[i][0]);
 		cr_assert_geq(estimate, A[i][1], "Estimate (%d) should be %d", estimate, A[i][1]);
 	}
 
-	sketch_destroy(s);
+	sketch_destroy(s0);
+	sketch_destroy(s1);
+	sketch_destroy(s2);
 }
 
 Test(sketch, update_point_3, .disabled=0) {
@@ -73,7 +85,7 @@ Test(sketch, update_point_3, .disabled=0) {
 		{42, 78}
 	};
 
-	sketch_t *s = sketch_create(2, 0.3, 0.2);
+	sketch_t *s = sketch_create(2, 0.3, 0.2, &hash31);
 
 	for (int i = 0; i < 10; i++) {
 		sketch_update(s, A[i][0], A[i][1]);
@@ -109,7 +121,7 @@ Test(sketch, update_range_naive_1, .disabled=0) {
 		{42, 78}
 	};
 
-	sketch_t *s = sketch_create(2, 0.3, 0.2);
+	sketch_t *s = sketch_create(2, 0.3, 0.2, &hash31);
 
 	for (int i = 0; i < 10; i++) {
 		sketch_update(s, A[i][0], A[i][1]);
@@ -128,7 +140,7 @@ Test(sketch, update_range_naive_1, .disabled=0) {
 }
 
 Test(sketch, should_allocate_internals, .disabled=0) {
-	sketch_t *s = sketch_create(2, 0.5, 0.2);
+	sketch_t *s = sketch_create(2, 0.5, 0.2, &hash31);
 
 	cr_assert_not_null(s, "Expedted an allocated structure");
 	cr_assert_not_null(s->a, "Expedted an allocated structure");
@@ -139,7 +151,7 @@ Test(sketch, should_allocate_internals, .disabled=0) {
 }
 
 Test(sketch, should_free_object, .disabled=1) {
-	sketch_t *s = sketch_create(2, 0.5, 0.2);
+	sketch_t *s = sketch_create(2, 0.5, 0.2, &hash31);
 	sketch_destroy(s);
 
 	cr_assert_null(s, "Expedted an empty structure");
