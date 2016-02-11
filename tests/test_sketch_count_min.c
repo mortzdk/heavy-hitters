@@ -1,26 +1,30 @@
+#include <stdint.h>
 #include <criterion/criterion.h>
 
 #include "hash.h"
-#include "sketch.h"
+#include "sketch/count_min.h"
+#include "sketch/sketch.h"
 
-Test(sketch, expected_d, .disabled=0) {
-	sketch_t *s = sketch_create(2, 0.25, 0.2, &hash31);
+Test(count_min_sketch, expected_d, .disabled=0) {
+	sketch_t *s = sketch_create(&countMin, 2, 0.25, 0.2, &hash31);
+	count_min_t *cm = s->sketch;
 
-	cr_assert_eq(s->d, 3, "Wrong d value");
-
-	sketch_destroy(s);
-}
-
-Test(sketch, expected_w_16, .disabled=0) {
-	sketch_t *s = sketch_create(2, 0.25, 0.2, &hash31);
-
-	cr_assert_eq(s->w, 16, "Wrong w value");
+	cr_assert_eq(cm->d, 3, "Wrong d value, expected %d got %"PRIu32, 3, cm->d);
 
 	sketch_destroy(s);
 }
 
-Test(sketch, update_point, .disabled=0) {
-	sketch_t *s = sketch_create(2, 0.3, 0.2, &hash31);
+Test(count_min_sketch, expected_w_16, .disabled=0) {
+	sketch_t *s     = sketch_create(&countMin, 2, 0.25, 0.2, &hash31);
+	count_min_t *cm = s->sketch;
+
+	cr_assert_eq(cm->w, 8, "Wrong w value, expected %d got %"PRIu32, 8, cm->w);
+
+	sketch_destroy(s);
+}
+
+Test(count_min_sketch, update_point, .disabled=0) {
+	sketch_t *s = sketch_create(&countMin, 2, 0.3, 0.2, &hash31);
 
 	sketch_update(s, 9, 42);
 	uint32_t estimate = sketch_point(s, 9);
@@ -30,7 +34,7 @@ Test(sketch, update_point, .disabled=0) {
 	sketch_destroy(s);
 }
 
-Test(sketch, update_point_2, .disabled=0) {
+Test(count_min_sketch, update_point_2, .disabled=0) {
 	uint32_t estimate;
 	uint32_t A[10][2] = {
 		{1, 3543},
@@ -45,9 +49,9 @@ Test(sketch, update_point_2, .disabled=0) {
 		{327, 78}
 	};
 
-	sketch_t *s0 = sketch_create(2, 0.25, 0.2, &hash31);
-	sketch_t *s1 = sketch_create(2, 0.25, 0.2, &hash31p2);
-	sketch_t *s2 = sketch_create(2, 0.25, 0.2, &multiplyShift);
+	sketch_t *s0 = sketch_create(&countMin, 2, 0.25, 0.2, &hash31);
+	sketch_t *s1 = sketch_create(&countMin, 2, 0.25, 0.2, &hash31p2);
+	sketch_t *s2 = sketch_create(&countMin, 2, 0.25, 0.2, &multiplyShift);
 
 	for (int i = 0; i < 10; i++) {
 		sketch_update(s0, A[i][0], A[i][1]);
@@ -70,7 +74,7 @@ Test(sketch, update_point_2, .disabled=0) {
 	sketch_destroy(s2);
 }
 
-Test(sketch, update_point_3, .disabled=0) {
+Test(count_min_sketch, update_point_3, .disabled=0) {
 	uint32_t estimate;
 	uint32_t A[10][2] = {
 		{42, 3543},
@@ -85,7 +89,7 @@ Test(sketch, update_point_3, .disabled=0) {
 		{42, 78}
 	};
 
-	sketch_t *s = sketch_create(2, 0.3, 0.2, &hash31);
+	sketch_t *s = sketch_create(&countMin, 2, 0.3, 0.2, &hash31);
 
 	for (int i = 0; i < 10; i++) {
 		sketch_update(s, A[i][0], A[i][1]);
@@ -97,16 +101,16 @@ Test(sketch, update_point_3, .disabled=0) {
 		sum += A[i][1];
 	}
 
-	estimate = sketch_range_naive(s, 42, 42);
+	estimate = sketch_range_sum(s, 42, 42);
 	cr_assert_eq(estimate, sum, "Estimate (%d) should be %d", estimate, sum);
 
-	estimate = sketch_range_naive(s, 0, 100);
+	estimate = sketch_range_sum(s, 0, 100);
 	cr_assert_eq(estimate, sum, "Estimate (%d) should be %d", estimate, sum);
 
 	sketch_destroy(s);
 }
 
-Test(sketch, update_range_naive_1, .disabled=0) {
+Test(count_min_sketch, update_range_naive_1, .disabled=0) {
 	uint32_t estimate;
 	uint32_t A[10][2] = {
 		{42, 3543},
@@ -121,7 +125,7 @@ Test(sketch, update_range_naive_1, .disabled=0) {
 		{42, 78}
 	};
 
-	sketch_t *s = sketch_create(2, 0.3, 0.2, &hash31);
+	sketch_t *s = sketch_create(&countMin, 2, 0.3, 0.2, &hash31);
 
 	for (int i = 0; i < 10; i++) {
 		sketch_update(s, A[i][0], A[i][1]);
@@ -139,19 +143,20 @@ Test(sketch, update_range_naive_1, .disabled=0) {
 	sketch_destroy(s);
 }
 
-Test(sketch, should_allocate_internals, .disabled=0) {
-	sketch_t *s = sketch_create(2, 0.5, 0.2, &hash31);
+Test(count_min_sketch, should_allocate_internals, .disabled=0) {
+	sketch_t *s     = sketch_create(&countMin, 2, 0.5, 0.2, &hash31);
+	count_min_t *cm = s->sketch;
 
-	cr_assert_not_null(s, "Expedted an allocated structure");
-	cr_assert_not_null(s->a, "Expedted an allocated structure");
-	cr_assert_not_null(s->b, "Expedted an allocated structure");
-	cr_assert_not_null(s->table, "Expedted an allocated structure");
+	cr_assert_not_null(cm, "Expedted an allocated structure");
+	cr_assert_not_null(cm->a, "Expedted an allocated structure");
+	cr_assert_not_null(cm->b, "Expedted an allocated structure");
+	cr_assert_not_null(cm->table, "Expedted an allocated structure");
 
 	sketch_destroy(s);
 }
 
-Test(sketch, should_free_object, .disabled=1) {
-	sketch_t *s = sketch_create(2, 0.5, 0.2, &hash31);
+Test(count_min_sketch, should_free_object, .disabled=1) {
+	sketch_t *s = sketch_create(&countMin, 2, 0.5, 0.2, &hash31);
 	sketch_destroy(s);
 
 	cr_assert_null(s, "Expedted an empty structure");

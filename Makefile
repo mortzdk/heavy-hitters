@@ -27,29 +27,34 @@ BUILD_FOLDER = build
 BIN_FOLDER   = bin
 TESTS_FOLDER = tests
 
+DIR = $(shell pwd)
+
 # FLAGS
-FLAGS_GENERAL = -I.
+FLAGS_GENERAL = -I${DIR}/${SRC_FOLDER} 
 FLAGS_LD      = -Wl,-z,relro -Wl,-z,now -lm
 LD_TEST       = -lcriterion
 FLAGS_TEST    = -I ${SRC_FOLDER}
 
+# First level of directories in src folder
+SRC_DIRS := $(subst /.,,$(subst ${SRC_FOLDER},,$(wildcard ${SRC_FOLDER}/*/.)))
+
 # all c source files
-SRC := $(wildcard ${SRC_FOLDER}/*.c)
+SRC   := $(shell find ${SRC_FOLDER} -name "*.c" -type f;)
 
 # all test files
-TESTS := $(wildcard ${TESTS_FOLDER}/test_*.c)
+TESTS := $(shell find ${TESTS_FOLDER} -name "test_*.c" -type f;)
 
 # non-test obect files
-OBJ  = ${patsubst ${SRC_FOLDER}/%.c,${BUILD_FOLDER}/%.o, $(SRC)}
+OBJ  = ${subst ${SRC_FOLDER}, ${BUILD_FOLDER}, ${patsubst %.c, %.o, $(SRC)}}
 
 # non-test assembly files
-ASM  = ${patsubst ${SRC_FOLDER}/%.c,${BUILD_FOLDER}/%.S, $(SRC)}
+ASM  = ${subst ${SRC_FOLDER}, ${BUILD_FOLDER}, ${patsubst %.c, %.S, $(SRC)}}
 
 # test object files
-TEST = ${patsubst ${TESTS_FOLDER}/%.c,${BUILD_FOLDER}/%.o,${TESTS}}
+TEST = ${subst ${TESTS_FOLDER}, ${BUILD_FOLDER}, ${patsubst %.c, %.o, $(TESTS)}}
 
-# names o tests
-TEST_NAMES= ${patsubst ${TESTS_FOLDER}/%.c,%, ${TESTS}}
+# names of tests
+TEST_NAMES = ${patsubst ${TESTS_FOLDER}/%.c, %, ${TESTS}}
 
 # all object files
 ALL  = ${OBJ} ${TEST}
@@ -79,7 +84,9 @@ test: bin build $(TEST_NAMES) ${addprefix run_,${TEST_NAMES}}
 -include $(DEPS)
 
 build:
+	echo $(wildcard ${SRC_FOLDER}/*/.);
 	if [[ ! -e ${BUILD_FOLDER} ]]; then mkdir -p ${BUILD_FOLDER}; fi
+	mkdir $(addprefix $(BUILD_FOLDER), ${SRC_DIRS})
 
 bin:
 	if [[ ! -e ${BIN_FOLDER} ]]; then mkdir -p ${BIN_FOLDER}; fi
@@ -148,7 +155,7 @@ clean:
 	@echo
 	rm -f ${OBJ} ${TEST} ${DEPS} ${ASM} ${addprefix bin/,${TEST_NAMES}}
 	rm -f gmon.out callgrind.* $(LOG) ${TESTS:.c=} main prof
-	if [[ -d build ]] ; then rmdir --ignore-fail-on-non-empty build; fi
+	if [[ -d build ]] ; then rmdir --ignore-fail-on-non-empty $(addprefix ${BUILD_FOLDER}, ${SRC_DIRS}); rmdir --ignore-fail-on-non-empty build; fi
 	if [[ -d bin ]] ; then rmdir --ignore-fail-on-non-empty bin; fi
 	#$(MAKE) -C libmeasure clean
 

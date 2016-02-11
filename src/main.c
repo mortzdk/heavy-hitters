@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "sketch.h"
+#include "sketch/sketch.h"
 
 int main (int argc, char **argv) {
 	(void) argc;
