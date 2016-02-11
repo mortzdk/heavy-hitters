@@ -3,14 +3,22 @@
 #include <stdlib.h>  /* exit(), calloc(), malloc(), EXIT_FAILURE */
 #include <stdio.h>   /* fprintf() */
 #include <string.h>  /* memset() */
+#include <inttypes.h>
 #include <math.h>
 
 #include "xutil.h"
 
-unsigned int I1 = 1234;
-unsigned int I2 = 5678;
+uint32_t I1 = 1234;
+uint32_t I2 = 5678;
+
+extern inline uint32_t next_pow_2(uint32_t v);
 
 extern inline double xuni_rand(void);
+
+const short MultiplyDeBruijnBitPosition2[32] = {
+	  0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 
+	  31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
+};
 
 void xerror(char *msg, int line, char *file) {
 	fprintf(stderr, "Error %d@%s: %s\n", line, file, msg);

@@ -9,8 +9,22 @@
 #define unlikely(x)    __builtin_expect(!!(x), 0)
 
 #include <stdlib.h>  /* random */
+#include <inttypes.h>  /* random */
 
-extern unsigned int I1, I2;
+extern uint32_t I1, I2;
+ 
+extern const short MultiplyDeBruijnBitPosition2[32];
+
+inline uint32_t next_pow_2(uint32_t v) {
+	v--;
+	v |= v >> 1;
+	v |= v >> 2;
+	v |= v >> 4;
+	v |= v >> 8;
+	v |= v >> 16;
+	v++;
+	return v;
+}
 
 inline double xuni_rand(void) {
 	I1 = 36969*(I1 & 0177777) + (I1>>16);

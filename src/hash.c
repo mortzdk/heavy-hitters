@@ -6,7 +6,9 @@
 #include "xutil.h"
 #include "hash.h"
 
-extern short M;
+/*****************************************************************************
+ *        HASH_31 by MASSDAL: http://www.cs.rutgers.edu/~muthu/prng.c        *
+ *****************************************************************************/
 
 static uint32_t h31_internal(uint32_t x, uint32_t a, uint32_t b) {
 	uint64_t result;
@@ -31,6 +33,19 @@ uint32_t h31p2(uint32_t x, uint32_t w, uint32_t a, uint32_t b) {
 	return res & (w - 1);
 }
 
+uint32_t h31_agen () {
+	return 1 + (xuni_rand() * (MOD_P - 2));
+}
+
+uint32_t h31_bgen () {
+	return xuni_rand() * (MOD_P - 1);
+}
+
+/*****************************************************************************
+ *                              MULTIPLY-SHIFT                               *
+ *****************************************************************************/
+extern short M;
+
 uint32_t ms(uint32_t x, uint32_t w, uint32_t a, uint32_t b) {
 	(void) w;
 
@@ -46,14 +61,6 @@ uint32_t ms(uint32_t x, uint32_t w, uint32_t a, uint32_t b) {
 	return (uint32_t) (a*x+b) >> (sizeof(uint32_t)*BYTE-M);
 }
 
-uint32_t h31_agen () {
-	return 1 + (xuni_rand() * (MOD_P - 2));
-}
-
-uint32_t h31_bgen () {
-	return xuni_rand() * (MOD_P - 1);
-}
-
 uint32_t ms_agen () {
 	return xuni_rand() * UINT32_MAX;
 }
@@ -61,6 +68,11 @@ uint32_t ms_agen () {
 uint32_t ms_bgen () {
 	return xuni_rand() * (1 << (sizeof(uint32_t)*BYTE-M));
 }
+
+
+/*****************************************************************************
+ *                           HASH_T STRUCTURES                               *
+ *****************************************************************************/
 
 hash_t hash31 = {
 	.hash = (hash) h31,

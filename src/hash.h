@@ -28,8 +28,8 @@ uint32_t h31_bgen();
 uint32_t ms(uint32_t x, uint32_t w, uint32_t a, uint32_t b);
 uint32_t ms_agen();
 uint32_t ms_bgen();
-
 extern short M;
+
 extern hash_t hash31;
 extern hash_t hash31p2;
 extern hash_t multiplyShift;

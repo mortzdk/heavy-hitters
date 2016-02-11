@@ -63,7 +63,7 @@ void stream_set_data_type(stream_t *s, size_t type) {
 }
 
 void *stream_read(stream_t *s){
-	int      err;
+	int      err = -1;
 	uint32_t buf_size = s->buffer_size;
 	data_t  *d        = &s->data;
 	char    *data     = d->data;

@@ -12,25 +12,25 @@
 short M;
 
 count_min_t *count_min_create(short b, double epsilon, double delta, hash_t *hash) {
-	uint32_t i;
+	uint32_t i, w, d;
 	count_min_t *s = xmalloc(sizeof(count_min_t));
 
-	s->w       = ceil(b / epsilon) * hash->c;
-	s->d       = ceil(log2(1 / delta) / log2(b));
-	s->a       = xmalloc(sizeof(uint32_t) * s->d);
-	s->b       = xmalloc(sizeof(uint32_t) * s->d);
-	s->table   = xmalloc(sizeof(uint32_t) * s->d * s->w);
-	s->hash    = hash;
+	w        = s->size.w = ceil(b / epsilon) * hash->c;
+	d        = s->size.d = ceil(log2(1 / delta) / log2(b));
+	s->a     = xmalloc(sizeof(uint32_t) * d);
+	s->b     = xmalloc(sizeof(uint32_t) * d);
+	s->table = xmalloc(sizeof(uint32_t) * d * w);
+	s->hash  = hash;
 
-	M = (short)floor(log2(s->w));
+	M = (short)floor(log2(w));
 
-	memset(s->a, '\0', sizeof(uint32_t) * s->d);
-	memset(s->b, '\0', sizeof(uint32_t) * s->d);
-	memset(s->table, '\0', sizeof(uint32_t) * s->d * s->w);
+	memset(s->a, '\0', sizeof(uint32_t) * d);
+	memset(s->b, '\0', sizeof(uint32_t) * d);
+	memset(s->table, '\0', sizeof(uint32_t) * d * w);
 
-	for (i = 0; i < s->d; i++) {
+	for (i = 0; i < d; i++) {
 		s->a[i] = hash->agen();
-		s->b[i] = hash->bgen(s->w);
+		s->b[i] = hash->bgen(w);
 	}
 
 	return s;
@@ -62,9 +62,9 @@ void count_min_destroy(count_min_t *s) {
 
 void count_min_update(count_min_t *s, uint32_t i, int32_t c) {
 	uint32_t di, wi;
-	uint32_t w = s->w;
+	uint32_t w = s->size.w;
 
-	for (di = 0; di < s->d; di++) {
+	for (di = 0; di < s->size.d; di++) {
 		wi = s->hash->hash(i, w, s->a[di], s->b[di]);
 
 		assert( wi < w );
@@ -88,11 +88,11 @@ void count_min_update(count_min_t *s, uint32_t i, int32_t c) {
 
 uint32_t count_min_point(count_min_t *s, uint32_t i) {
 	uint32_t di, wi, estimate, e;
-	uint32_t w = s->w;
+	uint32_t w = s->size.w;
 
 	wi        = s->hash->hash(i, w, s->a[0], s->b[0]);
 	estimate  = s->table[COUNT_MIN_INDEX(w, 0, wi)];
-	for (di = 1; di < s->d; di++) {
+	for (di = 1; di < s->size.d; di++) {
 		wi = s->hash->hash(i, w, s->a[di], s->b[di]);
 		e  = s->table[COUNT_MIN_INDEX(w, di, wi)];
 

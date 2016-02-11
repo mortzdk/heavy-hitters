@@ -67,11 +67,11 @@ LOG = VALGRIND_LOG
 
 # executeable name
 ifeq (${EXEC}, -g -DRUPIFY)
-	NAME = prof
+	NAME = profile
 	FILTER = ${BUILD_FOLDER}/main.o
 else
 	NAME = main
-	FILTER = ${BUILD_FOLDER}/prof.o
+	FILTER = ${BUILD_FOLDER}/profile.o
 endif
 
 # what we are trying to build
@@ -154,7 +154,7 @@ clean:
 	@echo ================ [Cleaning $(NAME)] ================
 	@echo
 	rm -f ${OBJ} ${TEST} ${DEPS} ${ASM} ${addprefix bin/,${TEST_NAMES}}
-	rm -f gmon.out callgrind.* $(LOG) ${TESTS:.c=} main prof
+	rm -f gmon.out callgrind.* $(LOG) ${TESTS:.c=} main profile
 	if [[ -d build ]] ; then rmdir --ignore-fail-on-non-empty $(addprefix ${BUILD_FOLDER}, ${SRC_DIRS}); rmdir --ignore-fail-on-non-empty build; fi
 	if [[ -d bin ]] ; then rmdir --ignore-fail-on-non-empty bin; fi
 	#$(MAKE) -C libmeasure clean

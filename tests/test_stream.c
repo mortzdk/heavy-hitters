@@ -1,7 +1,7 @@
 #include <criterion/criterion.h>
 #include <stdio.h>
 
-#include "stream.h"
+#include "stream/stream.h"
 
 Test(stream, should_open_and_close_file, .disabled=0) {
 	// File of size 4*buffer_size + 7

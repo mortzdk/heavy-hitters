@@ -15,9 +15,9 @@ sketch_func_t countMin = {
 	.rangesum = (rangesum)count_min_range_sum,
 };
 
-sketch_t *sketch_create(sketch_func_t *f, short b, double epsilon, double delta, hash_t *hash) {
-	sketch_t *s = xmalloc( sizeof(sketch_t) );
-
+sketch_t *sketch_create(sketch_func_t *f, hash_t *hash, short b, 
+		double epsilon, double delta) {
+	sketch_t *s = xmalloc( sizeof(sketch_t) ); 
 	s->funcs  = f;
 	s->sketch = s->funcs->create(b, epsilon, delta, hash);
 

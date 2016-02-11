@@ -6,14 +6,18 @@
 
 // User defined libraries
 #include "hash.h"
+#include "sketch/sketch.h"
 
 // Helpers
 #define COUNT_MIN_INDEX(w, di, wi) ( ( w * di ) + wi )
 
 // Structures
 typedef struct {
+	sketch_size_t size; // Width and depth of sketch
+	/*
 	uint32_t  w;     // Width of the count_min table
 	uint32_t  d;     // Depth of the count_min table
+	*/
 	uint32_t *a;     // Array of a values for the d hash functions
 	uint32_t *b;     // Array of b values for the d hash functions
 	uint32_t *table; // The count_min table
