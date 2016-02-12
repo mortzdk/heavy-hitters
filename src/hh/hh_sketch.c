@@ -28,27 +28,24 @@ hh_sketch_t *hh_sketch_create(sketch_func_t *f, hash_t *hash, double phi,
 
 	assert(phi > epsilon);
 	
-	epsilon         = epsilon/(2*logm);
+//	epsilon         = epsilon/(2*logm);
 	delta           = (delta*phi)/(2*logm);
 	s               = sketch_create(f, hash, b, epsilon, delta);
 
 	assert(phi > epsilon);
 
+	// TODO: Maybe just calculate w and d again
 	// This only works since the sketch_size_t appears first in the *_sketch_t structures!
 	w               = sketch_width(s->sketch);
 	d               = sketch_depth(s->sketch);
-
-	printf("wd: %d\n", w*d);
-	printf("logm: %d\n", logm);
 
 	hh->m              = m;
 	hh->logm           = logm;
 	hh->phi            = phi;
 	hh->epsilon        = epsilon;
 	hh->norm           = 0;
-	hh->result.hitters = xmalloc( sizeof(uint32_t) * (2/phi) );
 	hh->result.count   = 0; 
-
+	hh->result.hitters = xmalloc( sizeof(uint32_t) * (2/phi) );
 	memset(hh->result.hitters, '\0', sizeof(uint32_t) * (2/phi));
 
 	// Find the base (log2) of the next power of two of w*d
@@ -66,11 +63,9 @@ hh_sketch_t *hh_sketch_create(sketch_func_t *f, hash_t *hash, double phi,
 
 	memset(hh->top, '\0', sizeof(uint32_t) * (1 << (np2_base+1)));
 
-	printf("base: %d\n", np2_base);
-
 	if ( np2_base < logm ) {
 		hh->tree = xmalloc( sizeof(sketch_t *) * (logm-np2_base) );
-		for (i = 0; i < logm-2-np2_base; i++) {
+		for (i = 0; i < (logm-1)-np2_base; i++) {
 			hh->tree[i] = sketch_create(f, hash, b, epsilon, delta);
 		}
 		hh->tree[i] = s;
@@ -113,21 +108,31 @@ void hh_sketch_update(hh_sketch_t *hh, uint32_t idx, int32_t c) {
 	short i;
 	uint32_t left, right, mid, x;
 
-	// TODO: set right = m-1 and figure out the consequences
 	x     = 0;
 	left  = 0;
-	right = next_pow_2(hh->m)-1;
+//	right = next_pow_2(hh->m)-1;
+	right = hh->m-1;
+	mid   = right/2;
+
+	if (mid < idx) {
+		x++;
+		hh->top[x] += c;
+		left = mid+1;
+	} else {
+		hh->top[x] += c;
+		right = mid;
+	}
 
 	// Update exact counts as long as |x| <= next_pow_2(wd)
-	for (i = 0; i < hh->top_cnt; i++) {
+	for (i = 1; i < hh->top_cnt; i++) {
 		mid = left + ( (right - left)/2 );
 		x   = 2*x;
-		if (mid > idx) {
+		if (mid < idx) {
 			x++;
-			hh->top[x+(1 << i)-1] += c;
+			hh->top[x+(1 << (i+1))-2] += c;
 			left = mid+1;
 		} else {
-			hh->top[x+(1 << i)-1] += c;
+			hh->top[x+(1 << (i+1))-2] += c;
 			right = mid;
 		}
 	}
@@ -136,7 +141,7 @@ void hh_sketch_update(hh_sketch_t *hh, uint32_t idx, int32_t c) {
 	for (i = 0; i < hh->logm-hh->top_cnt; i++) {
 		mid = left + ( (right - left)/2 );
 		x  *= 2;
-		if (mid > idx) {
+		if (mid < idx) {
 			x++;
 			sketch_update(hh->tree[i], x, c);
 			left = mid+1;
@@ -152,13 +157,12 @@ void hh_sketch_update(hh_sketch_t *hh, uint32_t idx, int32_t c) {
 static void hh_sketch_query_bottom_recursive(hh_sketch_t *hh, short layer, 
 		uint32_t x, double th) {
 	short i;
+	uint32_t point;
 	x *= 2;
-
-	printf("layer: %d\n", layer);
 
 	for (i = 0; i < 2; i++) {
 		x += i;	
-		if ( sketch_point(hh->tree[layer], x) >= th ) {
+		if ( (point = sketch_point(hh->tree[layer], x)) >= th ) {
 			if ( unlikely( layer+hh->top_cnt == hh->logm-1 ) ) {
 				hh->result.hitters[hh->result.count] = x;
 
@@ -179,7 +183,8 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *hh, short layer,
 
 	for (i = 0; i < 2; i++) {
 		x += i;	
-		if ( hh->top[x+(1 << layer)-1] >= th ) {
+
+		if ( hh->top[x+(1 << (layer+1))-2] >= th ) {
 			if ( unlikely(layer == hh->logm-1) ) {
 				hh->result.hitters[hh->result.count] = x;
 
@@ -195,12 +200,17 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *hh, short layer,
 	}
 }
 
-
 // Query
 heavy_hitters_t *hh_sketch_query(hh_sketch_t *hh) {
 	double thresshold = hh->phi*hh->norm;
 
-	hh_sketch_query_top_recursive(hh, 0, 0, thresshold);
+	if (hh->top[0] >= thresshold) {
+		hh_sketch_query_top_recursive(hh, 1, 0, thresshold);
+	}
+
+	if (hh->top[1] >= thresshold) {
+		hh_sketch_query_top_recursive(hh, 1, 1, thresshold);
+	}
 
 	return &hh->result;
 }

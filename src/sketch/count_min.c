@@ -9,6 +9,9 @@
 #include "sketch/count_min.h"
 #include "hash.h"
 
+/**
+ * Extern variable used by the multiplyShift hash function
+ */
 short M;
 
 count_min_t *count_min_create(short b, double epsilon, double delta, hash_t *hash) {
@@ -22,6 +25,7 @@ count_min_t *count_min_create(short b, double epsilon, double delta, hash_t *has
 	s->table = xmalloc(sizeof(uint32_t) * d * w);
 	s->hash  = hash;
 
+	// Set variable to be able to use multiply shift
 	M = (short)floor(log2(w));
 
 	memset(s->a, '\0', sizeof(uint32_t) * d);
