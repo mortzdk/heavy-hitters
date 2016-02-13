@@ -9,7 +9,7 @@ CC = gcc
 PROFILE = -g -DRUPIFY
 DEBUG = -g
 RELEASE = -O3 -DNDEBUG
-EXEC = ${RELEASE}
+EXEC = ${DEBUG}
 
 # Compiler options
 CFLAGS = -MMD -pipe -fno-exceptions -fstack-protector\
