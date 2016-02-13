@@ -21,6 +21,7 @@ static uint32_t h31_internal(uint32_t x, uint32_t a, uint32_t b) {
 
 uint32_t h31(uint32_t x, uint32_t w, uint32_t a, uint32_t b) {
 	uint32_t res = h31_internal(x, a, b);
+
 	return res % w;
 }
 
@@ -31,20 +32,22 @@ uint32_t h31p2(uint32_t x, uint32_t w, uint32_t a, uint32_t b) {
 	assert( w && !(w & (w - 1)) );
 
 	return res & (w - 1);
+	
 }
 
 uint32_t h31_agen () {
 	return 1 + (xuni_rand() * (MOD_P - 2));
 }
 
-uint32_t h31_bgen () {
+uint32_t h31_bgen (uint32_t w) {
+	(void) w;
 	return xuni_rand() * (MOD_P - 1);
 }
 
 /*****************************************************************************
  *                              MULTIPLY-SHIFT                               *
  *****************************************************************************/
-extern short M;
+static uint8_t M;
 
 uint32_t ms(uint32_t x, uint32_t w, uint32_t a, uint32_t b) {
 	(void) w;
@@ -65,7 +68,8 @@ uint32_t ms_agen () {
 	return xuni_rand() * UINT32_MAX;
 }
 
-uint32_t ms_bgen () {
+uint32_t ms_bgen (uint32_t w) {
+	M = (uint8_t)floor(log2(w));
 	return xuni_rand() * (1 << (sizeof(uint32_t)*BYTE-M));
 }
 

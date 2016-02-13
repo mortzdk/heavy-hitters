@@ -1,48 +1,38 @@
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
-#include <inttypes.h>
 #include <string.h>
 #include <math.h>
 #include <assert.h>
 
 #include "xutil.h"
+#include "hh/hh.h"
+#include "hh/sketch.h"
 #include "sketch/sketch.h"
-#include "hh/hh_sketch.h"
 
-static inline uint32_t sketch_depth(void *sketch) {
-	return ((sketch_size_t *)sketch)->d;
-}
-
-static inline uint32_t sketch_width(void *sketch) {
-	return ((sketch_size_t *)sketch)->w;
-}
-
-hh_sketch_t *hh_sketch_create(sketch_func_t *f, hash_t *hash, double phi,
-		short b, double epsilon, double delta, uint32_t m){
+hh_sketch_t *hh_sketch_create(hh_sketch_params_t *p) {
 	int32_t i;
-	short np2_base;
+	uint8_t np2_base;
 	uint32_t w, d;
-	sketch_t *s;
-	hh_sketch_t *hh = xmalloc( sizeof(hh_sketch_t) );
-	short logm      = ceil(log2(m));
+	uint32_t m       = p->params->m;
+	uint8_t logm     = xceil_log2(m);
+	double   phi     = p->params->phi;
+	double   epsilon = p->params->epsilon;
+//	         epsilon = epsilon/(2*logm);
+	double   delta   = (p->params->delta*phi)/(2*logm);
+	uint32_t b       = p->params->b;
+	hh_sketch_t *hh  = xmalloc( sizeof(hh_sketch_t) );
+	sketch_t *s      = sketch_create(p->f, p->hash, b, epsilon, delta);
 
 	assert(phi > epsilon);
 	
-//	epsilon         = epsilon/(2*logm);
-	delta           = (delta*phi)/(2*logm);
-	s               = sketch_create(f, hash, b, epsilon, delta);
-
-	assert(phi > epsilon);
-
 	// TODO: Maybe just calculate w and d again
 	// This only works since the sketch_size_t appears first in the *_sketch_t structures!
 	w               = sketch_width(s->sketch);
 	d               = sketch_depth(s->sketch);
 
-	hh->m              = m;
 	hh->logm           = logm;
-	hh->phi            = phi;
-	hh->epsilon        = epsilon;
+	hh->params         = p->params;
 	hh->norm           = 0;
 	hh->result.count   = 0; 
 	hh->result.hitters = xmalloc( sizeof(uint32_t) * (2/phi) );
@@ -66,7 +56,7 @@ hh_sketch_t *hh_sketch_create(sketch_func_t *f, hash_t *hash, double phi,
 	if ( np2_base < logm ) {
 		hh->tree = xmalloc( sizeof(sketch_t *) * (logm-np2_base) );
 		for (i = 0; i < (logm-1)-np2_base; i++) {
-			hh->tree[i] = sketch_create(f, hash, b, epsilon, delta);
+			hh->tree[i] = sketch_create(p->f, p->hash, b, epsilon, delta);
 		}
 		hh->tree[i] = s;
 	} else {
@@ -79,7 +69,7 @@ hh_sketch_t *hh_sketch_create(sketch_func_t *f, hash_t *hash, double phi,
 
 // Destuction
 void hh_sketch_destroy(hh_sketch_t *hh) {
-	short i;
+	uint8_t i;
 
 	if (hh == NULL) {
 		return;
@@ -105,13 +95,13 @@ void hh_sketch_destroy(hh_sketch_t *hh) {
 
 // Update
 void hh_sketch_update(hh_sketch_t *hh, uint32_t idx, int32_t c) {
-	short i;
+	uint8_t i;
 	uint32_t left, right, mid, x;
 
 	x     = 0;
 	left  = 0;
 //	right = next_pow_2(hh->m)-1;
-	right = hh->m-1;
+	right = hh->params->m-1;
 	mid   = right/2;
 
 	if (mid < idx) {
@@ -154,9 +144,9 @@ void hh_sketch_update(hh_sketch_t *hh, uint32_t idx, int32_t c) {
 	hh->norm += c;
 }
 	
-static void hh_sketch_query_bottom_recursive(hh_sketch_t *hh, short layer, 
+static void hh_sketch_query_bottom_recursive(hh_sketch_t *hh, uint8_t layer, 
 		uint32_t x, double th) {
-	short i;
+	uint8_t i;
 	uint32_t point;
 	x *= 2;
 
@@ -166,7 +156,7 @@ static void hh_sketch_query_bottom_recursive(hh_sketch_t *hh, short layer,
 			if ( unlikely( layer+hh->top_cnt == hh->logm-1 ) ) {
 				hh->result.hitters[hh->result.count] = x;
 
-				assert( x < hh->m );
+				assert( x < hh->params->m );
 
 				hh->result.count++;
 				return;
@@ -176,9 +166,9 @@ static void hh_sketch_query_bottom_recursive(hh_sketch_t *hh, short layer,
 	}
 }
 
-static void hh_sketch_query_top_recursive(hh_sketch_t *hh, short layer, 
+static void hh_sketch_query_top_recursive(hh_sketch_t *hh, uint8_t layer, 
 		uint32_t x, double th) {
-	short i;
+	uint8_t i;
 	x *= 2;
 
 	for (i = 0; i < 2; i++) {
@@ -188,11 +178,11 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *hh, short layer,
 			if ( unlikely(layer == hh->logm-1) ) {
 				hh->result.hitters[hh->result.count] = x;
 
-				assert( x < hh->m );
+				assert( x < hh->params->m );
 
 				hh->result.count++;
 			} else if ( unlikely(layer == hh->top_cnt-1) ) {
-				hh_sketch_query_bottom_recursive(hh, 0, x, th+(hh->epsilon*hh->norm));
+				hh_sketch_query_bottom_recursive(hh, 0, x, th+(hh->params->epsilon*hh->norm));
 			} else {
 				hh_sketch_query_top_recursive(hh, layer+1, x, th);
 			}
@@ -201,8 +191,8 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *hh, short layer,
 }
 
 // Query
-heavy_hitters_t *hh_sketch_query(hh_sketch_t *hh) {
-	double thresshold = hh->phi*hh->norm;
+heavy_hitter_t *hh_sketch_query(hh_sketch_t *hh) {
+	double thresshold = hh->params->phi*hh->norm;
 
 	if (hh->top[0] >= thresshold) {
 		hh_sketch_query_top_recursive(hh, 1, 0, thresshold);

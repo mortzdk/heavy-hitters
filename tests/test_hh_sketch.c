@@ -1,20 +1,17 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <math.h>
 #include <criterion/criterion.h>
 
 #include "hash.h"
 #include "alias.h"
 #include "xutil.h"
+
+#include "hh/hh.h"
+#include "hh/sketch.h"
 #include "sketch/sketch.h"
-#include "hh/hh_sketch.h"
 
 Test(count_min_sketch, hh_top_only, .disabled=0) {
-	double phi     = 0.05;
-	double epsilon = 0.01;
-	double delta   = 0.2;
-	uint32_t m     = pow(2, 9);
-	uint32_t b     = 2;
-
 	uint32_t A[10][2] = {
 		{1, 3543},
 		{2, 7932},
@@ -32,14 +29,25 @@ Test(count_min_sketch, hh_top_only, .disabled=0) {
 		2, 3, 8, 327
 	};
 
-	hh_sketch_t *hh = hh_sketch_create(&countMin, &hash31, phi, b, epsilon, 
-			delta, m);
+	heavy_hitter_params_t params = {
+		.b       = 2,
+		.epsilon = 0.01,
+		.delta   = 0.2,
+		.m       = pow(2, 9),
+		.phi     = 0.05
+	};
+	hh_sketch_params_t p = {
+		.f = &countMin,
+		.hash = &hash31,
+		.params = &params
+	};
+	hh_t *hh = heavy_hitter_create(&hh_sketch, &p);
 
 	for (int i = 0; i < 10; i++) {
-		hh_sketch_update(hh, A[i][0], A[i][1]);
+		heavy_hitter_update(hh, A[i][0], A[i][1]);
 	}
 
-	heavy_hitters_t *result = hh_sketch_query(hh);
+	heavy_hitter_t *result = heavy_hitter_query(hh);
 
 	cr_assert_eq(result->count, 4, "Heavy hitters (%d) should be 4", result->count);
 
@@ -53,22 +61,28 @@ Test(count_min_sketch, hh_top_only, .disabled=0) {
 		);
 	}
 
-	hh_sketch_destroy(hh);
+	heavy_hitter_destroy(hh);
 }
 
 Test(count_min_sketch, hh_top_and_bottom, .disabled=0) {
-	double phi       = 0.05;
-	double epsilon   = (double)1/64;
-	double delta     = 0.2;
-	uint32_t m       = pow(2, 20);
-	uint32_t b       = 2;
 	double hh_mass   = 0.70;
+	uint32_t m       = pow(2, 20);
 
-	hh_sketch_t *hh = hh_sketch_create(&countMin, &hash31, phi, b, 
-			epsilon, delta, m);
+	heavy_hitter_params_t params = {
+		.b       = 2,
+		.epsilon = (double)1/64,
+		.delta   = 0.2,
+		.m       = m,
+		.phi     = 0.05
+	};
+	hh_sketch_params_t p = {
+		.f = &countMin,
+		.hash = &hash31,
+		.params = &params
+	};
 
-
-	double *x = xmalloc( m*sizeof(double) );
+	hh_t *hh = heavy_hitter_create(&hh_sketch, &p);
+	double *x       = xmalloc( m*sizeof(double) );
 
 	for (uint32_t i = 0; i < m; i++) {
 		x[i] = (1-hh_mass)/(m-7);
@@ -90,10 +104,10 @@ Test(count_min_sketch, hh_top_and_bottom, .disabled=0) {
 	uint32_t idx;
 	for (uint32_t i = 0; i < pow(2, 25); i++) {
 		idx = alias_draw(a);
-		hh_sketch_update(hh, idx, 1);
+		heavy_hitter_update(hh, idx, 1);
 	}
 
-	heavy_hitters_t *result = hh_sketch_query(hh);
+	heavy_hitter_t *result = heavy_hitter_query(hh);
 
 	cr_assert_eq(result->count, 7, "Heavy hitters (%d) should be 7", result->count);
 
@@ -110,22 +124,28 @@ Test(count_min_sketch, hh_top_and_bottom, .disabled=0) {
 		);
 	}
 
-	hh_sketch_destroy(hh);
+	heavy_hitter_destroy(hh);
 }
 
 Test(count_min_sketch, hh_top_and_bottom_close_non_hh, .disabled=0) {
-	double phi       = 0.05;
-	double epsilon   = (double)1/64;
-	double delta     = 0.2;
+	double hh_mass   = 0.7 + 0.04955 + 0.04812 + 0.05023;
 	uint32_t m       = pow(2, 20);
-	uint32_t b       = 2;
-	double hh_mass   = 0.7 + 0.04955 +0.04812+0.05023;
 
-	hh_sketch_t *hh = hh_sketch_create(&countMin, &hash31, phi, b, 
-			epsilon, delta, m);
+	heavy_hitter_params_t params = {
+		.b       = 2,
+		.epsilon = (double)1/64,
+		.delta   = 0.2,
+		.m       = m,
+		.phi     = 0.05
+	};
+	hh_sketch_params_t p = {
+		.f = &countMin,
+		.hash = &hash31,
+		.params = &params
+	};
 
-
-	double *x = xmalloc( m*sizeof(double) );
+	hh_t *hh = heavy_hitter_create(&hh_sketch, &p);
+	double *x       = xmalloc( m*sizeof(double) );
 
 	for (uint32_t i = 0; i < m; i++) {
 		x[i] = (1-hh_mass)/(m-7);
@@ -154,10 +174,10 @@ Test(count_min_sketch, hh_top_and_bottom_close_non_hh, .disabled=0) {
 	uint32_t idx;
 	for (uint32_t i = 0; i < pow(2, 25); i++) {
 		idx = alias_draw(a);
-		hh_sketch_update(hh, idx, 1);
+		heavy_hitter_update(hh, idx, 1);
 	}
 
-	heavy_hitters_t *result = hh_sketch_query(hh);
+	heavy_hitter_t *result = heavy_hitter_query(hh);
 
 	cr_assert_eq(result->count, 7, "Heavy hitters (%d) should be 7", result->count);
 
@@ -165,7 +185,7 @@ Test(count_min_sketch, hh_top_and_bottom_close_non_hh, .disabled=0) {
 		3, 134, 2345, 38474, 374298, 849793, 1000000
 	};
 	for (uint32_t i = 0; i < result->count; i++) {
-		cr_expect_eq(
+		cr_assert_eq(
 				H[i], 
 				result->hitters[i], 
 				"Expected %"PRIu32" to be next heavy hitter got: %"PRIu32, 
@@ -174,5 +194,5 @@ Test(count_min_sketch, hh_top_and_bottom_close_non_hh, .disabled=0) {
 		);
 	}
 
-	hh_sketch_destroy(hh);
+	heavy_hitter_destroy(hh);
 }

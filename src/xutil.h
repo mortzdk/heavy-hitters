@@ -12,8 +12,8 @@
 #include <inttypes.h>  /* random */
 
 extern uint32_t I1, I2;
- 
-extern const short MultiplyDeBruijnBitPosition2[32];
+
+extern const uint8_t MultiplyDeBruijnBitPosition2[32];
 
 inline uint32_t next_pow_2(uint32_t v) {
 	v--;
@@ -32,11 +32,35 @@ inline double xuni_rand(void) {
 	return ((I1 << 16)^(I2 & 0177777)) * 2.328306437080797e-10; /* in [0,1) */
 }
 
+inline uint8_t xceil_log2(uint64_t x) {
+    static const uint64_t t[6] = {
+        0xFFFFFFFF00000000ull,
+        0x00000000FFFF0000ull,
+        0x000000000000FF00ull,
+        0x00000000000000F0ull,
+        0x000000000000000Cull,
+        0x0000000000000002ull
+    };
+
+    uint8_t y = (((x & (x - 1)) == 0) ? 0 : 1);
+    uint8_t j = 32;
+    uint8_t i;
+
+    for (i = 0; i < 6; i++) {
+        uint8_t k = (((x & t[i]) == 0) ? 0 : j);
+        y += k;
+        x >>= k;
+        j >>= 1;
+    }
+
+    return y;
+}
+
 void xerror(char *msg, int line, char *file);
 
 void *xcalloc(size_t nmemb, size_t size);
 
-void *xmalloc(size_t size); 
+void *xmalloc(size_t size);
 
 void *xrealloc(void *ptr, size_t size);
 
