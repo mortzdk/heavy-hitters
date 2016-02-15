@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <assert.h>
@@ -30,8 +29,6 @@ hh_sketch_t *hh_sketch_create(hh_sketch_params_t *p) {
 	// This only works since the sketch_size_t appears first in the *_sketch_t structures!
 	w               = sketch_width(s->sketch);
 	d               = sketch_depth(s->sketch);
-
-	printf("wd: %d", w*d);
 
 	hh->logm           = logm;
 	hh->params         = p->params;
