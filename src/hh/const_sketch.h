@@ -11,7 +11,7 @@
 
 // Structures
 typedef struct {
-	uint32_t              *tree;
+	uint64_t              *tree;
 	sketch_t              *sketch;
 	hash_t                *hash;
 	uint8_t                exact_cnt;
@@ -30,7 +30,7 @@ hh_const_sketch_t *hh_const_sketch_create(sketch_func_t *f, hash_t *hash,
 void hh_const_sketch_destroy(hh_const_sketch_t *hh);
 
 // Update
-void hh_const_sketch_update(hh_const_sketch_t *hh, uint32_t idx, int32_t c);
+void hh_const_sketch_update(hh_const_sketch_t *hh, uint32_t idx, int64_t c);
 
 // Query
 heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *hh);

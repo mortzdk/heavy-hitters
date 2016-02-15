@@ -31,6 +31,8 @@ hh_sketch_t *hh_sketch_create(hh_sketch_params_t *p) {
 	w               = sketch_width(s->sketch);
 	d               = sketch_depth(s->sketch);
 
+	printf("wd: %d", w*d);
+
 	hh->logm           = logm;
 	hh->params         = p->params;
 	hh->norm           = 0;

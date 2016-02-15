@@ -77,7 +77,7 @@ Test(count_min_sketch, hh_top_and_bottom, .disabled=0) {
 	};
 	hh_sketch_params_t p = {
 		.f = &countMin,
-		.hash = &hash31,
+		.hash = &hash31p2,
 		.params = &params
 	};
 
@@ -140,7 +140,7 @@ Test(count_min_sketch, hh_top_and_bottom_close_non_hh, .disabled=0) {
 	};
 	hh_sketch_params_t p = {
 		.f = &countMin,
-		.hash = &hash31,
+		.hash = &hash31p2,
 		.params = &params
 	};
 

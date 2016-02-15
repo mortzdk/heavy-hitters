@@ -12,6 +12,7 @@
 // Initialization
 hh_const_sketch_t *hh_const_sketch_create(sketch_func_t *f, hash_t *hash, 
 		heavy_hitter_params_t *params) {
+	uint32_t size;
 	double   phi          = params->phi;
 	double   epsilon      = params->epsilon;
 	double   delta        = params->delta;
@@ -27,6 +28,7 @@ hh_const_sketch_t *hh_const_sketch_create(sketch_func_t *f, hash_t *hash,
 		(uint32_t)(next_pow_2(w) * 0x077CB531U) >> 27
 	] + 1;
 
+	size               = ((1 << (np2_base+1))+((1+w)*(logm-np2_base)));
 	hh->params         = params;
 	hh->logm           = logm;
 	hh->norm           = 0;
@@ -37,10 +39,14 @@ hh_const_sketch_t *hh_const_sketch_create(sketch_func_t *f, hash_t *hash,
 	memset(hh->result.hitters, '\0', sizeof(uint32_t) * (2/phi));
 	hh->sketch         = s;
 	hh->exact_cnt      = np2_base;
-	hh->tree           = xmalloc( sizeof(uint64_t) * 
-			((1 << (np2_base+1))+((w/error)*(logm-np2_base))) );
+	hh->tree           = xmalloc( sizeof(uint64_t) * size );
+	memset(hh->tree, '\0', sizeof(uint64_t) * size);
 
 	//TODO allocate a and b for all hash functions
+	for (uint8_t i = (1 << (np2_base+1)); i < size; i += 1+w) {
+		hh->tree[i] |= ((uint64_t) hash->agen()) << 32;
+		hh->tree[i] |= (uint64_t) hash->bgen(w);
+	}
 
 	return hh;
 }
@@ -68,9 +74,9 @@ void hh_const_sketch_destroy(hh_const_sketch_t *hh) {
 }
 
 // Update
-void hh_const_sketch_update(hh_const_sketch_t *hh, uint32_t idx, int32_t c) {
+void hh_const_sketch_update(hh_const_sketch_t *hh, uint32_t idx, int64_t c) {
 	uint8_t i;
-	uint32_t left, right, mid, x;
+	uint32_t left, right, mid, offset, hash, x, a, b;
 
 	x     = 0;
 	left  = 0;
@@ -101,20 +107,29 @@ void hh_const_sketch_update(hh_const_sketch_t *hh, uint32_t idx, int32_t c) {
 		}
 	}
 
+	offset = (1 << (i+1))-2;
+
 	// Use sketches to estimate count instead
 	// TODO update correct
 	for (i = 0; i < hh->logm-hh->exact_cnt; i++) {
-		mid = left + ( (right - left)/2 );
-		x  *= 2;
+		mid  = left + ( (right - left)/2 );
+		x   *= 2;
+		a    = (hh->tree[offset+((hh->w+1)*i)] >> 32);
+		b    = (uint32_t) hh->tree[offset+((hh->w+1)*i)];
+
 		if (mid < idx) {
 			x++;
-//			sketch_update(hh->tree[i], x, c);
+			hash = hh->hash->hash(x, hh->w, a, b);
+			hh->tree[offset+((hh->w+1)*i)+hash] += c; 
 			left = mid+1;
 		} else {
-//			sketch_update(hh->tree[i], x, c);
+			hash = hh->hash->hash(x, hh->w, a, b);
+			hh->tree[offset+((hh->w+1)*i)+hash] += c; 
 			right = mid;
 		}
 	}
+
+	sketch_update(hh->sketch, x, c);
 
 	hh->norm += c;
 }
