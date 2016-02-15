@@ -29,11 +29,9 @@ typedef struct {
 } hh_t;
 
 typedef struct {
-	double          phi;
-	double          epsilon;
-	double          delta;
-	uint32_t        m;
-	uint32_t        b;
+	//sketch_func_t *f;
+	hash_t *hash;
+	void * params;
 } heavy_hitter_params_t;
 
 hh_t *heavy_hitter_create(hh_func_t *f, void *params);
@@ -48,4 +46,6 @@ void heavy_hitter_update(hh_t *hh, uint32_t idx, int64_t c);
 heavy_hitter_t *heavy_hitter_query(hh_t *hh);
 
 extern hh_func_t hh_sketch;
+extern hh_func_t hh_const_sketch;
+
 #endif

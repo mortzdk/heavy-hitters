@@ -9,19 +9,20 @@
 #include "hh/sketch.h"
 #include "sketch/sketch.h"
 
-hh_sketch_t *hh_sketch_create(hh_sketch_params_t *p) {
+hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *p) {
 	int32_t i;
 	uint8_t np2_base;
 	uint32_t w, d;
-	uint32_t m       = p->params->m;
+	hh_sketch_params_t *params = (hh_sketch_params_t *)p->params;
+	uint32_t m       = params->m;
 	uint8_t logm     = xceil_log2(m);
-	double   phi     = p->params->phi;
-	double   epsilon = p->params->epsilon;
+	double   phi     = params->phi;
+	double   epsilon = params->epsilon;
 //	         epsilon = epsilon/(2*logm);
-	double   delta   = (p->params->delta*phi)/(2*logm);
-	uint32_t b       = p->params->b;
+	double   delta   = (params->delta*phi)/(2*logm);
+	uint32_t b       = params->b;
 	hh_sketch_t *hh  = xmalloc( sizeof(hh_sketch_t) );
-	sketch_t *s      = sketch_create(p->f, p->hash, b, epsilon, delta);
+	sketch_t *s      = sketch_create(params->f, p->hash, b, epsilon, delta);
 
 	assert(phi > epsilon);
 	
@@ -31,7 +32,7 @@ hh_sketch_t *hh_sketch_create(hh_sketch_params_t *p) {
 	d               = sketch_depth(s->sketch);
 
 	hh->logm           = logm;
-	hh->params         = p->params;
+	hh->params         = params;
 	hh->norm           = 0;
 	hh->result.count   = 0; 
 	hh->result.hitters = xmalloc( sizeof(uint32_t) * (2/phi) );
@@ -55,7 +56,7 @@ hh_sketch_t *hh_sketch_create(hh_sketch_params_t *p) {
 	if ( np2_base < logm ) {
 		hh->tree = xmalloc( sizeof(sketch_t *) * (logm-np2_base) );
 		for (i = 0; i < (logm-1)-np2_base; i++) {
-			hh->tree[i] = sketch_create(p->f, p->hash, b, epsilon, delta);
+			hh->tree[i] = sketch_create(params->f, p->hash, b, epsilon, delta);
 		}
 		hh->tree[i] = s;
 	} else {
@@ -158,9 +159,9 @@ static void hh_sketch_query_bottom_recursive(hh_sketch_t *hh, uint8_t layer,
 				assert( x < hh->params->m );
 
 				hh->result.count++;
-				return;
+			} else {
+				hh_sketch_query_bottom_recursive(hh, layer+1, x, th);
 			}
-			hh_sketch_query_bottom_recursive(hh, layer+1, x, th);
 		}
 	}
 }

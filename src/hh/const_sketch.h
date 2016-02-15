@@ -11,20 +11,28 @@
 
 // Structures
 typedef struct {
-	uint64_t              *tree;
-	sketch_t              *sketch;
-	hash_t                *hash;
-	uint8_t                exact_cnt;
-	uint32_t               w;
-	short                  logm;
-	uint64_t               norm;
-	heavy_hitter_params_t *params;
-	heavy_hitter_t         result;
+	double          phi;
+	double          epsilon;
+	double          delta;
+	uint32_t        m;
+	uint32_t        b;
+	sketch_func_t *f;
+} hh_const_sketch_params_t;
+
+typedef struct {
+	uint64_t                 *tree;
+	sketch_t                 *sketch;
+	hash_t                   *hash;
+	uint8_t                   exact_cnt;
+	uint32_t                  w;
+	short                     logm;
+	uint64_t                  norm;
+	hh_const_sketch_params_t *params;
+	heavy_hitter_t            result;
 } hh_const_sketch_t; 
 
 // Initialization
-hh_const_sketch_t *hh_const_sketch_create(sketch_func_t *f, hash_t *hash, 
-		heavy_hitter_params_t *params);
+hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *p);
 
 // Destruction
 void hh_const_sketch_destroy(hh_const_sketch_t *hh);

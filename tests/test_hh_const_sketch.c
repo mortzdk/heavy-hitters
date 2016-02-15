@@ -8,10 +8,10 @@
 #include "xutil.h"
 
 #include "hh/hh.h"
-#include "hh/sketch.h"
+#include "hh/const_sketch.h"
 #include "sketch/sketch.h"
 
-Test(hh_sketch, hh_top_only, .disabled=0) {
+Test(hh_const_sketch, hh_top_only, .disabled=0) {
 	uint32_t A[10][2] = {
 		{1, 3543},
 		{2, 7932},
@@ -29,7 +29,7 @@ Test(hh_sketch, hh_top_only, .disabled=0) {
 		2, 3, 8, 327
 	};
 
-	hh_sketch_params_t params = {
+	hh_const_sketch_params_t params = {
 		.b       = 2,
 		.epsilon = 0.01,
 		.delta   = 0.2,
@@ -41,7 +41,7 @@ Test(hh_sketch, hh_top_only, .disabled=0) {
 		.hash   = &hash31,
 		.params = &params
 	};
-	hh_t *hh = heavy_hitter_create(&hh_sketch, &p);
+	hh_t *hh = heavy_hitter_create(&hh_const_sketch, &p);
 
 	for (int i = 0; i < 10; i++) {
 		heavy_hitter_update(hh, A[i][0], A[i][1]);
@@ -64,11 +64,11 @@ Test(hh_sketch, hh_top_only, .disabled=0) {
 	heavy_hitter_destroy(hh);
 }
 
-Test(hh_sketch, hh_top_and_bottom, .disabled=0) {
+Test(hh_const_sketch, hh_top_and_bottom, .disabled=0) {
 	double hh_mass   = 0.70;
 	uint32_t m       = pow(2, 20);
 
-	hh_sketch_params_t params = {
+	hh_const_sketch_params_t params = {
 		.b       = 2,
 		.epsilon = (double)1/64,
 		.delta   = 0.2,
@@ -78,10 +78,10 @@ Test(hh_sketch, hh_top_and_bottom, .disabled=0) {
 	};
 	heavy_hitter_params_t p = {
 		.hash   = &hash31p2,
-		.params = &params
+		.params = &params,
 	};
 
-	hh_t *hh = heavy_hitter_create(&hh_sketch, &p);
+	hh_t *hh = heavy_hitter_create(&hh_const_sketch, &p);
 	double *x       = xmalloc( m*sizeof(double) );
 
 	for (uint32_t i = 0; i < m; i++) {
@@ -127,11 +127,11 @@ Test(hh_sketch, hh_top_and_bottom, .disabled=0) {
 	heavy_hitter_destroy(hh);
 }
 
-Test(hh_sketch, hh_top_and_bottom_close_non_hh, .disabled=0) {
+Test(hh_const_sketch, hh_top_and_bottom_close_non_hh, .disabled=0) {
 	double hh_mass   = 0.7 + 0.04955 + 0.04812 + 0.05023;
 	uint32_t m       = pow(2, 20);
 
-	hh_sketch_params_t params = {
+	hh_const_sketch_params_t params = {
 		.b       = 2,
 		.epsilon = (double)1/64,
 		.delta   = 0.2,
@@ -144,7 +144,7 @@ Test(hh_sketch, hh_top_and_bottom_close_non_hh, .disabled=0) {
 		.params = &params
 	};
 
-	hh_t *hh = heavy_hitter_create(&hh_sketch, &p);
+	hh_t *hh = heavy_hitter_create(&hh_const_sketch, &p);
 	double *x       = xmalloc( m*sizeof(double) );
 
 	for (uint32_t i = 0; i < m; i++) {

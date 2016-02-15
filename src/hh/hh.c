@@ -5,6 +5,7 @@
 #include "xutil.h"
 
 #include "hh/hh.h"
+#include "hh/const_sketch.h"
 #include "hh/sketch.h"
 
 hh_func_t hh_sketch = {
@@ -12,6 +13,13 @@ hh_func_t hh_sketch = {
 	.destroy  = (hh_destroy) hh_sketch_destroy,
 	.update   = (hh_update)  hh_sketch_update,
 	.query    = (hh_query)   hh_sketch_query,
+};
+
+hh_func_t hh_const_sketch = {
+	.create   = (hh_create)  hh_const_sketch_create,
+	.destroy  = (hh_destroy) hh_const_sketch_destroy,
+	.update   = (hh_update)  hh_const_sketch_update,
+	.query    = (hh_query)   hh_const_sketch_query,
 };
 
 hh_t *heavy_hitter_create(hh_func_t *f, void *params) {
