@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <assert.h>
 #include <math.h>
@@ -61,9 +62,10 @@ void count_min_update(count_min_t *s, uint32_t i, int64_t c) {
 	}
 }
 
-uint32_t count_min_point(count_min_t *s, uint32_t i) {
-	uint32_t di, wi, estimate, e;
+uint64_t count_min_point(count_min_t *s, uint32_t i) {
+	uint32_t di, wi;
 	uint32_t w = s->size.w;
+	uint64_t estimate, e;
 
 	wi        = s->hash->hash(i, w, (uint32_t)(s->table[0]>>32), 
 			(uint32_t)s->table[0]);
@@ -84,8 +86,26 @@ uint32_t count_min_point(count_min_t *s, uint32_t i) {
 	return estimate;
 }
 
-uint32_t count_min_range_sum(count_min_t *s, uint32_t l, uint32_t r) {
-	uint32_t sum = 0, i;
+bool count_min_above_thresshold(count_min_t *s, uint32_t i, uint64_t th) {
+	uint32_t di, wi;
+	uint32_t w = s->size.w;
+
+	for (di = 0; di < s->size.d; di++) {
+		wi       = s->hash->hash(i, w, (uint32_t)(s->table[di*(w+1)]>>32), 
+		          	(uint32_t)s->table[di*(w+1)]);
+
+		assert( wi < w );
+
+		if (s->table[COUNT_MIN_INDEX(w, di, wi)] < th) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+uint64_t count_min_range_sum(count_min_t *s, uint32_t l, uint32_t r) {
+	uint64_t sum = 0, i;
 
 	for (i = l; i <= r; i++) {
 		sum += count_min_point(s, i);

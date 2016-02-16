@@ -3,6 +3,7 @@
 
 // Standard libraries
 #include <stdint.h>
+#include <stdbool.h>
 
 // User defined libraries
 #include "hash.h"
@@ -10,8 +11,9 @@
 typedef void*(*s_create)(hash_t *hash, uint8_t b, double epsilon, double delta);
 typedef void(*s_destroy)(void *s);
 typedef void(*s_update)(void *s, uint32_t i, int32_t c);
-typedef uint32_t(*s_point)(void *s, uint32_t i);
-typedef uint32_t(*s_rangesum)(void *s, uint32_t l, uint32_t r);
+typedef uint64_t(*s_point)(void *s, uint32_t i);
+typedef bool(*s_above)(void *s, uint32_t i, uint64_t th);
+typedef uint64_t(*s_rangesum)(void *s, uint32_t l, uint32_t r);
 
 typedef struct {
 	uint32_t w;
@@ -23,6 +25,7 @@ typedef struct {
 	s_destroy  destroy;
 	s_update   update;
 	s_point    point;
+	s_above    above;
 	s_rangesum rangesum;
 } sketch_func_t;
 
@@ -43,8 +46,9 @@ sketch_t *sketch_create(sketch_func_t *f, hash_t *hash, uint8_t b,
 		double epsilon, double delta);
 void      sketch_destroy(sketch_t *s);
 void      sketch_update(sketch_t *s, uint32_t i, int64_t c);
-uint32_t  sketch_point(sketch_t *s, uint32_t i);
-uint32_t  sketch_range_sum(sketch_t *s, uint32_t l, uint32_t r);
+uint64_t  sketch_point(sketch_t *s, uint32_t i);
+bool      sketch_above_thresshold(sketch_t *s, uint32_t i, uint64_t th);
+uint64_t  sketch_range_sum(sketch_t *s, uint32_t l, uint32_t r);
 
 /**
  * Structures holding function pointers for different sketch implementations

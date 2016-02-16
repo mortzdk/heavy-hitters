@@ -18,7 +18,6 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *p) {
 	uint8_t logm     = xceil_log2(m);
 	double   phi     = params->phi;
 	double   epsilon = params->epsilon;
-//	         epsilon = epsilon/(2*logm);
 	double   delta   = (params->delta*phi)/(2*logm);
 	uint32_t b       = params->b;
 	hh_sketch_t *hh  = xmalloc( sizeof(hh_sketch_t) );
@@ -26,8 +25,8 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *p) {
 
 	assert(phi > epsilon);
 	
-	// TODO: Maybe just calculate w and d again
-	// This only works since the sketch_size_t appears first in the *_sketch_t structures!
+	// This only works since the sketch_size_t appears first in the *_sketch_t 
+	// structures!
 	w               = sketch_width(s->sketch);
 	d               = sketch_depth(s->sketch);
 
@@ -47,11 +46,10 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *p) {
 		np2_base = logm;
 	}
 
-	// TODO: Overestimated space usage of top
-	hh->top         = xmalloc( sizeof(uint32_t) * (1 << (np2_base+1)) ); // pow(2, np2_base+1)
-	hh->top_cnt     = np2_base;
+	hh->top     = xmalloc( sizeof(uint32_t) * ((1 << (np2_base+1))-2) );
+	hh->top_cnt = np2_base;
 
-	memset(hh->top, '\0', sizeof(uint32_t) * (1 << (np2_base+1)));
+	memset(hh->top, '\0', sizeof(uint32_t) * ((1 << (np2_base+1))-2) );
 
 	if ( np2_base < logm ) {
 		hh->tree = xmalloc( sizeof(sketch_t *) * (logm-np2_base) );
@@ -104,17 +102,8 @@ void hh_sketch_update(hh_sketch_t *hh, uint32_t idx, int32_t c) {
 	right = hh->params->m-1;
 	mid   = right/2;
 
-	if (mid < idx) {
-		x++;
-		hh->top[x] += c;
-		left = mid+1;
-	} else {
-		hh->top[x] += c;
-		right = mid;
-	}
-
 	// Update exact counts as long as |x| <= next_pow_2(wd)
-	for (i = 1; i < hh->top_cnt; i++) {
+	for (i = 0; i < hh->top_cnt; i++) {
 		mid = left + ( (right - left)/2 );
 		x   = 2*x;
 		if (mid < idx) {
@@ -147,12 +136,11 @@ void hh_sketch_update(hh_sketch_t *hh, uint32_t idx, int32_t c) {
 static void hh_sketch_query_bottom_recursive(hh_sketch_t *hh, uint8_t layer, 
 		uint32_t x, double th) {
 	uint8_t i;
-	uint32_t point;
 	x *= 2;
 
 	for (i = 0; i < 2; i++) {
 		x += i;	
-		if ( (point = sketch_point(hh->tree[layer], x)) >= th ) {
+		if ( sketch_above_thresshold(hh->tree[layer], x, th) ) {
 			if ( unlikely( layer+hh->top_cnt == hh->logm-1 ) ) {
 				hh->result.hitters[hh->result.count] = x;
 
@@ -194,13 +182,7 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *hh, uint8_t layer,
 heavy_hitter_t *hh_sketch_query(hh_sketch_t *hh) {
 	double thresshold = hh->params->phi*hh->norm;
 
-	if (hh->top[0] >= thresshold) {
-		hh_sketch_query_top_recursive(hh, 1, 0, thresshold);
-	}
-
-	if (hh->top[1] >= thresshold) {
-		hh_sketch_query_top_recursive(hh, 1, 1, thresshold);
-	}
+	hh_sketch_query_top_recursive(hh, 0, 0, thresshold);
 
 	return &hh->result;
 }

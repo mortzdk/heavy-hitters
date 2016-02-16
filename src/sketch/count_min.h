@@ -3,6 +3,7 @@
 
 // Standard libraries
 #include <inttypes.h>
+#include <stdbool.h>
 
 // User defined libraries
 #include "hash.h"
@@ -30,7 +31,8 @@ void count_min_destroy(count_min_t *s);
 void count_min_update(count_min_t *s, uint32_t i, int64_t c);
 
 // Query
-uint32_t count_min_point(count_min_t *s, uint32_t i);
-uint32_t count_min_range_sum(count_min_t *s, uint32_t l, uint32_t r);
+uint64_t count_min_point(count_min_t *s, uint32_t i);
+bool count_min_above_thresshold(count_min_t *s, uint32_t i, uint64_t th);
+uint64_t count_min_range_sum(count_min_t *s, uint32_t l, uint32_t r);
 
 #endif

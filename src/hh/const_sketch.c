@@ -87,15 +87,6 @@ void hh_const_sketch_update(hh_const_sketch_t *hh, uint32_t idx, int64_t c) {
 	right = hh->params->m-1;
 	mid   = right/2;
 
-	/*if (mid < idx) {
-		x++;
-		hh->tree[x] += c;
-		left = mid+1;
-	} else {
-		hh->tree[x] += c;
-		right = mid;
-	}*/
-
 	// Update exact counts as long as |x| <= next_pow_2(wd)
 	for (i = 0; i < hh->exact_cnt; i++) {
 		mid = left + ( (right - left)/2 );
@@ -113,7 +104,6 @@ void hh_const_sketch_update(hh_const_sketch_t *hh, uint32_t idx, int64_t c) {
 	offset = (1 << (i+1))-2;
 
 	// Use sketches to estimate count instead
-	// TODO update correct
 	for (i = 0; i < hh->logm-hh->exact_cnt; i++) {
 		mid  = left + ( (right - left)/2 );
 		x   *= 2;
@@ -143,8 +133,7 @@ void hh_const_sketch_update(hh_const_sketch_t *hh, uint32_t idx, int64_t c) {
 static void hh_sketch_query_bottom_recursive(hh_const_sketch_t *hh, uint8_t layer, 
 		uint32_t x, double th) {
 	uint8_t i;
-	uint32_t point, offset, a, b, hash;
-	double val;
+	uint32_t offset, a, b, hash;
 	x *= 2;
 
 	offset = (1 << (hh->exact_cnt +1))-2   + ((hh->w+1) * layer);
@@ -156,15 +145,14 @@ static void hh_sketch_query_bottom_recursive(hh_const_sketch_t *hh, uint8_t laye
 		hash = hh->hash->hash(x, hh->w, a, b);
 
 		// Plus one to get away from a and b
-		if ( (point = hh->tree[offset + 1 + hash]) >= th ) {
+		if ( hh->tree[offset + 1 + hash] >= th ) {
 			if ( unlikely( layer+hh->exact_cnt == hh->logm-1 ) ) {
-				if ((val = sketch_point(hh->sketch, x)) >= th) {
+				if ( sketch_above_thresshold(hh->sketch, x, th) ) {
 					hh->result.hitters[hh->result.count] = x;
 
 					assert( x < hh->params->m );
 
 					hh->result.count++;
-
 				}
 			} else {
 				hh_sketch_query_bottom_recursive(hh, layer+1, x, th);

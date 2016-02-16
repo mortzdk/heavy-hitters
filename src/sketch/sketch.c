@@ -15,6 +15,7 @@ sketch_func_t countMin = {
 	.destroy  = (s_destroy) count_min_destroy,
 	.update   = (s_update)  count_min_update,
 	.point    = (s_point)   count_min_point,
+	.above    = (s_above)   count_min_above_thresshold,
 	.rangesum = (s_rangesum)count_min_range_sum,
 };
 
@@ -42,10 +43,14 @@ void sketch_update(sketch_t *s, uint32_t i, int64_t c) {
 	s->funcs->update(s->sketch, i, c);
 }
 
-uint32_t sketch_point(sketch_t *s, uint32_t i) {
+uint64_t sketch_point(sketch_t *s, uint32_t i) {
 	return s->funcs->point(s->sketch, i);
 }
 
-uint32_t sketch_range_sum(sketch_t *s, uint32_t l, uint32_t r) {
+bool sketch_above_thresshold(sketch_t *s, uint32_t i, uint64_t th) {
+	return s->funcs->above(s->sketch, i, th);
+}
+
+uint64_t sketch_range_sum(sketch_t *s, uint32_t l, uint32_t r) {
 	return s->funcs->rangesum(s->sketch, l , r);
 }
