@@ -8,12 +8,14 @@
 // User defined libraries
 #include "hash.h"
 
-typedef void*(*s_create)(hash_t *hash, uint8_t b, double epsilon, double delta);
-typedef void(*s_destroy)(void *s);
-typedef void(*s_update)(void *s, uint32_t i, int32_t c);
-typedef uint64_t(*s_point)(void *s, uint32_t i);
-typedef bool(*s_above)(void *s, uint32_t i, uint64_t th);
-typedef uint64_t(*s_rangesum)(void *s, uint32_t l, uint32_t r);
+typedef void*(*s_create)(hash_t *restrict hash, const uint8_t b, 
+		const double epsilon, const double delta);
+typedef void(*s_destroy)(void *restrict s);
+typedef void(*s_update)(void *restrict s, const uint64_t i, const int64_t c);
+typedef uint64_t(*s_point)(void *restrict s, const uint32_t i);
+typedef bool(*s_above)(void *restrict s, const uint32_t i, const uint64_t th);
+typedef uint64_t(*s_rangesum)(void *restrict s, const uint32_t l, 
+		const uint32_t r);
 
 typedef struct {
 	uint32_t w;
@@ -30,25 +32,28 @@ typedef struct {
 } sketch_func_t;
 
 typedef struct {
-	void          *sketch;
-	sketch_func_t *funcs;
+	void          *restrict sketch;
+	sketch_func_t *restrict funcs;
 } sketch_t;
 
-inline uint32_t sketch_depth(void *sketch) {
+inline uint32_t sketch_depth(void *restrict sketch) {
 	return ((sketch_size_t *)sketch)->d;
 }
 
-inline uint32_t sketch_width(void *sketch) {
+inline uint32_t sketch_width(void *restrict sketch) {
 	return ((sketch_size_t *)sketch)->w;
 }
 
-sketch_t *sketch_create(sketch_func_t *f, hash_t *hash, uint8_t b, 
-		double epsilon, double delta);
-void      sketch_destroy(sketch_t *s);
-void      sketch_update(sketch_t *s, uint32_t i, int64_t c);
-uint64_t  sketch_point(sketch_t *s, uint32_t i);
-bool      sketch_above_thresshold(sketch_t *s, uint32_t i, uint64_t th);
-uint64_t  sketch_range_sum(sketch_t *s, uint32_t l, uint32_t r);
+sketch_t *sketch_create(sketch_func_t *restrict f, hash_t *restrict hash, 
+		const uint8_t b, const double epsilon, const double delta);
+void      sketch_destroy(sketch_t *restrict s);
+void      sketch_update(sketch_t *restrict s, const uint32_t i, 
+		const int64_t c);
+uint64_t  sketch_point(sketch_t *restrict s, const uint32_t i);
+bool      sketch_above_thresshold(sketch_t *restrict s, const uint32_t i, 
+		const uint64_t th);
+uint64_t  sketch_range_sum(sketch_t *restrict s, const uint32_t l, 
+		const uint32_t r);
 
 /**
  * Structures holding function pointers for different sketch implementations

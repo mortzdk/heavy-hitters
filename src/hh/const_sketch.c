@@ -11,27 +11,31 @@
 #include "sketch/sketch.h"
 
 // Initialization
-hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *p) {
-	uint32_t size;
-	hh_const_sketch_params_t *params = (hh_const_sketch_params_t *)p->params;
-	double   phi          = params->phi;
-	double   epsilon      = params->epsilon;
-	double   delta        = params->delta;
-	uint32_t m            = params->m;
-	uint32_t b            = params->b;
-	hh_const_sketch_t *hh = xmalloc( sizeof(hh_const_sketch_t) );
-	const double error    = 0.25;
-	uint8_t logm          = xceil_log2(m);
-	sketch_t *s           = sketch_create(params->f, p->hash, b,
+hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
+	uint32_t i, size;
+	hh_const_sketch_params_t *restrict params = 
+		(hh_const_sketch_params_t *)p->params;
+	const double   phi     = params->phi;
+	const double   epsilon = params->epsilon;
+	const double   delta   = params->delta;
+	const uint32_t m       = params->m;
+	const uint32_t b       = params->b;
+	const double error     = 0.25;
+	const uint8_t logm     = xceil_log2(m);
+	hh_const_sketch_t *restrict hh  = xmalloc( sizeof(hh_const_sketch_t) );
+	sketch_t          *restrict s   = sketch_create(params->f, p->hash, b,
 			(epsilon * p->hash->c),
 			((delta*(phi+epsilon))/(logm * 2)));
-	uint32_t w            = ceil(sketch_width(s->sketch)/error);
-	uint32_t np2_base     = MultiplyDeBruijnBitPosition2[
+	const uint32_t w       = ceil(sketch_width(s->sketch)/error);
+	uint8_t np2_base      = MultiplyDeBruijnBitPosition2[
 		(uint32_t)(next_pow_2(w) * 0x077CB531U) >> 27
 	] + 1;
 
+	if (np2_base > logm) {
+		np2_base = logm;
+	}
 
-	size               = ( (1 << (np2_base+1)) - 2 + ((1+w)*(logm-np2_base)) );
+	size               = ( ((1 << (np2_base+1))-2) + ((1+w)*(logm-np2_base)) );
 	hh->params         = params;
 	hh->logm           = logm;
 	hh->norm           = 0;
@@ -46,7 +50,7 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *p) {
 	memset(hh->tree, '\0', sizeof(uint64_t) * size);
 
 	//TODO allocate a and b for all hash functions
-	for (uint32_t i = (1 << (np2_base+1)) -2; i < size; i += 1+w) {
+	for (i = (1 << (np2_base+1))-2; i < size; i += 1+w) {
 		hh->tree[i] |= ((uint64_t) p->hash->agen()) << 32;
 		hh->tree[i] |= (uint64_t) p->hash->bgen(w);
 	}
@@ -55,7 +59,7 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *p) {
 }
 
 // Destruction
-void hh_const_sketch_destroy(hh_const_sketch_t *hh) {
+void hh_const_sketch_destroy(hh_const_sketch_t *restrict hh) {
 	if (hh == NULL) {
 		return;
 	}
@@ -77,15 +81,14 @@ void hh_const_sketch_destroy(hh_const_sketch_t *hh) {
 }
 
 // Update
-void hh_const_sketch_update(hh_const_sketch_t *hh, uint32_t idx, int64_t c) {
+void hh_const_sketch_update(hh_const_sketch_t *restrict hh, const uint32_t idx, 
+		const int64_t c) {
 	uint8_t i;
 	uint32_t left, right, mid, offset, hash, x, a, b;
 
 	x     = 0;
 	left  = 0;
-//	right = next_pow_2(hh->m)-1;
 	right = hh->params->m-1;
-	mid   = right/2;
 
 	// Update exact counts as long as |x| <= next_pow_2(wd)
 	for (i = 0; i < hh->exact_cnt; i++) {
@@ -130,8 +133,8 @@ void hh_const_sketch_update(hh_const_sketch_t *hh, uint32_t idx, int64_t c) {
 }
 
 // Query
-static void hh_sketch_query_bottom_recursive(hh_const_sketch_t *hh, uint8_t layer, 
-		uint32_t x, double th) {
+static void hh_sketch_query_bottom_recursive(hh_const_sketch_t *restrict hh, 
+		const uint8_t layer, uint32_t x, const double th) {
 	uint8_t i;
 	uint32_t offset, a, b, hash;
 	x *= 2;
@@ -161,8 +164,8 @@ static void hh_sketch_query_bottom_recursive(hh_const_sketch_t *hh, uint8_t laye
 	}
 }
 
-static void hh_sketch_query_top_recursive(hh_const_sketch_t *hh, uint8_t layer, 
-		uint32_t x, double th) {
+static void hh_sketch_query_top_recursive(hh_const_sketch_t *restrict hh, 
+		const uint8_t layer, uint32_t x, const double th) {
 	uint8_t i;
 	x *= 2;
 
@@ -185,8 +188,8 @@ static void hh_sketch_query_top_recursive(hh_const_sketch_t *hh, uint8_t layer,
 	}
 }
 
-heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *hh) {
-	double thresshold = hh->params->phi*hh->norm;
+heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *restrict hh) {
+	const double thresshold = hh->params->phi*hh->norm;
 
 	hh_sketch_query_top_recursive(hh, 0, 0, thresshold);
 

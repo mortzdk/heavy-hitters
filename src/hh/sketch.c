@@ -9,19 +9,20 @@
 #include "hh/sketch.h"
 #include "sketch/sketch.h"
 
-hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *p) {
+hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	int32_t i;
 	uint8_t np2_base;
 	uint32_t w, d;
-	hh_sketch_params_t *params = (hh_sketch_params_t *)p->params;
-	uint32_t m       = params->m;
-	uint8_t logm     = xceil_log2(m);
-	double   phi     = params->phi;
-	double   epsilon = params->epsilon;
-	double   delta   = (params->delta*phi)/(2*logm);
-	uint32_t b       = params->b;
-	hh_sketch_t *hh  = xmalloc( sizeof(hh_sketch_t) );
-	sketch_t *s      = sketch_create(params->f, p->hash, b, epsilon, delta);
+	hh_sketch_params_t *restrict params = (hh_sketch_params_t *)p->params;
+	const uint32_t m       = params->m;
+	const uint8_t logm     = xceil_log2(m);
+	const double   phi     = params->phi;
+	const double   epsilon = params->epsilon;
+	const double   delta   = (params->delta*phi)/(2*logm);
+	const uint32_t b       = params->b;
+	hh_sketch_t *restrict hh = xmalloc( sizeof(hh_sketch_t) );
+	sketch_t    *restrict s  = sketch_create(params->f, p->hash, b, epsilon, 
+			delta);
 
 	assert(phi > epsilon);
 	
@@ -66,7 +67,7 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *p) {
 }
 
 // Destuction
-void hh_sketch_destroy(hh_sketch_t *hh) {
+void hh_sketch_destroy(hh_sketch_t *restrict hh) {
 	uint8_t i;
 
 	if (hh == NULL) {
@@ -92,15 +93,14 @@ void hh_sketch_destroy(hh_sketch_t *hh) {
 }
 
 // Update
-void hh_sketch_update(hh_sketch_t *hh, uint32_t idx, int32_t c) {
+void hh_sketch_update(hh_sketch_t *restrict hh, const uint32_t idx, 
+		const int64_t c) {
 	uint8_t i;
 	uint32_t left, right, mid, x;
 
 	x     = 0;
 	left  = 0;
-//	right = next_pow_2(hh->m)-1;
 	right = hh->params->m-1;
-	mid   = right/2;
 
 	// Update exact counts as long as |x| <= next_pow_2(wd)
 	for (i = 0; i < hh->top_cnt; i++) {
@@ -133,8 +133,8 @@ void hh_sketch_update(hh_sketch_t *hh, uint32_t idx, int32_t c) {
 	hh->norm += c;
 }
 	
-static void hh_sketch_query_bottom_recursive(hh_sketch_t *hh, uint8_t layer, 
-		uint32_t x, double th) {
+static void hh_sketch_query_bottom_recursive(hh_sketch_t *restrict hh, 
+		const uint8_t layer, uint32_t x, const double th) {
 	uint8_t i;
 	x *= 2;
 
@@ -154,8 +154,8 @@ static void hh_sketch_query_bottom_recursive(hh_sketch_t *hh, uint8_t layer,
 	}
 }
 
-static void hh_sketch_query_top_recursive(hh_sketch_t *hh, uint8_t layer, 
-		uint32_t x, double th) {
+static void hh_sketch_query_top_recursive(hh_sketch_t *restrict hh, 
+		const uint8_t layer, uint32_t x, const double th) {
 	uint8_t i;
 	x *= 2;
 
@@ -170,7 +170,8 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *hh, uint8_t layer,
 
 				hh->result.count++;
 			} else if ( unlikely(layer == hh->top_cnt-1) ) {
-				hh_sketch_query_bottom_recursive(hh, 0, x, th+(hh->params->epsilon*hh->norm));
+				hh_sketch_query_bottom_recursive(hh, 0, x, 
+						th+(hh->params->epsilon*hh->norm));
 			} else {
 				hh_sketch_query_top_recursive(hh, layer+1, x, th);
 			}
@@ -179,8 +180,8 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *hh, uint8_t layer,
 }
 
 // Query
-heavy_hitter_t *hh_sketch_query(hh_sketch_t *hh) {
-	double thresshold = hh->params->phi*hh->norm;
+heavy_hitter_t *hh_sketch_query(hh_sketch_t *restrict hh) {
+	const double thresshold = hh->params->phi*hh->norm;
 
 	hh_sketch_query_top_recursive(hh, 0, 0, thresshold);
 

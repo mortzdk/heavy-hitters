@@ -20,27 +20,28 @@ typedef struct {
 } hh_const_sketch_params_t;
 
 typedef struct {
-	uint64_t                 *tree;
-	sketch_t                 *sketch;
-	hash_t                   *hash;
+	uint64_t                 *restrict tree;
+	sketch_t                 *restrict sketch;
+	hash_t                   *restrict hash;
 	uint8_t                   exact_cnt;
 	uint32_t                  w;
 	short                     logm;
 	uint64_t                  norm;
-	hh_const_sketch_params_t *params;
+	hh_const_sketch_params_t *restrict params;
 	heavy_hitter_t            result;
 } hh_const_sketch_t; 
 
 // Initialization
-hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *p);
+hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p);
 
 // Destruction
-void hh_const_sketch_destroy(hh_const_sketch_t *hh);
+void hh_const_sketch_destroy(hh_const_sketch_t *restrict hh);
 
 // Update
-void hh_const_sketch_update(hh_const_sketch_t *hh, uint32_t idx, int64_t c);
+void hh_const_sketch_update(hh_const_sketch_t *restrict hh, const uint32_t idx, 
+		const int64_t c);
 
 // Query
-heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *hh);
+heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *restrict hh);
 
 #endif

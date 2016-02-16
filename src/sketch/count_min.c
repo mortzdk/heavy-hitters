@@ -12,14 +12,13 @@
 #include "sketch/count_min.h"
 #include "hash.h"
 
-count_min_t *count_min_create(hash_t *hash, uint8_t b, double epsilon, 
-		double delta) {
-	uint32_t i, w, d, dw;
-	count_min_t *s = xmalloc(sizeof(count_min_t));
-
-	w        = s->size.w = ceil(b / epsilon) * hash->c;
-	d        = s->size.d = ceil(log2(1 / delta) / log2(b));
-	dw       = w*d;
+count_min_t *count_min_create(hash_t *restrict hash, const uint8_t b, 
+		const double epsilon, const double delta) {
+	uint32_t i;
+	count_min_t *restrict s = xmalloc(sizeof(count_min_t));
+	const uint32_t w        = s->size.w = ceil(b / epsilon) * hash->c;
+	const uint32_t d        = s->size.d = ceil(log2(1 / delta) / log2(b));
+	const uint32_t dw       = w*d;
 
 	s->table = xmalloc(sizeof(uint64_t) * (dw + d));
 	s->hash  = hash;
@@ -34,7 +33,7 @@ count_min_t *count_min_create(hash_t *hash, uint8_t b, double epsilon,
 	return s;
 }
 
-void count_min_destroy(count_min_t *s) {
+void count_min_destroy(count_min_t *restrict s) {
 	if (s == NULL) {
 		return;
 	}
@@ -48,9 +47,10 @@ void count_min_destroy(count_min_t *s) {
 	s = NULL;
 }
 
-void count_min_update(count_min_t *s, uint32_t i, int64_t c) {
+void count_min_update(count_min_t *restrict s, const uint32_t i, 
+		const int64_t c) {
 	uint32_t di, wi;
-	uint32_t w = s->size.w;
+	const uint32_t w = s->size.w;
 
 	for (di = 0; di < s->size.d; di++) {
 		wi = s->hash->hash(i, w, (uint32_t)(s->table[di*(w+1)]>>32), 
@@ -62,12 +62,12 @@ void count_min_update(count_min_t *s, uint32_t i, int64_t c) {
 	}
 }
 
-uint64_t count_min_point(count_min_t *s, uint32_t i) {
+uint64_t count_min_point(count_min_t *restrict s, const uint32_t i) {
 	uint32_t di, wi;
-	uint32_t w = s->size.w;
+	const uint32_t w = s->size.w;
 	uint64_t estimate, e;
 
-	wi        = s->hash->hash(i, w, (uint32_t)(s->table[0]>>32), 
+	wi = s->hash->hash(i, w, (uint32_t)(s->table[0]>>32), 
 			(uint32_t)s->table[0]);
 
 	assert( wi < w );
@@ -86,9 +86,10 @@ uint64_t count_min_point(count_min_t *s, uint32_t i) {
 	return estimate;
 }
 
-bool count_min_above_thresshold(count_min_t *s, uint32_t i, uint64_t th) {
+bool count_min_above_thresshold(count_min_t *restrict s, const uint32_t i, 
+		const uint64_t th) {
 	uint32_t di, wi;
-	uint32_t w = s->size.w;
+	const uint32_t w = s->size.w;
 
 	for (di = 0; di < s->size.d; di++) {
 		wi       = s->hash->hash(i, w, (uint32_t)(s->table[di*(w+1)]>>32), 
@@ -104,7 +105,8 @@ bool count_min_above_thresshold(count_min_t *s, uint32_t i, uint64_t th) {
 	return true;
 }
 
-uint64_t count_min_range_sum(count_min_t *s, uint32_t l, uint32_t r) {
+uint64_t count_min_range_sum(count_min_t *restrict s, const uint32_t l, 
+		const uint32_t r) {
 	uint64_t sum = 0, i;
 
 	for (i = l; i <= r; i++) {

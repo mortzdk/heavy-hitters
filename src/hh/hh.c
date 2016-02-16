@@ -22,7 +22,7 @@ hh_func_t hh_const_sketch = {
 	.query    = (hh_query)   hh_const_sketch_query,
 };
 
-hh_t *heavy_hitter_create(hh_func_t *f, void *params) {
+hh_t *heavy_hitter_create(hh_func_t *restrict f, void *restrict params) {
 	hh_t *hh   = xmalloc( sizeof(hh_t) ); 
 
 	hh->funcs  = f;
@@ -31,7 +31,7 @@ hh_t *heavy_hitter_create(hh_func_t *f, void *params) {
 	return hh;
 }
 
-void heavy_hitter_destroy(hh_t *hh) {
+void heavy_hitter_destroy(hh_t *restrict hh) {
 	if (hh == NULL) {
 		return;
 	}
@@ -42,11 +42,11 @@ void heavy_hitter_destroy(hh_t *hh) {
 	hh = NULL;
 }
 
-void heavy_hitter_update(hh_t *hh, uint32_t i, int64_t c) {
+void heavy_hitter_update(hh_t *restrict hh, const uint32_t i, const int64_t c) {
 	hh->funcs->update(hh->hh, i, c);
 }
 
-heavy_hitter_t *heavy_hitter_query(hh_t *hh) {
+heavy_hitter_t *heavy_hitter_query(hh_t *restrict hh) {
 	return hh->funcs->query(hh->hh);
 }
 

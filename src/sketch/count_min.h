@@ -15,24 +15,28 @@
 
 // Structures
 typedef struct {
-	sketch_size_t size;  // Width and depth of sketch
-	uint64_t     *table; // The count_min table
-	hash_t       *hash;  // Structure that determines work of hash function
+	sketch_size_t size;           // Width and depth of sketch
+	uint64_t     *restrict table; // The count_min table
+	hash_t       *restrict hash;  // Structure that determines work of hash function
 } count_min_t; 
 
 
 // Initialization
-count_min_t *count_min_create(hash_t *hash, uint8_t b, double epsilon, double delta);
+count_min_t *count_min_create(hash_t *restrict hash, const uint8_t b, 
+		const double epsilon, const double delta);
 
 // Destuction
-void count_min_destroy(count_min_t *s);
+void count_min_destroy(count_min_t *restrict s);
 
 // Update
-void count_min_update(count_min_t *s, uint32_t i, int64_t c);
+void count_min_update(count_min_t *restrict s, const uint32_t i, 
+		const int64_t c);
 
 // Query
-uint64_t count_min_point(count_min_t *s, uint32_t i);
-bool count_min_above_thresshold(count_min_t *s, uint32_t i, uint64_t th);
-uint64_t count_min_range_sum(count_min_t *s, uint32_t l, uint32_t r);
+uint64_t count_min_point(count_min_t *restrict s, const uint32_t i);
+bool count_min_above_thresshold(count_min_t *restrict s, const uint32_t i, 
+		const uint64_t th);
+uint64_t count_min_range_sum(count_min_t *restrict s, const uint32_t l, 
+		const uint32_t r);
 
 #endif
