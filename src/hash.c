@@ -6,8 +6,6 @@
 #include "xutil.h"
 #include "hash.h"
 
-static uint32_t *restrict w;
-
 /*****************************************************************************
  *        HASH_31 by MASSDAL: http://www.cs.rutgers.edu/~muthu/prng.c        *
  *****************************************************************************/
@@ -21,19 +19,23 @@ static inline uint32_t h31_internal(uint32_t x, uint32_t a, uint32_t b) {
 	return (uint32_t) result;
 }
 
-uint32_t h31(uint32_t x, uint32_t a, uint32_t b) {
+uint32_t h31(uint32_t w, uint8_t M, uint32_t x, uint32_t a, uint32_t b) {
 	uint32_t res = h31_internal(x, a, b);
 
-	return res % *w;
+	(void) M;
+
+	return res % w;
 }
 
-uint32_t h31p2(uint32_t x, uint32_t a, uint32_t b) {
+uint32_t h31p2(uint32_t w, uint8_t M, uint32_t x, uint32_t a, uint32_t b) {
 	uint32_t res = h31_internal(x, a, b);
+
+	(void) M;
 
 	// Amount of bins must be power of 2
 	assert( w && !(w & (w - 1)) );
 
-	return res & (*w - 1);
+	return res & (w - 1);
 	
 }
 
@@ -48,9 +50,9 @@ uint32_t h31_bgen () {
 /*****************************************************************************
  *                              MULTIPLY-SHIFT                               *
  *****************************************************************************/
-static uint8_t *restrict M;
+uint32_t ms(uint32_t w, uint8_t M, uint32_t x, uint32_t a, uint32_t b) {
+	(void) w;
 
-uint32_t ms(uint32_t x, uint32_t a, uint32_t b) {
 	// a < 2^w
 	assert( a <= UINT32_MAX ) ;
 
@@ -63,23 +65,24 @@ uint32_t ms(uint32_t x, uint32_t a, uint32_t b) {
 	// Amount of bins must be power of 2
 	assert( w && !(w & (w - 1)) );
 
-	return (uint32_t) (a*x+b) >> (sizeof(uint32_t)*BYTE-*M);
+	return (uint32_t) (a*x+b) >> (sizeof(uint32_t)*BYTE-M);
 }
 
 uint32_t ms_agen () {
 	return (uint32_t)0x1 |(uint32_t)(xuni_rand() * UINT32_MAX);
 }
 
-uint32_t ms_bgen () {
-	return xuni_rand() * (1 << (sizeof(uint32_t)*BYTE-*M));
+uint32_t ms_bgen (uint8_t M) {
+	return xuni_rand() * (1 << (sizeof(uint32_t)*BYTE-M));
 }
 
 /*****************************************************************************
  *                              MULTIPLY-SHIFT-2                             *
  *****************************************************************************/
 
-uint32_t ms2(uint32_t x, uint32_t a, uint32_t b) {
+uint32_t ms2(uint32_t w, uint8_t M, uint32_t x, uint32_t a, uint32_t b) {
 	(void) b;
+	(void) w;
 
 	// a < 2^w
 	assert( a <= UINT32_MAX ) ;
@@ -90,7 +93,7 @@ uint32_t ms2(uint32_t x, uint32_t a, uint32_t b) {
 	// Amount of bins must be power of 2
 	assert( w && !(w & (w - 1)) );
 
-	return (uint32_t) (a*x) >> (sizeof(uint32_t)*BYTE-*M);
+	return (uint32_t) (a*x) >> (sizeof(uint32_t)*BYTE-M);
 }
 
 uint32_t ms2_agen () {
@@ -104,13 +107,14 @@ uint32_t ms2_bgen () {
 /*****************************************************************************
  *                              CARTER-WEGMAN                                *
  *****************************************************************************/
-uint32_t cw(uint32_t x, uint32_t a, uint32_t b) {
+uint32_t cw(uint32_t w, uint8_t M, uint32_t x, uint32_t a, uint32_t b) {
 	(void) b;
+	(void) M;
 
 	// Amount of bins must be power of 2
 	assert( w && !(w & (w - 1)) );
 
-	return (((a*x) >> 31) & MOD_P) & *w;
+	return (((a*x) >> 31) & MOD_P) & w;
 }
 
 uint32_t cw_agen () {
@@ -125,7 +129,9 @@ uint32_t cw_bgen () {
  *                                    SIGN                                   *
  *****************************************************************************/
 
-uint8_t s(uint32_t x, uint8_t a, uint8_t b) {
+uint8_t s(uint32_t w, uint8_t M, uint32_t x, uint8_t a, uint8_t b) {
+	(void) w;
+	(void) M;
 	return (((a*x)+b) & MOD_SIGN);
 }
 
@@ -184,22 +190,6 @@ hash_t sign = {
 	.c    = 1,
 };
 
-void hash_width(hash_t *hash, uint32_t width) {
-	if ( unlikely(!hash->w[0]) ) {
-		w = &hash->w[0];
-		M = &hash->M[0];
-		*M = (uint8_t)floor(log2(width));
-		*w = width;
-	} else if ( unlikely(!hash->w[1]) ) {
-		w = &hash->w[1];
-		M = &hash->M[1];
-		*M = (uint8_t)floor(log2(width));
-		*w = width;
-	} else if ( hash->w[0] == width ) {
-		w = &hash->w[0];
-		M = &hash->M[0];
-	} else {
-		w = &hash->w[1];
-		M = &hash->M[1];
-	} 
+void hash_init(uint8_t *restrict M, uint32_t width) {
+	*M = (uint8_t)floor(log2(width));
 }

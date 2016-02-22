@@ -31,7 +31,7 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 		(uint32_t)(next_pow_2(w) * 0x077CB531U) >> 27
 	] + 1;
 
-	hash_width(p->hash, w);
+	hash_init(&hh->M, w);
 
 	if (np2_base > logm) {
 		np2_base = logm;
@@ -54,7 +54,7 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 	//TODO allocate a and b for all hash functions
 	for (i = (1 << (np2_base+1))-2; i < size; i += 1+w) {
 		hh->tree[i] |= ((uint64_t) p->hash->agen()) << 32;
-		hh->tree[i] |= (uint64_t) p->hash->bgen();
+		hh->tree[i] |= (uint64_t) p->hash->bgen(hh->M);
 	}
 
 	return hh;
@@ -88,8 +88,6 @@ void hh_const_sketch_update(hh_const_sketch_t *restrict hh, const uint32_t idx,
 	uint8_t i;
 	uint32_t left, right, mid, offset, hash, x, a, b;
 
-	hash_width(hh->hash, hh->w);
-
 	x     = 0;
 	left  = 0;
 	right = hh->params->m-1;
@@ -119,11 +117,11 @@ void hh_const_sketch_update(hh_const_sketch_t *restrict hh, const uint32_t idx,
 
 		if (mid < idx) {
 			x++;
-			hash = hh->hash->hash(x, a, b);
+			hash = hh->hash->hash(hh->w, hh->M, x, a, b);
 			hh->tree[offset + 1 + hash] += c; 
 			left = mid+1;
 		} else {
-			hash = hh->hash->hash(x, a, b);
+			hash = hh->hash->hash(hh->w, hh->M, x, a, b);
 			hh->tree[offset + 1 + hash] += c; 
 			right = mid;
 		}
@@ -149,8 +147,7 @@ static void hh_sketch_query_bottom_recursive(hh_const_sketch_t *restrict hh,
 		x += i;	
 		a    = (hh->tree[offset] >> 32);
 		b    = (uint32_t) hh->tree[offset];
-		hash_width(hh->hash, hh->w);
-		hash = hh->hash->hash(x, a, b);
+		hash = hh->hash->hash(hh->w, hh->M, x, a, b);
 
 		// Plus one to get away from a and b
 		if ( hh->tree[offset + 1 + hash] >= th ) {

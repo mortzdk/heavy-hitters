@@ -25,6 +25,7 @@ typedef struct {
 	hash_t                   *restrict hash;
 	uint8_t                   exact_cnt;
 	uint32_t                  w;
+	uint8_t                   M;
 	short                     logm;
 	uint64_t                  norm;
 	hh_const_sketch_params_t *restrict params;

@@ -19,8 +19,8 @@ count_min_t *count_min_create(hash_t *restrict hash, const uint8_t b,
 	const uint32_t w        = s->size.w = ceil(b / epsilon) * hash->c;
 	const uint32_t d        = s->size.d = ceil(log2(1 / delta) / log2(b));
 	const uint32_t dw       = w*d;
-
-	hash_width(hash, w);
+	hash_init(&s->size.M, w);
+	const uint32_t M        = s->size.M;
 
 	s->table = xmalloc(sizeof(uint64_t) * (dw + d));
 	s->hash  = hash;
@@ -29,7 +29,7 @@ count_min_t *count_min_create(hash_t *restrict hash, const uint8_t b,
 
 	for (i = 0; i < d; i++) {
 		s->table[i*(w+1)] |= ((uint64_t) hash->agen()) << 32;
-		s->table[i*(w+1)] |= (uint64_t) hash->bgen();
+		s->table[i*(w+1)] |= (uint64_t) hash->bgen(M);
 	}
 
 	return s;
@@ -53,11 +53,10 @@ void count_min_update(count_min_t *restrict s, const uint32_t i,
 		const int64_t c) {
 	uint32_t di, wi;
 	const uint32_t w = s->size.w;
-
-	hash_width(s->hash, w);
+	const uint8_t  M = s->size.M;
 
 	for (di = 0; di < s->size.d; di++) {
-		wi = s->hash->hash(i, (uint32_t)(s->table[di*(w+1)]>>32), 
+		wi = s->hash->hash(w, M, i, (uint32_t)(s->table[di*(w+1)]>>32), 
 				(uint32_t)(s->table[di*(w+1)]));
 
 		assert( wi < w );
@@ -69,18 +68,17 @@ void count_min_update(count_min_t *restrict s, const uint32_t i,
 uint64_t count_min_point(count_min_t *restrict s, const uint32_t i) {
 	uint32_t di, wi;
 	const uint32_t w = s->size.w;
+	const uint8_t  M = s->size.M;
 	uint64_t estimate, e;
 
-	hash_width(s->hash, w);
-
-	wi = s->hash->hash(i, (uint32_t)(s->table[0]>>32), 
+	wi = s->hash->hash(w, M, i, (uint32_t)(s->table[0]>>32), 
 			(uint32_t)s->table[0]);
 
 	assert( wi < w );
 
 	estimate  = s->table[COUNT_MIN_INDEX(w, 0, wi)];
 	for (di = 1; di < s->size.d; di++) {
-		wi       = s->hash->hash(i, (uint32_t)(s->table[di*(w+1)]>>32), 
+		wi       = s->hash->hash(w, M, i, (uint32_t)(s->table[di*(w+1)]>>32), 
 		          	(uint32_t)s->table[di*(w+1)]);
 
 		assert( wi < w );
@@ -96,11 +94,10 @@ bool count_min_above_thresshold(count_min_t *restrict s, const uint32_t i,
 		const uint64_t th) {
 	uint32_t di, wi;
 	const uint32_t w = s->size.w;
-
-	hash_width(s->hash, w);
+	const uint32_t M = s->size.M;
 
 	for (di = 0; di < s->size.d; di++) {
-		wi       = s->hash->hash(i, (uint32_t)(s->table[di*(w+1)]>>32), 
+		wi       = s->hash->hash(w, M, i, (uint32_t)(s->table[di*(w+1)]>>32), 
 		          	(uint32_t)s->table[di*(w+1)]);
 
 		assert( wi < w );

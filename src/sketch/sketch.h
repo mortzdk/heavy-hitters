@@ -20,6 +20,7 @@ typedef uint64_t(*s_rangesum)(void *restrict s, const uint32_t l,
 typedef struct {
 	uint32_t w;
 	uint32_t d;
+	uint8_t M;
 } sketch_size_t;
 
 typedef struct {
