@@ -77,7 +77,7 @@ Test(hh_sketch, hh_top_and_bottom, .disabled=0) {
 		.f       = &countMin,
 	};
 	heavy_hitter_params_t p = {
-		.hash   = &hash31p2,
+		.hash   = &multiplyShift,
 		.params = &params
 	};
 
@@ -140,12 +140,12 @@ Test(hh_sketch, hh_top_and_bottom_close_non_hh, .disabled=0) {
 		.f       = &countMin,
 	};
 	heavy_hitter_params_t p = {
-		.hash   = &hash31p2,
+		.hash   = &multiplyShift,
 		.params = &params
 	};
 
-	hh_t *hh = heavy_hitter_create(&hh_sketch, &p);
-	double *x       = xmalloc( m*sizeof(double) );
+	hh_t *hh   = heavy_hitter_create(&hh_sketch, &p);
+	double *x  = xmalloc( m*sizeof(double) );
 
 	for (uint32_t i = 0; i < m; i++) {
 		x[i] = (1-hh_mass)/(m-7);

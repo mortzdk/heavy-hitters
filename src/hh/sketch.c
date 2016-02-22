@@ -12,14 +12,14 @@
 hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	int32_t i;
 	uint8_t np2_base;
-	uint32_t w, d;
+	uint32_t w, d, result_size, top_tree_size;
 	hh_sketch_params_t *restrict params = (hh_sketch_params_t *)p->params;
-	const uint32_t m       = params->m;
-	const uint8_t logm     = xceil_log2(m);
-	const double   phi     = params->phi;
-	const double   epsilon = params->epsilon;
-	const double   delta   = (params->delta*phi)/(2*logm);
-	const uint32_t b       = params->b;
+	const uint32_t m         = params->m;
+	const uint8_t logm       = xceil_log2(m);
+	const double   phi       = params->phi;
+	const double   epsilon   = params->epsilon;
+	const double   delta     = (params->delta*phi)/(2*logm);
+	const uint32_t b         = params->b;
 	hh_sketch_t *restrict hh = xmalloc( sizeof(hh_sketch_t) );
 	sketch_t    *restrict s  = sketch_create(params->f, p->hash, b, epsilon, 
 			delta);
@@ -28,15 +28,16 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	
 	// This only works since the sketch_size_t appears first in the *_sketch_t 
 	// structures!
-	w               = sketch_width(s->sketch);
-	d               = sketch_depth(s->sketch);
+	w                  = sketch_width(s->sketch);
+	d                  = sketch_depth(s->sketch);
 
 	hh->logm           = logm;
 	hh->params         = params;
 	hh->norm           = 0;
 	hh->result.count   = 0; 
-	hh->result.hitters = xmalloc( sizeof(uint32_t) * (2/phi) );
-	memset(hh->result.hitters, '\0', sizeof(uint32_t) * (2/phi));
+	result_size        = sizeof(uint32_t) * (2/phi);
+	hh->result.hitters = xmalloc( result_size );
+	memset(hh->result.hitters, '\0', result_size);
 
 	// Find the base (log2) of the next power of two of w*d
 	np2_base        = MultiplyDeBruijnBitPosition2[
@@ -47,10 +48,10 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 		np2_base = logm;
 	}
 
-	hh->top     = xmalloc( sizeof(uint32_t) * ((1 << (np2_base+1))-2) );
-	hh->top_cnt = np2_base;
-
-	memset(hh->top, '\0', sizeof(uint32_t) * ((1 << (np2_base+1))-2) );
+	top_tree_size = sizeof(uint32_t) * ((1 << (np2_base+1))-2);
+	hh->top       = xmalloc( top_tree_size );
+	memset(hh->top, '\0', top_tree_size );
+	hh->top_cnt   = np2_base;
 
 	if ( np2_base < logm ) {
 		hh->tree = xmalloc( sizeof(sketch_t *) * (logm-np2_base) );

@@ -77,7 +77,7 @@ Test(hh_const_sketch, hh_top_and_bottom, .disabled=0) {
 		.f       = &countMin,
 	};
 	heavy_hitter_params_t p = {
-		.hash   = &hash31p2,
+		.hash   = &multiplyShift,
 		.params = &params,
 	};
 
@@ -140,7 +140,7 @@ Test(hh_const_sketch, hh_top_and_bottom_close_non_hh, .disabled=0) {
 		.f       = &countMin,
 	};
 	heavy_hitter_params_t p = {
-		.hash   = &hash31p2,
+		.hash   = &multiplyShift,
 		.params = &params
 	};
 
