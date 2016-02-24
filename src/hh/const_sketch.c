@@ -182,7 +182,8 @@ static void hh_sketch_query_top_recursive(hh_const_sketch_t *restrict hh,
 
 				hh->result.count++;
 			} else if ( unlikely(layer == hh->exact_cnt-1) ) {
-				hh_sketch_query_bottom_recursive(hh, 0, x, th+(hh->params->epsilon*hh->norm));
+				hh_sketch_query_bottom_recursive(hh, 0, x, sketch_thresshold(
+							hh->sketch, hh->norm, hh->params->epsilon, th));
 			} else {
 				hh_sketch_query_top_recursive(hh, layer+1, x, th);
 			}

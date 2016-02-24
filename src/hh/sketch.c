@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <assert.h>
@@ -141,7 +142,7 @@ static void hh_sketch_query_bottom_recursive(hh_sketch_t *restrict hh,
 
 	for (i = 0; i < 2; i++) {
 		x += i;	
-		if ( sketch_above_thresshold(hh->tree[layer], x, th) ) {
+		if ( sketch_point(hh->tree[layer], x) >= th ) {
 			if ( unlikely( layer+hh->top_cnt == hh->logm-1 ) ) {
 				hh->result.hitters[hh->result.count] = x;
 
@@ -171,8 +172,8 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *restrict hh,
 
 				hh->result.count++;
 			} else if ( unlikely(layer == hh->top_cnt-1) ) {
-				hh_sketch_query_bottom_recursive(hh, 0, x, 
-						th+(hh->params->epsilon*hh->norm));
+				hh_sketch_query_bottom_recursive(hh, 0, x, sketch_thresshold(
+							hh->tree[0], hh->norm, hh->params->epsilon, th));
 			} else {
 				hh_sketch_query_top_recursive(hh, layer+1, x, th);
 			}

@@ -8,6 +8,6 @@ prof
 gmon.out
 callgrind.*.*
 datasets/DARPA/
-datasets/NUST-Syn-Flood/
+datasets/NUST/
 datasets/CAIDA/
 datasets/USC-ISI/

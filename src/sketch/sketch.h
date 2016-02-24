@@ -16,20 +16,22 @@ typedef uint64_t(*s_point)(void *restrict s, const uint32_t i);
 typedef bool(*s_above)(void *restrict s, const uint32_t i, const uint64_t th);
 typedef uint64_t(*s_rangesum)(void *restrict s, const uint32_t l, 
 		const uint32_t r);
+typedef double (*s_thresshold)(uint64_t l1, double epsilon, double th);
 
 typedef struct {
 	uint32_t w;
 	uint32_t d;
-	uint8_t M;
+	uint8_t  M;
 } sketch_size_t;
 
 typedef struct {
-	s_create   create;
-	s_destroy  destroy;
-	s_update   update;
-	s_point    point;
-	s_above    above;
-	s_rangesum rangesum;
+	s_create     create;
+	s_destroy    destroy;
+	s_update     update;
+	s_point      point;
+	s_above      above;
+	s_rangesum   rangesum;
+	s_thresshold thresshold;
 } sketch_func_t;
 
 typedef struct {
@@ -55,6 +57,8 @@ bool      sketch_above_thresshold(sketch_t *restrict s, const uint32_t i,
 		const uint64_t th);
 uint64_t  sketch_range_sum(sketch_t *restrict s, const uint32_t l, 
 		const uint32_t r);
+double sketch_thresshold(sketch_t *restrict s, uint64_t l1, double epsilon, 
+		double th);
 
 /**
  * Structures holding function pointers for different sketch implementations

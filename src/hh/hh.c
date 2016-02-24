@@ -9,10 +9,10 @@
 #include "hh/sketch.h"
 
 hh_func_t hh_sketch = {
-	.create   = (hh_create)  hh_sketch_create,
-	.destroy  = (hh_destroy) hh_sketch_destroy,
-	.update   = (hh_update)  hh_sketch_update,
-	.query    = (hh_query)   hh_sketch_query,
+	.create     = (hh_create)  hh_sketch_create,
+	.destroy    = (hh_destroy) hh_sketch_destroy,
+	.update     = (hh_update)  hh_sketch_update,
+	.query      = (hh_query)   hh_sketch_query,
 };
 
 hh_func_t hh_const_sketch = {

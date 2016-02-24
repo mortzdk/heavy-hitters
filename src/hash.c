@@ -129,20 +129,9 @@ uint32_t cw_bgen () {
  *                                    SIGN                                   *
  *****************************************************************************/
 
-uint8_t s(uint32_t w, uint8_t M, uint32_t x, uint8_t a, uint8_t b) {
-	(void) w;
-	(void) M;
-	return (((a*x)+b) & MOD_SIGN);
-}
-
-uint8_t s_agen () {
-	return 1 + (xuni_rand() >= 0.5);
-}
-
-uint8_t s_bgen () {
-	double rand = xuni_rand();
-	return (rand >= 0.66) + (rand >= 0.33);
-}
+extern inline int8_t  sign(uint32_t x, uint8_t a, uint8_t b);
+extern inline uint8_t s_agen();
+extern inline uint8_t s_bgen();
 
 /*****************************************************************************
  *                           HASH_T STRUCTURES                               *
@@ -181,13 +170,6 @@ hash_t carterWegman = {
 	.agen = (agen) cw_agen,
 	.bgen = (bgen) cw_bgen,
 	.c    = 2,
-};
-
-hash_t sign = {
-	.hash = (hash) s,
-	.agen = (agen) s_agen,
-	.bgen = (bgen) s_bgen,
-	.c    = 1,
 };
 
 void hash_init(uint8_t *restrict M, uint32_t width) {

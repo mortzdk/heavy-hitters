@@ -36,7 +36,7 @@ Test(count_min_sketch, update_point, .disabled=0) {
 }
 
 Test(count_min_sketch, update_point_2, .disabled=0) {
-	uint32_t estimate;
+	uint64_t estimate;
 	uint8_t b         = 2;
 	double  epsilon   = 0.25;
 	double  delta     = 0.20;
@@ -65,13 +65,19 @@ Test(count_min_sketch, update_point_2, .disabled=0) {
 
 	for (int i = 0; i < 10; i++) {
 		estimate = sketch_point(s0, A[i][0]);
-		cr_expect_geq(estimate, A[i][1], "Estimate (%d) should be %d, i = %d", estimate, A[i][1], i);
+		cr_expect_geq(estimate, A[i][1], 
+				"Estimate (%"PRIu64") should be %d, i = %d", estimate, 
+				A[i][1], i);
 
 		estimate = sketch_point(s1, A[i][0]);
-		cr_expect_geq(estimate, A[i][1], "Estimate (%d) should be %d, i = %d", estimate, A[i][1], i);
+		cr_expect_geq(estimate, A[i][1], 
+				"Estimate (%"PRIu64") should be %d, i = %d", estimate, 
+				A[i][1], i);
 
 		estimate = sketch_point(s2, A[i][0]);
-		cr_expect_geq(estimate, A[i][1], "Estimate (%d) should be %d, i = %d", estimate, A[i][1], i);
+		cr_expect_geq(estimate, A[i][1], 
+				"Estimate (%"PRIu64") should be %d, i = %d", estimate, 
+				A[i][1], i);
 	}
 
 	sketch_destroy(s0);
@@ -80,7 +86,7 @@ Test(count_min_sketch, update_point_2, .disabled=0) {
 }
 
 Test(count_min_sketch, update_point_3, .disabled=0) {
-	uint32_t estimate;
+	uint64_t estimate;
 	uint32_t A[10][2] = {
 		{42, 3543},
 		{42, 7932},
@@ -100,23 +106,25 @@ Test(count_min_sketch, update_point_3, .disabled=0) {
 		sketch_update(s, A[i][0], A[i][1]);
 	}
 
-	uint32_t sum = 0;
+	uint64_t sum = 0;
 
 	for (int i = 0; i < 10; i++) {
 		sum += A[i][1];
 	}
 
 	estimate = sketch_range_sum(s, 42, 42);
-	cr_assert_eq(estimate, sum, "Estimate (%d) should be %d", estimate, sum);
+	cr_assert_eq(estimate, sum, "Estimate (%"PRIu64") should be %"PRIu64, 
+			estimate, sum);
 
 	estimate = sketch_range_sum(s, 0, 100);
-	cr_assert_eq(estimate, sum, "Estimate (%d) should be %d", estimate, sum);
+	cr_assert_eq(estimate, sum, "Estimate (%"PRIu64") should be %"PRIu64, 
+			estimate, sum);
 
 	sketch_destroy(s);
 }
 
 Test(count_min_sketch, update_range_naive_1, .disabled=0) {
-	uint32_t estimate;
+	uint64_t estimate;
 	uint32_t A[10][2] = {
 		{42, 3543},
 		{42, 7932},
@@ -136,14 +144,15 @@ Test(count_min_sketch, update_range_naive_1, .disabled=0) {
 		sketch_update(s, A[i][0], A[i][1]);
 	}
 
-	uint32_t sum = 0;
+	uint64_t sum = 0;
 
 	for (int i = 0; i < 10; i++) {
 		sum += A[i][1];
 	}
 
 	estimate = sketch_point(s, 42);
-	cr_assert_eq(estimate, sum, "Estimate (%d) should be %d", estimate, sum);
+	cr_assert_eq(estimate, sum, "Estimate (%"PRIu64") should be %"PRIu64, 
+			estimate, sum);
 
 	sketch_destroy(s);
 }

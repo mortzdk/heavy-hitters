@@ -15,9 +15,9 @@
 
 // Structures
 typedef struct {
-	sketch_size_t size;           // Width and depth of sketch
-	uint64_t     *restrict table; // The count_min table
-	hash_t       *restrict hash;  // Structure that determines work of hash function
+	sketch_size_t      size;    // Width and depth of sketch
+	uint64_t *restrict table;   // The count_min table
+	hash_t   *restrict hash;    // Structure that determines work of hash function
 } count_min_t; 
 
 
@@ -38,5 +38,13 @@ bool count_min_above_thresshold(count_min_t *restrict s, const uint32_t i,
 		const uint64_t th);
 uint64_t count_min_range_sum(count_min_t *restrict s, const uint32_t l, 
 		const uint32_t r);
+
+// Heavy hitter thresshold
+inline double count_min_heavy_hitter_thresshold(uint64_t l1, 
+		double epsilon, double th) {
+	(void) epsilon;
+	(void) l1;
+	return th;	
+}
 
 #endif

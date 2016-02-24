@@ -27,10 +27,10 @@ stream_t *stream_open(char const *filename) {
 	s->eof = false;
 
 	data_t * d = &s->data;
-	d->type   = sizeof(char);
-	d->size   = DATA_SIZE;
-	d->length = 0;
-	d->data   = xmalloc( d->type * d->size );
+	d->type    = sizeof(char);
+	d->size    = DATA_SIZE;
+	d->length  = 0;
+	d->data    = xmalloc( (d->type * (d->size+1)) );
 
     /* Advise the kernel of our access pattern.  */
     err = posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL|POSIX_FADV_WILLNEED);
@@ -51,28 +51,30 @@ void stream_set_buffer_size(stream_t *s, uint32_t const buffer_size) {
 void stream_set_data_size(stream_t *s, uint32_t const data_size) {
 	if ( data_size >= s->buffer_size ) {
 		s->data.size = data_size;
-		s->data.data = xrealloc(s->data.data, s->data.size*s->data.type);
+		s->data.data = xrealloc(s->data.data, ((s->data.size+1)*s->data.type));
 	}
 }
 
 void stream_set_data_type(stream_t *s, size_t type) {
 	if (type > 0) {
 		s->data.type = type;
-		s->data.data = xrealloc(s->data.data, s->data.size*s->data.type);
+		s->data.data = xrealloc(s->data.data, ((s->data.size+1)*s->data.type));
 	}
 }
 
 void *stream_read(stream_t *s){
-	int      err = -1;
+	int      err      = -1;
 	uint32_t buf_size = s->buffer_size;
 	data_t  *d        = &s->data;
 	char    *data     = d->data;
 	char     buf[buf_size];
 
-	memset(d->data, '\0', d->size * d->type);
-	d->length = 0;
+//	printf("MEMSET: %lu\n", (1+d->size)*d->type);
 
-	s->eof = false;
+	memset(d->data, '\0', ((1+d->size)*d->type));
+
+	d->length = 0;
+	s->eof    = false;
 
     while ( (d->length+buf_size <= d->size*d->type) && 
 			(err = read(s->fd, buf, buf_size)) != 0 ) {
@@ -93,6 +95,7 @@ void *stream_read(stream_t *s){
 
 		if ( likely(err > 0) ) {
 			memcpy(&data[d->length], buf, err);
+			d->length += err;
 		}
 	}
 
@@ -102,6 +105,9 @@ void *stream_read(stream_t *s){
 		}
 		s->eof = true;
 	}
+
+//	printf("Alloced: %"PRIu64"\n", d->size * d->type+1);
+//	printf("Length: %"PRIu32"\n", d->length);
 
 	return d->data;
 }

@@ -22,8 +22,8 @@ count_min_t *count_min_create(hash_t *restrict hash, const uint8_t b,
 	hash_init(&s->size.M, w);
 	const uint32_t M        = s->size.M;
 
-	s->table = xmalloc(sizeof(uint64_t) * (dw + d));
-	s->hash  = hash;
+	s->table   = xmalloc(sizeof(uint64_t) * (dw + d));
+	s->hash    = hash;
 
 	memset(s->table, '\0', sizeof(uint64_t) * (dw + d));
 
@@ -120,3 +120,6 @@ uint64_t count_min_range_sum(count_min_t *restrict s, const uint32_t l,
 
 	return sum;
 }
+
+extern inline double count_min_heavy_hitter_thresshold(uint64_t l1, 
+		double epsilon, double th);
