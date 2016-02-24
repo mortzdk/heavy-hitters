@@ -53,9 +53,9 @@ int main (int argc, char **argv) {
 	char     *optstring = "e:d:p:m:f:n";
 	uint64_t  buf_size = 0;
 
-	double epsilon = 0.05;
+	double epsilon = 1./64.;
 	double delta   = 0.25;
-	double phi     = 0.10;
+	double phi     = 0.05;
 	uint32_t m     = UINT32_MAX;
 
 	memset(nust.flags, '\0', 5);
