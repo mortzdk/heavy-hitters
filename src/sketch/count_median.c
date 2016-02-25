@@ -21,13 +21,13 @@
  *  This code by Nicolas Devillard - 1998. Public domain.
  */
 
-#define SWAP(a, b) { register uint32_t t=(a);(a)=(b);(b)=t; }
+#define SWAP(a, b) { register int64_t t=(a);(a)=(b);(b)=t; }
 
 static int64_t quick_select(int64_t *restrict v, const uint32_t n) {
     register uint32_t middle, ll, hh;
-    register uint32_t low    = 0;
-	register uint32_t high   = n-1;
-    register uint32_t median = (low + high) / 2;
+    register uint32_t low          = 0;
+	register uint32_t high         = n-1;
+    register const uint32_t median = (low + high) / 2;
 
     for (;;) {
         if ( unlikely(high <= low) ) {
@@ -64,9 +64,14 @@ static int64_t quick_select(int64_t *restrict v, const uint32_t n) {
 		/* Nibble from each end towards middle, swapping items when stuck */
 		ll = low + 1;
 		hh = high;
+
 		for (;;) {
-			do ll++; while (v[low] > v[ll]);
-			do hh--; while (v[hh]  > v[low]);
+			do {
+				ll++;
+			} while (v[low] > v[ll]);
+			do {
+				hh--;
+			} while (v[hh]  > v[low]);
 
 			if (hh < ll) {
 				break;
@@ -111,36 +116,36 @@ static int64_t quick_select(int64_t *restrict v, const uint32_t n) {
 
 static int64_t wirth(int64_t *restrict v, const uint32_t n) {
     register uint32_t i, j, l, m;
-    register uint32_t x;
+    register int64_t x;
 	register const uint32_t k = (n-1)/2;
 
     l = 0;
 	m = n-1;
-    while (l<m) {
+    while (l < m) {
         x = v[k];
         i = l;
         j = m;
         do {
-            while ( v[i]<x ) {
+            while ( v[i] < x ) {
 				i++;
 			}
-            while ( x<v[j] ) {
+            while ( x < v[j] ) {
 				j--;
 			}
-            if ( i<=j ) {
-                SWAP(v[i],v[j]);
+            if ( i <= j ) {
+                SWAP(v[i], v[j]);
                 i++;
 				j--;
             }
-        } while ( i<=j );
-        if ( j<k ) {
-			l=i;
+        } while ( i <= j );
+        if ( j < k ) {
+			l = i;
 		}
-        if ( k<i ) {
-			m=j ;
+        if ( k < i ) {
+			m = j;
 		}
     }
-    return v[k] ;
+    return v[k];
 }
 
 /*****************************************************************************
@@ -155,8 +160,7 @@ count_median_t *count_median_create(hash_t *restrict hash, const uint8_t b,
 	register const uint32_t d  = s->size.d = ceil( log((1./delta)) * 
 			((double)((uint32_t)(b-1)*b << 3)/pow(b-2, 2)));
 	hash_init(&s->size.M, w);
- 	const uint32_t M           = s->size.M;
-	const uint32_t table_size  = sizeof(int64_t) * (w*d + 2*d);
+	const uint32_t table_size  = sizeof(int64_t) * ((w+2)*d);
 	const uint32_t median_size = sizeof(int64_t) * d;
 
 	assert( b > 2 );
@@ -170,9 +174,9 @@ count_median_t *count_median_create(hash_t *restrict hash, const uint8_t b,
 
 	for (i = 0; i < d; i++) {
 		s->table[i*(w+2)]   |= ((uint64_t) hash->agen()) << 32;
-		s->table[i*(w+2)]   |= (uint64_t) hash->bgen(M);
-		s->table[i*(w+2)+1] |= ((uint64_t) s_agen()) << 32;
-		s->table[i*(w+2)+1] |= (uint64_t) s_bgen();
+		s->table[i*(w+2)]   |= (uint64_t) hash->bgen(s->size.M);
+		s->table[i*(w+2)+1] |= ((uint64_t) sign_agen()) << 32;
+		s->table[i*(w+2)+1] |= (uint64_t) sign_bgen();
 	}
 
 	#ifdef SPACE
@@ -238,8 +242,8 @@ int64_t count_median_point(count_median_t *restrict s, const uint32_t i) {
 				(uint8_t)(s->table[di*(w+2)+1]));
 	}
 
-	return quick_select(s->median, d);
-	//return wirth(s->median, d);
+//	return quick_select(s->median, d);
+	return wirth(s->median, d);
 }
 
 int64_t count_median_range_sum(count_median_t *restrict s, const uint32_t l, 

@@ -13,7 +13,7 @@ Test(count_median_sketch, expected_d, .disabled=0) {
 	sketch_t *s = sketch_create(&countMedian, &hash31, b, epsilon, delta);
 	count_median_t *cm = s->sketch;
 
-	cr_assert_eq(cm->size.d, 35, "Wrong d value, expected %d got %"PRIu32, 35, 
+	cr_assert_eq(cm->size.d, 25, "Wrong d value, expected %d got %"PRIu32, 25, 
 			cm->size.d);
 
 	sketch_destroy(s);

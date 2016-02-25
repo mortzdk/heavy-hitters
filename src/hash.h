@@ -43,7 +43,7 @@ inline int8_t sign(uint32_t x, uint8_t a, uint8_t b) {
 	return (((a*x)+b) & MOD_SIGN) ? 1 : -1;
 }
 
-inline uint8_t s_agen () {
+inline uint8_t sign_agen () {
 	uint8_t a = 1 + xuni_rand()*2;
 
 	assert(a < MOD_SIGN+1);
@@ -51,7 +51,7 @@ inline uint8_t s_agen () {
 	return a;
 }
 
-inline uint8_t s_bgen () {
+inline uint8_t sign_bgen () {
 	uint8_t b = xuni_rand() * (MOD_SIGN+1);
 	
 	assert(b < MOD_SIGN+1);

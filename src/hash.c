@@ -130,8 +130,8 @@ uint32_t cw_bgen () {
  *****************************************************************************/
 
 extern inline int8_t  sign(uint32_t x, uint8_t a, uint8_t b);
-extern inline uint8_t s_agen();
-extern inline uint8_t s_bgen();
+extern inline uint8_t sign_agen();
+extern inline uint8_t sign_bgen();
 
 /*****************************************************************************
  *                           HASH_T STRUCTURES                               *

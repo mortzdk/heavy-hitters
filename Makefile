@@ -184,4 +184,4 @@ ${TEST_NAMES}: bin build ${OBJ} ${TEST}
 ${addprefix run_,${TEST_NAMES}}: ${TEST_NAMES}
 	@echo ================ [Running test ${patsubst run_%,%,$@}] ================
 	@echo
-	./${BIN_FOLDER}/${patsubst run_%,%,$@}
+	./${BIN_FOLDER}/${patsubst run_%,%,$@} --verbose --no-early-exit
