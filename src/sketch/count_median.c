@@ -152,8 +152,8 @@ count_median_t *count_median_create(hash_t *restrict hash, const uint8_t b,
 	register uint32_t i;
 	count_median_t *restrict s = xmalloc(sizeof(count_median_t));
 	register const uint32_t w  = s->size.w = ceil(b / (epsilon*epsilon)) * hash->c;
-	register const uint32_t d  = s->size.d = ceil(log2(1. / delta) * 
-			((double)((uint32_t)(b-1)*b << 3)/((b-2)*(b-2))));
+	register const uint32_t d  = s->size.d = ceil( log((1./delta)) * 
+			((double)((uint32_t)(b-1)*b << 3)/pow(b-2, 2)));
 	hash_init(&s->size.M, w);
  	const uint32_t M           = s->size.M;
 	const uint32_t table_size  = sizeof(int64_t) * (w*d + 2*d);
