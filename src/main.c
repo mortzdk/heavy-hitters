@@ -105,26 +105,26 @@ int main (int argc, char **argv) {
 		.phi     = phi,
 		.f       = &countMin,
 	};
-//	hh_sketch_params_t params_median = {
-//		.b       = 4,
-//		.epsilon = epsilon,
-//		.delta   = delta,
-//		.m       = m,
-//		.phi     = phi,
-//		.f       = &countMedian,
-//	};
+	hh_sketch_params_t params_median = {
+		.b       = 4,
+		.epsilon = epsilon,
+		.delta   = delta,
+		.m       = m,
+		.phi     = phi,
+		.f       = &countMedian,
+	};
 
 	heavy_hitter_params_t p_min = {
 		.hash   = &multiplyShift,
 		.params = &params_min
 	};
-//	heavy_hitter_params_t p_median = {
-//		.hash   = &multiplyShift,
-//		.params = &params_median
-//	};
+	heavy_hitter_params_t p_median = {
+		.hash   = &multiplyShift,
+		.params = &params_median
+	};
 
 	hh_t *min        = heavy_hitter_create(&hh_sketch, &p_min);
-//	hh_t *median     = heavy_hitter_create(&hh_sketch, &p_median);
+	hh_t *median     = heavy_hitter_create(&hh_sketch, &p_median);
 	hh_t *const_min  = heavy_hitter_create(&hh_const_sketch, &p_min);
 
 	do {
@@ -186,22 +186,13 @@ int main (int argc, char **argv) {
 							&h3,
 							&h4
 					);
+
 					if (h1 != 10) {
 						uid = (uint32_t)(h1 << 24) | (h2 << 16) | (h3 << 8) | h4;
 						heavy_hitter_update(min, uid, 1);
+						heavy_hitter_update(median, uid, 1);
 						heavy_hitter_update(const_min, uid, 1);
 					}
-
-				//	printf("Timestamp: %lf\n", nust.timestamp);
-				//	printf("Size: %"PRIu16"\n", nust.size);
-				//	printf("Source IP: %s\n", nust.sourceIP);
-				//	printf("Destination IP: %s\n", nust.destinationIP);
-				//	printf("Source Port: %"PRIu16"\n", nust.sourcePort);
-				//	printf("Destination Port: %"PRIu16"\n", nust.destinationPort);
-				//	printf("TCP Flags: %s\n", nust.flags);
-				//	printf("Transport Protocol: %"PRIu8"\n", nust.protocol);
-				//	printf("Direction: %"PRIu8"\n", nust.direction);
-				//	printf("Type: %s\n\n", nust.type);
 
 					break;
 				default:
@@ -242,6 +233,18 @@ int main (int argc, char **argv) {
 				h1, h2, h3, h4);
 	}
 
+	heavy_hitter_t *hitters_median       = heavy_hitter_query(median);
+
+	printf("Heavy Hitters: COUNT-MEDIAN:\n"); 
+	for (i = 0; i < hitters_median->count; i++) {
+		h1 = (hitters_median->hitters[i] & (0xff << 24)) >> 24;
+		h2 = (hitters_median->hitters[i] & (0xff << 16)) >> 16;
+		h3 = (hitters_median->hitters[i] & (0xff << 8)) >> 8;
+		h4 = (hitters_median->hitters[i] & 0xff);
+		printf("Heavy Hitter IP-Address: %"PRIu8".%"PRIu8".%"PRIu8".%"PRIu8"\n", 
+				h1, h2, h3, h4);
+	}
+
 	heavy_hitter_t *hitters_const_min = heavy_hitter_query(const_min);
 	printf("Heavy Hitters: CONST-COUNT-MIN:\n"); 
 	for (i = 0; i < hitters_const_min->count; i++) {
@@ -254,6 +257,7 @@ int main (int argc, char **argv) {
 	}
 
 	heavy_hitter_destroy(min);
+	heavy_hitter_destroy(median);
 	heavy_hitter_destroy(const_min);
 
 	stream_close(stream);

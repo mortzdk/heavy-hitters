@@ -19,7 +19,7 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	const uint8_t logm       = xceil_log2(m);
 	const double   phi       = params->phi;
 	const double   epsilon   = params->epsilon;
-	const double   delta     = (params->delta*phi)/(2*logm);
+	const double   delta     = (double)((params->delta*phi)/(2.*logm));
 	const uint32_t b         = params->b;
 	hh_sketch_t *restrict hh = xmalloc( sizeof(hh_sketch_t) );
 	sketch_t    *restrict s  = sketch_create(params->f, p->hash, b, epsilon, 
@@ -36,7 +36,7 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	hh->params         = params;
 	hh->norm           = 0;
 	hh->result.count   = 0; 
-	result_size        = sizeof(uint32_t) * (2/phi);
+	result_size        = sizeof(uint32_t) * ceil(2./phi);
 	hh->result.hitters = xmalloc( result_size );
 	memset(hh->result.hitters, '\0', result_size);
 
@@ -64,6 +64,12 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 		hh->tree = NULL;
 		sketch_destroy(s);
 	}
+
+	#ifdef SPACE
+	uint64_t space = top_tree_size + result_size + 
+		sizeof(sketch_t *) * (logm-np2_base) + sizeof(hh_sketch_t);
+	fprintf(strerr, "Space usage excluding sketches: %"PRIu64" bytes\n", space);
+	#endif
 
 	return hh;
 }

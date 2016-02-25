@@ -161,13 +161,13 @@ Test(hh_const_sketch, hh_top_and_bottom_close_non_hh, .disabled=0) {
 	x[1000000] = 0.10;
 	x[38474]   = 0.10;
 	x[3]       = 0.10;
+	x[737449]  = 0.05023;
 
 	/**
 	 * High but not heavy hitters
 	 */
 	x[5983]    = 0.04955;
 	x[389449]  = 0.04812;
-	x[737449]  = 0.05023;
 
 	alias_t * a = alias_preprocess(m, x);
 
@@ -179,13 +179,13 @@ Test(hh_const_sketch, hh_top_and_bottom_close_non_hh, .disabled=0) {
 
 	heavy_hitter_t *result = heavy_hitter_query(hh);
 
-	cr_assert_eq(result->count, 7, "Heavy hitters (%d) should be 7", result->count);
+	cr_expect_eq(result->count, 8, "Heavy hitters (%d) should be 8", result->count);
 
-	uint32_t H[7] = {  // Expected heavy hitters
-		3, 134, 2345, 38474, 374298, 374299, 1000000
+	uint32_t H[8] = {  // Expected heavy hitters
+		3, 134, 2345, 38474, 374298, 374299, 737449, 1000000
 	};
 	for (uint32_t i = 0; i < result->count; i++) {
-		cr_assert_eq(
+		cr_expect_eq(
 				H[i], 
 				result->hitters[i], 
 				"Expected %"PRIu32" to be next heavy hitter got: %"PRIu32, 

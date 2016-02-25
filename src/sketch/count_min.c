@@ -21,16 +21,22 @@ count_min_t *count_min_create(hash_t *restrict hash, const uint8_t b,
 	const uint32_t dw       = w*d;
 	hash_init(&s->size.M, w);
 	const uint32_t M        = s->size.M;
+	const uint32_t size     = sizeof(uint64_t) * (dw + d);
 
-	s->table   = xmalloc(sizeof(uint64_t) * (dw + d));
+	s->table   = xmalloc(size);
 	s->hash    = hash;
 
-	memset(s->table, '\0', sizeof(uint64_t) * (dw + d));
+	memset(s->table, '\0', size);
 
 	for (i = 0; i < d; i++) {
 		s->table[i*(w+1)] |= ((uint64_t) hash->agen()) << 32;
 		s->table[i*(w+1)] |= (uint64_t) hash->bgen(M);
 	}
+
+	#ifdef SPACE
+	uint64_t space = sizeof(count_min_t) + size;
+	fprintf(strerr, "Space usage Count-Min Sketch: %"PRIu64" bytes\n", space);
+	#endif
 
 	return s;
 }

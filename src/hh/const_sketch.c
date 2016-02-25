@@ -15,18 +15,18 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 	uint32_t i, size;
 	hh_const_sketch_params_t *restrict params = 
 		(hh_const_sketch_params_t *)p->params;
-	const double   phi     = params->phi;
-	const double   epsilon = params->epsilon;
-	const double   delta   = params->delta;
-	const uint32_t m       = params->m;
-	const uint32_t b       = params->b;
-	const double error     = 0.25;
-	const uint8_t logm     = xceil_log2(m);
+	const double   phi         = params->phi;
+	const double   epsilon     = params->epsilon;
+	const double   delta       = params->delta;
+	const uint32_t m           = params->m;
+	const uint32_t b           = params->b;
+	const double error         = 0.25;
+	const uint8_t logm         = xceil_log2(m);
+	const uint32_t result_size = sizeof(uint32_t) * ceil(2./phi);
 	hh_const_sketch_t *restrict hh  = xmalloc( sizeof(hh_const_sketch_t) );
 	sketch_t          *restrict s   = sketch_create(params->f, p->hash, b,
-			(epsilon * p->hash->c),
-			((delta*(phi+epsilon))/(logm * 2)));
-	const uint32_t w      = ceil(sketch_width(s->sketch)/error);
+			(epsilon * p->hash->c), (double)((delta*phi)/(logm * 2.)));
+	const uint32_t w      = ceil(1. / (epsilon * error * b));
 	uint8_t np2_base      = MultiplyDeBruijnBitPosition2[
 		(uint32_t)(next_pow_2(w) * 0x077CB531U) >> 27
 	] + 1;
@@ -44,8 +44,8 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 	hh->result.count   = 0; 
 	hh->w              = w;
 	hh->hash           = p->hash;
-	hh->result.hitters = xmalloc( sizeof(uint32_t) * (2/phi) );
-	memset(hh->result.hitters, '\0', sizeof(uint32_t) * (2/phi));
+	hh->result.hitters = xmalloc( result_size);
+	memset(hh->result.hitters, '\0', result_size);
 	hh->sketch         = s;
 	hh->exact_cnt      = np2_base;
 	hh->tree           = xmalloc( sizeof(uint64_t) * size );
@@ -56,6 +56,12 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 		hh->tree[i] |= ((uint64_t) p->hash->agen()) << 32;
 		hh->tree[i] |= (uint64_t) p->hash->bgen(hh->M);
 	}
+
+	#ifdef SPACE
+	uint64_t space = size * sizeof(uint64_t) + result_size + 
+		sizeof(hh_const_sketch_t);
+	fprintf(strerr, "Space usage excluding sketches: %"PRIu64" bytes\n", space);
+	#endif
 
 	return hh;
 }
@@ -135,8 +141,9 @@ void hh_const_sketch_update(hh_const_sketch_t *restrict hh, const uint32_t idx,
 }
 
 // Query
-static void hh_sketch_query_bottom_recursive(hh_const_sketch_t *restrict hh, 
-		const uint8_t layer, uint32_t x, const double th) {
+static void hh_const_sketch_query_bottom_recursive(
+		hh_const_sketch_t *restrict hh, const uint8_t layer, uint32_t x, 
+		const double th) {
 	uint8_t i;
 	uint32_t offset, a, b, hash;
 	x *= 2;
@@ -160,13 +167,13 @@ static void hh_sketch_query_bottom_recursive(hh_const_sketch_t *restrict hh,
 					hh->result.count++;
 				}
 			} else {
-				hh_sketch_query_bottom_recursive(hh, layer+1, x, th);
+				hh_const_sketch_query_bottom_recursive(hh, layer+1, x, th);
 			}
 		}
 	}
 }
 
-static void hh_sketch_query_top_recursive(hh_const_sketch_t *restrict hh, 
+static void hh_const_sketch_query_top_recursive(hh_const_sketch_t *restrict hh, 
 		const uint8_t layer, uint32_t x, const double th) {
 	uint8_t i;
 	x *= 2;
@@ -182,10 +189,9 @@ static void hh_sketch_query_top_recursive(hh_const_sketch_t *restrict hh,
 
 				hh->result.count++;
 			} else if ( unlikely(layer == hh->exact_cnt-1) ) {
-				hh_sketch_query_bottom_recursive(hh, 0, x, sketch_thresshold(
-							hh->sketch, hh->norm, hh->params->epsilon, th));
+				hh_const_sketch_query_bottom_recursive(hh, 0, x, th);
 			} else {
-				hh_sketch_query_top_recursive(hh, layer+1, x, th);
+				hh_const_sketch_query_top_recursive(hh, layer+1, x, th);
 			}
 		}
 	}
@@ -194,7 +200,7 @@ static void hh_sketch_query_top_recursive(hh_const_sketch_t *restrict hh,
 heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *restrict hh) {
 	const double thresshold = hh->params->phi*hh->norm;
 
-	hh_sketch_query_top_recursive(hh, 0, 0, thresshold);
+	hh_const_sketch_query_top_recursive(hh, 0, 0, thresshold);
 
 	return &hh->result;
 }
