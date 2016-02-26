@@ -133,7 +133,7 @@ Test(hh_const_sketch, hh_top_and_bottom_close_non_hh, .disabled=0) {
 
 	hh_const_sketch_params_t params = {
 		.b       = 2,
-		.epsilon = (double)1/64,
+		.epsilon = (double)1/128,
 		.delta   = 0.2,
 		.m       = m,
 		.phi     = 0.05,

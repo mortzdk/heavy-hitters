@@ -93,6 +93,9 @@ uint64_t count_min_point(count_min_t *restrict s, const uint32_t i) {
 		estimate = (e < estimate) ? e : estimate;
 	}
 
+	// The heavy hitter implementation does not support integer > 2^63-1
+	assert( (int64_t) estimate > 0 );
+
 	return estimate;
 }
 

@@ -189,9 +189,9 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *restrict hh,
 
 // Query
 heavy_hitter_t *hh_sketch_query(hh_sketch_t *restrict hh) {
-	const double thresshold = hh->params->phi*hh->norm;
+	const double threshold = hh->params->phi*hh->norm;
 
-	hh_sketch_query_top_recursive(hh, 0, 0, thresshold);
+	hh_sketch_query_top_recursive(hh, 0, 0, threshold);
 
 	return &hh->result;
 }

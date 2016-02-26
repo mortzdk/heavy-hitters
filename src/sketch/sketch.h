@@ -52,10 +52,10 @@ sketch_t *sketch_create(sketch_func_t *restrict f, hash_t *restrict hash,
 void      sketch_destroy(sketch_t *restrict s);
 void      sketch_update(sketch_t *restrict s, const uint32_t i, 
 		const int64_t c);
-uint64_t  sketch_point(sketch_t *restrict s, const uint32_t i);
+int64_t  sketch_point(sketch_t *restrict s, const uint32_t i);
 bool      sketch_above_thresshold(sketch_t *restrict s, const uint32_t i, 
 		const uint64_t th);
-uint64_t  sketch_range_sum(sketch_t *restrict s, const uint32_t l, 
+int64_t  sketch_range_sum(sketch_t *restrict s, const uint32_t l, 
 		const uint32_t r);
 double sketch_thresshold(sketch_t *restrict s, uint64_t l1, double epsilon, 
 		double th);

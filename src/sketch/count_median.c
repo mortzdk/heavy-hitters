@@ -232,7 +232,7 @@ int64_t count_median_point(count_median_t *restrict s, const uint32_t i) {
 	const uint8_t  M = s->size.M;
 
 	for (di = 0; di < d; di++) {
-		wi       = s->hash->hash(w, M, i, (uint32_t)(s->table[di*(w+2)]>>32), 
+		wi = s->hash->hash(w, M, i, (uint32_t)(s->table[di*(w+2)]>>32), 
 		          	(uint32_t)s->table[di*(w+2)]);
 
 		assert( wi < w );

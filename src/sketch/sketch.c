@@ -53,7 +53,7 @@ void sketch_update(sketch_t *restrict s, const uint32_t i, const int64_t c) {
 	s->funcs->update(s->sketch, i, c);
 }
 
-uint64_t sketch_point(sketch_t *restrict s, const uint32_t i) {
+int64_t sketch_point(sketch_t *restrict s, const uint32_t i) {
 	return s->funcs->point(s->sketch, i);
 }
 
@@ -62,7 +62,7 @@ bool sketch_above_thresshold(sketch_t *restrict s, const uint32_t i,
 	return s->funcs->above(s->sketch, i, th);
 }
 
-uint64_t sketch_range_sum(sketch_t *restrict s, const uint32_t l, 
+int64_t sketch_range_sum(sketch_t *restrict s, const uint32_t l, 
 		const uint32_t r) {
 	return s->funcs->rangesum(s->sketch, l , r);
 }
