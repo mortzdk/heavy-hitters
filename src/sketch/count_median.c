@@ -181,7 +181,7 @@ count_median_t *count_median_create(hash_t *restrict hash, const uint8_t b,
 
 	#ifdef SPACE
 	uint64_t space = sizeof(count_median_t) + table_size + median_size;
-	fprintf(strerr, "Space usage Count-Median Sketch: %"PRIu64" bytes\n", space);
+	fprintf(stderr, "Space usage Count-Median Sketch: %"PRIu64" bytes\n", space);
 	#endif
 
 	return s;

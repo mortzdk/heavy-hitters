@@ -35,7 +35,7 @@ count_min_t *count_min_create(hash_t *restrict hash, const uint8_t b,
 
 	#ifdef SPACE
 	uint64_t space = sizeof(count_min_t) + size;
-	fprintf(strerr, "Space usage Count-Min Sketch: %"PRIu64" bytes\n", space);
+	fprintf(stderr, "Space usage Count-Min Sketch: %"PRIu64" bytes\n", space);
 	#endif
 
 	return s;

@@ -72,7 +72,7 @@ int main (int argc, char **argv) {
 				delta = strtod(optarg, NULL);
 				break;
 			case 'm':
-				m = strtol(optarg, NULL, 10);
+				m = strtoll(optarg, NULL, 10);
 				break;
 			case 'p':
 				phi = strtod(optarg, NULL);
@@ -93,6 +93,15 @@ int main (int argc, char **argv) {
 		printusage(argv);
 		exit(EXIT_FAILURE);
 	}
+
+	printf("===========\n");
+	printf("Parameters:\n");
+	printf("===========\n");
+	printf("m:       %"PRIu32"\n", m);
+	printf("delta:   %lf\n", delta);
+	printf("epsilon: %lf\n", epsilon);
+	printf("phi:     %lf\n", phi);
+	printf("===========\n\n");
 
 	stream = stream_open(filename);
 	stream_set_data_size(stream, 1048576);

@@ -19,7 +19,7 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	const uint8_t logm       = xceil_log2(m);
 	const double   phi       = params->phi;
 	const double   epsilon   = params->epsilon;
-	const double   delta     = (double)((params->delta*phi)/(2.*logm));
+	double   delta           = (double)((params->delta*phi)/(2.*logm));
 	const uint32_t b         = params->b;
 	hh_sketch_t *restrict hh = xmalloc( sizeof(hh_sketch_t) );
 	sketch_t    *restrict s  = sketch_create(params->f, p->hash, b, epsilon, 
@@ -43,7 +43,7 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	// Find the base (log2) of the next power of two of w*d
 	np2_base        = MultiplyDeBruijnBitPosition2[
 		(uint32_t)(next_pow_2(w*d) * 0x077CB531U) >> 27
-	] + 1;
+	]; //+ 1; We only do exact when it is below size of sketch
 
 	if (np2_base > logm) {
 		np2_base = logm;
@@ -55,6 +55,7 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	hh->top_cnt   = np2_base;
 
 	if ( np2_base < logm ) {
+		delta    = (double)((params->delta*phi)/(2.*(logm-np2_base)));
 		hh->tree = xmalloc( sizeof(sketch_t *) * (logm-np2_base) );
 		for (i = 0; i < (logm-1)-np2_base; i++) {
 			hh->tree[i] = sketch_create(params->f, p->hash, b, epsilon, delta);
@@ -68,7 +69,7 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	#ifdef SPACE
 	uint64_t space = top_tree_size + result_size + 
 		sizeof(sketch_t *) * (logm-np2_base) + sizeof(hh_sketch_t);
-	fprintf(strerr, "Space usage excluding sketches: %"PRIu64" bytes\n", space);
+	fprintf(stderr, "Space usage excluding sketches: %"PRIu64" bytes\n\n", space);
 	#endif
 
 	return hh;

@@ -1,7 +1,8 @@
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 #include <assert.h>
 #include <math.h>
-#include <stdint.h>
-#include <string.h>
 
 #include "xutil.h"
 #include "hash.h"
@@ -29,7 +30,7 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 	const uint32_t w      = ceil(1. / (epsilon * error * b));
 	uint8_t np2_base      = MultiplyDeBruijnBitPosition2[
 		(uint32_t)(next_pow_2(w) * 0x077CB531U) >> 27
-	] + 1;
+	]; //+ 1; We only do exact when it is below size of sketch
 
 	hash_init(&hh->M, w);
 
@@ -60,7 +61,7 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 	#ifdef SPACE
 	uint64_t space = size * sizeof(uint64_t) + result_size + 
 		sizeof(hh_const_sketch_t);
-	fprintf(strerr, "Space usage excluding sketches: %"PRIu64" bytes\n", space);
+	fprintf(stderr, "Space usage excluding sketches: %"PRIu64" bytes\n\n", space);
 	#endif
 
 	return hh;

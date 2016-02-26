@@ -69,8 +69,6 @@ void *stream_read(stream_t *s){
 	char    *data     = d->data;
 	char     buf[buf_size];
 
-//	printf("MEMSET: %lu\n", (1+d->size)*d->type);
-
 	memset(d->data, '\0', ((1+d->size)*d->type));
 
 	d->length = 0;
@@ -86,7 +84,7 @@ void *stream_read(stream_t *s){
 		d->length += err;
     }
 
-	if ( d->length < d->size*d->type && err != 0 ) {
+	if ( likely( (d->length < d->size*d->type && err != 0) ) ) {
 		err = read(s->fd, buf, d->size*d->type - d->length);
 
         if ( unlikely(err == -1) ) {
@@ -100,14 +98,11 @@ void *stream_read(stream_t *s){
 	}
 
 	if ( unlikely(err == 0) ) {
-		if ( (err = lseek(s->fd, 0, SEEK_SET)) < 0 ) {
+		if ( unlikely( ((err = lseek(s->fd, 0, SEEK_SET)) < 0) ) ) {
 			xerror(strerror(errno), __LINE__, __FILE__);
 		}
 		s->eof = true;
 	}
-
-//	printf("Alloced: %"PRIu64"\n", d->size * d->type+1);
-//	printf("Length: %"PRIu32"\n", d->length);
 
 	return d->data;
 }
@@ -117,12 +112,12 @@ bool stream_eof(stream_t *s) {
 }
 
 void stream_close(stream_t *s) {
-	if ( NULL != s ) {
-		if ( close(s->fd) < 0) {
+	if ( likely( (NULL != s) ) ) {
+		if ( unlikely( close(s->fd) < 0 ) ) {
 			xerror(strerror(errno), __LINE__, __FILE__);
 		}
 
-		if ( NULL != s->data.data ) {
+		if ( likely( (NULL != s->data.data) ) ) {
 			free(s->data.data);
 			s->data.data = NULL;
 		}
