@@ -43,7 +43,7 @@ int64_t count_median_range_sum(count_median_t *restrict s, const uint32_t l,
 // Heavy hitter thresshold
 inline double count_median_heavy_hitter_thresshold(uint64_t l1, 
 		double epsilon, double th) {
-	return th + epsilon*l1;	
+	return th - epsilon*l1;	
 }
 
 #endif
