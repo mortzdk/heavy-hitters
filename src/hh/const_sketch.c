@@ -27,7 +27,7 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 	hh_const_sketch_t *restrict hh  = xmalloc( sizeof(hh_const_sketch_t) );
 	sketch_t          *restrict s   = sketch_create(params->f, p->hash, b,
 			(epsilon * p->hash->c), (double)((delta*phi)/(logm * 2.)));
-	const uint32_t w      = ceil(1. / (epsilon * error * b));
+	const uint32_t w      = ceil(1. / (epsilon * error)); // b/(epsilon*error*b)
 	uint8_t np2_base      = MultiplyDeBruijnBitPosition2[
 		(uint32_t)(next_pow_2(w) * 0x077CB531U) >> 27
 	]; //+ 1; We only do exact when it is below size of sketch
