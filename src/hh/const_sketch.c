@@ -21,7 +21,7 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 	const double   delta       = params->delta;
 	const uint32_t m           = params->m;
 	const uint32_t b           = params->b;
-	const double error         = 0.25;
+	const double error         = 0.25; // 1./4.
 	const uint8_t logm         = xceil_log2(m);
 	const uint32_t result_size = sizeof(uint32_t) * ceil(2./phi);
 	hh_const_sketch_t *restrict hh  = xmalloc( sizeof(hh_const_sketch_t) );
