@@ -22,16 +22,18 @@ CFLAGS = -MMD -pipe -fno-exceptions -fstack-protector\
 
 CVER = -std=c99
 
-SRC_FOLDER   = src
-BUILD_FOLDER = build
-BIN_FOLDER   = bin
-TESTS_FOLDER = tests
-
 DIR = $(shell pwd)
 
+SRC_FOLDER     = ${DIR}/src
+BUILD_FOLDER   = ${DIR}/build
+BIN_FOLDER     = ${DIR}/bin
+TESTS_FOLDER   = ${DIR}/tests
+MODULES_FOLDER = ${DIR}/modules
+
 # FLAGS
-FLAGS_GENERAL = -I${DIR}/${SRC_FOLDER} 
-FLAGS_LD      = -Wl,-z,relro -Wl,-z,now -lm
+FLAGS_GENERAL = -I${SRC_FOLDER} -I${MODULES_FOLDER}
+FLAGS_LD      = -Wl,-z,relro -Wl,-z,now -lm -L ${MODULES_FOLDER}/libmeasure \
+				-lmeasure -Wl,-rpath=${MODULES_FOLDER}/libmeasure
 LD_TEST       = -lcriterion
 FLAGS_TEST    = -I ${SRC_FOLDER}
 
