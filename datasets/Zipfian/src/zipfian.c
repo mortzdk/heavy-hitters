@@ -87,18 +87,6 @@ int main (int argc, char**argv) {
 		}
 	}
 
-
-	printf("===========\n");
-	printf("Parameters:\n");
-	printf("===========\n");
-	printf("N:        %"PRIu64"\n", N);
-	printf("Alpha:    %lf\n", alpha);
-	printf("Count:    %"PRIu64"\n", count);
-	printf("Filename: %s\n", filename);
-	printf("Seed1:    %"PRIu32"\n", I1);
-	printf("Seed2:    %"PRIu32"\n", I2);
-	printf("===========\n\n");
-
 	table = xmalloc( sizeof(double) * N );
 	res   = xmalloc( sizeof(uint64_t) * BUFFER );
 	file  = fopen(filename, "wb");
@@ -108,6 +96,13 @@ int main (int argc, char**argv) {
 		free(table);
 		xerror("Failed to open/create file.", __LINE__, __FILE__);
 	}
+
+	fprintf(file, "#N:        %"PRIu64"\n", N);
+	fprintf(file, "#Alpha:    %lf\n", alpha);
+	fprintf(file, "#Count:    %"PRIu64"\n", count);
+	fprintf(file, "#Filename: %s\n", filename);
+	fprintf(file, "#Seed1:    %"PRIu32"\n", I1);
+	fprintf(file, "#Seed2:    %"PRIu32"\n", I2);
 
 	for (i = 1; i <= N; i++) {
 		table[i-1] = pow( (double)i, alpha );
