@@ -17,9 +17,9 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	hh_sketch_params_t *restrict params = (hh_sketch_params_t *)p->params;
 	const uint32_t m         = params->m;
 	const uint8_t logm       = xceil_log2(m);
-	const double   phi       = params->phi;
-	const double   epsilon   = params->epsilon;
-	double   delta           = (double)((params->delta*phi)/(2.*logm));
+	const double phi         = params->phi;
+	const double epsilon     = params->epsilon;
+	double delta             = (double)((params->delta*phi)/(2.*logm));
 	const uint32_t b         = params->b;
 	hh_sketch_t *restrict hh = xmalloc( sizeof(hh_sketch_t) );
 	sketch_t    *restrict s  = sketch_create(params->f, p->hash, b, epsilon, 

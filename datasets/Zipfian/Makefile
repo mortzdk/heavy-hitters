@@ -9,7 +9,7 @@ CC = gcc
 PROFILE = -g -DRUPIFY
 DEBUG = -g
 RELEASE = -O3 -DNDEBUG
-EXEC = ${DEBUG}
+EXEC = ${RELEASE}
 
 # Compiler options
 CFLAGS = -MMD -pipe -fno-exceptions -fstack-protector\
@@ -28,20 +28,15 @@ SRC_FOLDER     = ${DIR}/src
 BUILD_FOLDER   = ${DIR}/build
 BIN_FOLDER     = ${DIR}/bin
 TESTS_FOLDER   = ${DIR}/tests
-MODULES_FOLDER = ${DIR}/modules
 
 # FLAGS
-FLAGS_GENERAL = -I${SRC_FOLDER} -I${MODULES_FOLDER}
-FLAGS_LD      = -Wl,-z,relro -Wl,-z,now -lm -L ${MODULES_FOLDER}/libmeasure \
-				-lmeasure -Wl,-rpath=${MODULES_FOLDER}/libmeasure
+FLAGS_GENERAL = -I${SRC_FOLDER}
+FLAGS_LD      = -Wl,-z,relro -Wl,-z,now -lm
 LD_TEST       = -lcriterion
 FLAGS_TEST    = -I ${SRC_FOLDER}
 
-# First level of directories in src folder
-SRC_DIRS := $(subst /.,,$(subst ${SRC_FOLDER},,$(wildcard ${SRC_FOLDER}/*/.)))
-
 # all c source files
-SRC   := $(shell find ${SRC_FOLDER} -name "*.c" -type f;)
+SRC   := $(shell find -L ${SRC_FOLDER} -name "*.c" -type f;)
 
 # all test files
 TESTS := $(shell find ${TESTS_FOLDER} -name "test_*.c" -type f;)
@@ -70,9 +65,9 @@ LOG = VALGRIND_LOG
 # executeable name
 ifeq (${EXEC}, -g -DRUPIFY)
 	NAME = profile
-	FILTER = ${BUILD_FOLDER}/main.o
+	FILTER = ${BUILD_FOLDER}/zipfian.o
 else
-	NAME = main
+	NAME = zipfian
 	FILTER = ${BUILD_FOLDER}/profile.o
 endif
 
@@ -88,7 +83,6 @@ test: bin build $(TEST_NAMES) ${addprefix run_,${TEST_NAMES}}
 build:
 	echo $(wildcard ${SRC_FOLDER}/*/.);
 	if [[ ! -e ${BUILD_FOLDER} ]]; then mkdir -p ${BUILD_FOLDER}; fi
-	mkdir $(addprefix $(BUILD_FOLDER), ${SRC_DIRS})
 
 bin:
 	if [[ ! -e ${BIN_FOLDER} ]]; then mkdir -p ${BIN_FOLDER}; fi
@@ -156,8 +150,8 @@ clean:
 	@echo ================ [Cleaning $(NAME)] ================
 	@echo
 	rm -f ${OBJ} ${TEST} ${DEPS} ${ASM} ${addprefix bin/,${TEST_NAMES}}
-	rm -f gmon.out callgrind.* $(LOG) ${TESTS:.c=} main profile
-	if [[ -d build ]] ; then rmdir --ignore-fail-on-non-empty $(addprefix ${BUILD_FOLDER}, ${SRC_DIRS}); rmdir --ignore-fail-on-non-empty build; fi
+	rm -f gmon.out callgrind.* $(LOG) ${TESTS:.c=} zipfian profile
+	if [[ -d build ]] ; then rmdir --ignore-fail-on-non-empty build; fi
 	if [[ -d bin ]] ; then rmdir --ignore-fail-on-non-empty bin; fi
 	#$(MAKE) -C libmeasure clean
 

@@ -29,11 +29,12 @@ typedef struct {
 } hh_t;
 
 typedef struct {
-	hash_t *restrict hash;
-	void   *restrict params;
+	hash_t    *restrict hash;
+	void      *restrict params;
+	hh_func_t *restrict f;
 } heavy_hitter_params_t;
 
-hh_t *heavy_hitter_create(hh_func_t *restrict f, void *restrict params);
+hh_t *heavy_hitter_create(heavy_hitter_params_t *restrict params);
 
 // Destuction
 void heavy_hitter_destroy(hh_t *restrict hh);

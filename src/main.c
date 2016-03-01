@@ -208,23 +208,30 @@ int main (int argc, char **argv) {
 
 	heavy_hitter_params_t p_min = {
 		.hash   = &multiplyShift,
-		.params = &params_min
+		.params = &params_min,
+		.f      = &hh_sketch,
 	};
 	heavy_hitter_params_t p_median = {
 		.hash   = &multiplyShift,
-		.params = &params_median
+		.params = &params_median,
+		.f      = &hh_sketch,
+	};
+	heavy_hitter_params_t p_const = {
+		.hash   = &multiplyShift,
+		.params = &params_min,
+		.f      = &hh_const_sketch,
 	};
 
 	for (k = 0; k < impl_cnt; k++) {
 		switch (alg[k].impl) {
 			case MIN:
-				impl[k] = heavy_hitter_create(&hh_sketch, &p_min);
+				impl[k] = heavy_hitter_create(&p_min);
 				break;
 			case MEDIAN:
-				impl[k] = heavy_hitter_create(&hh_sketch, &p_median);
+				impl[k] = heavy_hitter_create(&p_median);
 				break;
 			case CONST:
-				impl[k] = heavy_hitter_create(&hh_const_sketch, &p_min);
+				impl[k] = heavy_hitter_create(&p_const);
 				break;
 			default:
 				xerror("Unknown heavy hitter implementation.", __LINE__, __FILE__);

@@ -22,11 +22,11 @@ hh_func_t hh_const_sketch = {
 	.query    = (hh_query)   hh_const_sketch_query,
 };
 
-hh_t *heavy_hitter_create(hh_func_t *restrict f, void *restrict params) {
+hh_t *heavy_hitter_create(heavy_hitter_params_t *restrict params) {
 	hh_t *hh   = xmalloc( sizeof(hh_t) ); 
 
-	hh->funcs  = f;
-	hh->hh     = f->create(params);
+	hh->funcs  = params->f;
+	hh->hh     = hh->funcs->create(params);
 
 	return hh;
 }
