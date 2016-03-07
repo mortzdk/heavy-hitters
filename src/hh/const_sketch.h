@@ -26,7 +26,7 @@ typedef struct {
 	uint8_t                   exact_cnt;
 	uint32_t                  w;
 	uint8_t                   M;
-	short                     logm;
+	uint8_t                   logm;
 	uint64_t                  norm;
 	hh_const_sketch_params_t *restrict params;
 	heavy_hitter_t            result;

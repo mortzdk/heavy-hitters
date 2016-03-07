@@ -57,8 +57,8 @@ bool      sketch_above_thresshold(sketch_t *restrict s, const uint32_t i,
 		const uint64_t th);
 int64_t  sketch_range_sum(sketch_t *restrict s, const uint32_t l, 
 		const uint32_t r);
-double sketch_thresshold(sketch_t *restrict s, uint64_t l1, double epsilon, 
-		double th);
+double sketch_thresshold(sketch_t *restrict s, const uint64_t l1, 
+		const double epsilon, const double th);
 
 /**
  * Structures holding function pointers for different sketch implementations

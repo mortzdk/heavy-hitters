@@ -6,10 +6,13 @@ CC = gcc
 #CC = clang
 
 # Debug or Release
-PROFILE = -g -DRUPIFY
+PROFILE = -g -DRUPIFY -DNDEBUG
 DEBUG = -g
 RELEASE = -O3 -DNDEBUG
-EXEC = ${DEBUG}
+EXEC = ${RELEASE}
+
+# Which binary to compile
+NAME = main profile measure
 
 # Compiler options
 CFLAGS = -MMD -pipe -fno-exceptions -fstack-protector\
@@ -68,13 +71,13 @@ DEPS = ${ALL:%.o=%.d}
 LOG = VALGRIND_LOG
 
 # executeable name
-ifeq (${EXEC}, -g -DRUPIFY)
-	NAME = profile
-	FILTER = ${BUILD_FOLDER}/main.o
-else
-	NAME = main
-	FILTER = ${BUILD_FOLDER}/profile.o
-endif
+#ifeq (${EXEC}, -g -DRUPIFY)
+#	NAME = profile
+#	FILTER = ${BUILD_FOLDER}/main.o
+#else
+#	FILTER = ${BUILD_FOLDER}/profile.o
+#endif
+
 
 # what we are trying to build
 all:  build $(NAME)
@@ -98,8 +101,8 @@ $(NAME): ${OBJ}
 	@echo ================ [Linking] ================
 	@echo
 	$(CC) ${CFLAGS} ${CVER} -o $@ \
-		$(filter-out ${FILTER}, $^) ${FLAGS_LD} \
-		$(FLAGS_GENERAL)
+		$(filter-out $(filter-out ${BUILD_FOLDER}/$@.o, $(addsuffix .o, $(addprefix ${BUILD_FOLDER}/, ${NAME}))), $^) \
+		${FLAGS_LD} $(FLAGS_GENERAL)
 	@echo
 	@echo ================ [$@ compiled succesfully] ================
 	@echo

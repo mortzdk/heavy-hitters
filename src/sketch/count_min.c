@@ -58,43 +58,46 @@ void count_min_destroy(count_min_t *restrict s) {
 void count_min_update(count_min_t *restrict s, const uint32_t i, 
 		const int64_t c) {
 	uint32_t di, wi;
-	const uint32_t w = s->size.w;
-	const uint8_t  M = s->size.M;
+	const uint32_t w         = s->size.w;
+	const uint8_t  M         = s->size.M;
+	uint64_t *restrict table = s->table;
+	hash hash                = s->hash->hash;                  
 
 	for (di = 0; di < s->size.d; di++) {
-		wi = s->hash->hash(w, M, i, (uint32_t)(s->table[di*(w+1)]>>32), 
-				(uint32_t)(s->table[di*(w+1)]));
+		wi = hash(w, M, i, (uint32_t)(table[di*(w+1)]>>32), 
+				(uint32_t)(table[di*(w+1)]));
 
 		assert( wi < w );
 
-		s->table[COUNT_MIN_INDEX(w, di, wi)] += c;
+		table[COUNT_MIN_INDEX(w, di, wi)] += c;
 	}
 }
 
 uint64_t count_min_point(count_min_t *restrict s, const uint32_t i) {
 	uint32_t di, wi;
-	const uint32_t w = s->size.w;
-	const uint8_t  M = s->size.M;
 	uint64_t estimate, e;
+	const uint32_t w         = s->size.w;
+	const uint8_t  M         = s->size.M;
+	uint64_t *restrict table = s->table;
+	hash hash                = s->hash->hash;                  
 
-	wi = s->hash->hash(w, M, i, (uint32_t)(s->table[0]>>32), 
-			(uint32_t)s->table[0]);
+	wi = hash(w, M, i, (uint32_t)(table[0]>>32), (uint32_t)table[0]);
 
 	assert( wi < w );
 
-	estimate  = s->table[COUNT_MIN_INDEX(w, 0, wi)];
+	estimate  = table[COUNT_MIN_INDEX(w, 0, wi)];
 	for (di = 1; di < s->size.d; di++) {
-		wi       = s->hash->hash(w, M, i, (uint32_t)(s->table[di*(w+1)]>>32), 
-		          	(uint32_t)s->table[di*(w+1)]);
+		wi = hash(w, M, i, (uint32_t)(table[di*(w+1)]>>32), 
+		          	(uint32_t)table[di*(w+1)]);
 
 		assert( wi < w );
 
-		e        = s->table[COUNT_MIN_INDEX(w, di, wi)];
+		e        = table[COUNT_MIN_INDEX(w, di, wi)];
 		estimate = (e < estimate) ? e : estimate;
 	}
 
 	// The heavy hitter implementation does not support integer > 2^63-1
-	assert( (int64_t) estimate > 0 );
+	assert( estimate < ((uint64_t)1 << 63) );
 
 	return estimate;
 }
@@ -102,16 +105,18 @@ uint64_t count_min_point(count_min_t *restrict s, const uint32_t i) {
 bool count_min_above_thresshold(count_min_t *restrict s, const uint32_t i, 
 		const uint64_t th) {
 	uint32_t di, wi;
-	const uint32_t w = s->size.w;
-	const uint32_t M = s->size.M;
+	const uint32_t w         = s->size.w;
+	const uint32_t M         = s->size.M;
+	uint64_t *restrict table = s->table;
+	hash hash                = s->hash->hash;                  
 
 	for (di = 0; di < s->size.d; di++) {
-		wi       = s->hash->hash(w, M, i, (uint32_t)(s->table[di*(w+1)]>>32), 
-		          	(uint32_t)s->table[di*(w+1)]);
+		wi = hash(w, M, i, (uint32_t)(table[di*(w+1)]>>32), 
+		          	(uint32_t)table[di*(w+1)]);
 
 		assert( wi < w );
 
-		if (s->table[COUNT_MIN_INDEX(w, di, wi)] < th) {
+		if (table[COUNT_MIN_INDEX(w, di, wi)] < th) {
 			return false;
 		}
 	}
@@ -130,5 +135,5 @@ uint64_t count_min_range_sum(count_min_t *restrict s, const uint32_t l,
 	return sum;
 }
 
-extern inline double count_min_heavy_hitter_thresshold(uint64_t l1, 
-		double epsilon, double th);
+extern inline double count_min_heavy_hitter_thresshold(const uint64_t l1, 
+		const double epsilon, const double th);

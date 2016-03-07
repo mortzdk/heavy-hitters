@@ -67,7 +67,7 @@ int64_t sketch_range_sum(sketch_t *restrict s, const uint32_t l,
 	return s->funcs->rangesum(s->sketch, l , r);
 }
 
-double sketch_thresshold(sketch_t *restrict s, uint64_t l1, double epsilon, 
-		double th) {
+double sketch_thresshold(sketch_t *restrict s, const uint64_t l1, 
+		const double epsilon, const double th) {
 	return s->funcs->thresshold(l1, epsilon, th);
 }

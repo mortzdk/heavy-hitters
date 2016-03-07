@@ -11,7 +11,7 @@
 
 // Helpers
 #define COUNT_MIN_INDEX(width, depth, index) \
-	( 1 + ( (1+width) * depth ) + index )
+	( 1 + ( (1+(width)) * (depth) ) + (index) )
 
 // Structures
 typedef struct {
@@ -40,8 +40,8 @@ uint64_t count_min_range_sum(count_min_t *restrict s, const uint32_t l,
 		const uint32_t r);
 
 // Heavy hitter thresshold
-inline double count_min_heavy_hitter_thresshold(uint64_t l1, 
-		double epsilon, double th) {
+inline double count_min_heavy_hitter_thresshold(const uint64_t l1, 
+		const double epsilon, const double th) {
 	(void) epsilon;
 	(void) l1;
 	return th;	

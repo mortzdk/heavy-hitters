@@ -11,7 +11,7 @@
 
 // Helpers
 #define COUNT_MEDIAN_INDEX(width, depth, index) \
-	( 2 + ( (2+width) * depth ) + index )
+	( 2 + ( (2+(width)) * (depth) ) + (index) )
 
 // Structures
 typedef struct {
@@ -41,8 +41,8 @@ int64_t count_median_range_sum(count_median_t *restrict s, const uint32_t l,
 		const uint32_t r);
 
 // Heavy hitter thresshold
-inline double count_median_heavy_hitter_thresshold(uint64_t l1, 
-		double epsilon, double th) {
+inline double count_median_heavy_hitter_thresshold(const uint64_t l1, 
+		const double epsilon, const double th) {
 	return th - epsilon*l1;	
 }
 

@@ -158,7 +158,7 @@ count_median_t *count_median_create(hash_t *restrict hash, const uint8_t b,
 	count_median_t *restrict s = xmalloc(sizeof(count_median_t));
 	register const uint32_t w  = s->size.w = ceil(b / (epsilon*epsilon)) * hash->c;
 	register const uint32_t d  = s->size.d = ceil( log((1./delta)) * 
-			((double)((uint32_t)(b-1)*b << 3)/pow(b-2, 2)));
+		1);//	((double)((uint32_t)(b-1)*b << 3)/pow(b-2, 2)));
 	hash_init(&s->size.M, w);
 	const uint32_t table_size  = sizeof(int64_t) * ((w+2)*d);
 	const uint32_t median_size = sizeof(int64_t) * d;
@@ -210,40 +210,46 @@ void count_median_update(count_median_t *restrict s, const uint32_t i,
 		const int64_t c) {
 	int64_t wi;
 	uint32_t di;
-	const uint32_t w = s->size.w;
-	const uint8_t  M = s->size.M;
+	const uint32_t d        = s->size.d;
+	const uint32_t w        = s->size.w;
+	const uint8_t  M        = s->size.M;
+	int64_t *restrict table = s->table;
+	hash hash               = s->hash->hash;
 
-	for (di = 0; di < s->size.d; di++) {
-		wi = s->hash->hash(w, M, i, (uint32_t)(s->table[di*(w+2)]>>32), 
-				(uint32_t)(s->table[di*(w+2)]));
+	for (di = 0; di < d; di++) {
+		wi = hash(w, M, i, (uint32_t)(table[di*(w+2)]>>32), 
+				(uint32_t)(table[di*(w+2)]));
 
 		assert( wi < w );
 
-		s->table[COUNT_MEDIAN_INDEX(w, di, wi)] += c * sign(i, 
-				(uint8_t)(s->table[di*(w+2)+1]>>32), 
-				(uint8_t)(s->table[di*(w+2)+1]));
+		table[COUNT_MEDIAN_INDEX(w, di, wi)] += c * sign(i, 
+				(uint8_t)(table[di*(w+2)+1]>>32), 
+				(uint8_t)(table[di*(w+2)+1]));
 	}
 }
 
 int64_t count_median_point(count_median_t *restrict s, const uint32_t i) {
 	uint32_t di, wi;
-	const uint32_t d = s->size.d;
-	const uint32_t w = s->size.w;
-	const uint8_t  M = s->size.M;
+	const uint32_t d         = s->size.d;
+	const uint32_t w         = s->size.w;
+	const uint8_t  M         = s->size.M;
+	int64_t *restrict table  = s->table;
+	int64_t *restrict median = s->median;
+	hash hash                = s->hash->hash;
 
 	for (di = 0; di < d; di++) {
-		wi = s->hash->hash(w, M, i, (uint32_t)(s->table[di*(w+2)]>>32), 
-		          	(uint32_t)s->table[di*(w+2)]);
+		wi = hash(w, M, i, (uint32_t)(table[di*(w+2)]>>32), 
+		          	(uint32_t)table[di*(w+2)]);
 
 		assert( wi < w );
 
-		s->median[di] = s->table[COUNT_MEDIAN_INDEX(w, di, wi)] * sign(i, 
-				(uint8_t)(s->table[di*(w+2)+1]>>32), 
-				(uint8_t)(s->table[di*(w+2)+1]));
+		median[di] = table[COUNT_MEDIAN_INDEX(w, di, wi)] * sign(i, 
+				(uint8_t)(table[di*(w+2)+1]>>32), 
+				(uint8_t)(table[di*(w+2)+1]));
 	}
 
-//	return quick_select(s->median, d);
-	return wirth(s->median, d);
+//	return quick_select(median, d);
+	return wirth(median, d);
 }
 
 int64_t count_median_range_sum(count_median_t *restrict s, const uint32_t l, 
@@ -257,5 +263,5 @@ int64_t count_median_range_sum(count_median_t *restrict s, const uint32_t l,
 	return sum;
 }
 
-extern inline double count_median_heavy_hitter_thresshold(uint64_t l1, 
-		double epsilon, double th);
+extern inline double count_median_heavy_hitter_thresshold( const uint64_t l1, 
+		const double epsilon, const double th);

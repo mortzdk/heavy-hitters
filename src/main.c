@@ -48,6 +48,7 @@ typedef struct {
 typedef enum {
 	NUST,
 	DARPA,
+	BINARY,
 } format_t;
 
 typedef enum {
@@ -61,7 +62,7 @@ typedef struct {
 	int       index;
 } alg_t;
 
-void printusage(char *argv[]) {
+static void printusage(char *argv[]) {
     fprintf(stderr, "Usage: %s \n"
             "\t[-f --file     [char *]   {REQUIRED} (Filename to hand to stream)]\n"
             "\t[-e --epsilon  [double]   {OPTIONAL} (Epsilon value)]\n"
@@ -155,6 +156,9 @@ int main (int argc, char **argv) {
 				if ((NULL != strstr(filename, "DARPA"))) {
 					format = DARPA;
 				}
+				if ((NULL != strstr(filename, "Zipfian"))) {
+					format = BINARY;
+				}
 				break;
 			case 'h':
 			default:
@@ -166,6 +170,11 @@ int main (int argc, char **argv) {
 	if ( NULL == filename ) {
 		printusage(argv);
 		exit(EXIT_FAILURE);
+	}
+
+	if ( epsilon >= phi ) {
+		free(filename);
+		xerror("Epsilon cannot be bigger than phi", __LINE__, __FILE__);
 	}
 
 	if ( impl_cnt == 0 ) {
@@ -234,172 +243,227 @@ int main (int argc, char **argv) {
 				impl[k] = heavy_hitter_create(&p_const);
 				break;
 			default:
+				stream_close(stream);
+				free(filename);
 				xerror("Unknown heavy hitter implementation.", __LINE__, __FILE__);
 		}
 	}
 
 	printf("Reading Stream");
-	do {
-		printf(".");
-		fflush(stdout);
-		buffer = stream_read(stream);
+	if ( format == BINARY ) {
 		i = 0;
 		j = 0;
-
 		do {
-			// Find end of line
-			while ( i < stream->data.length && buffer[i] != '\n') {
+			printf(".");
+			fflush(stdout);
+			buffer = stream_read(stream);
+
+			while ( buffer[j] == '#' ) {
+				while ( i < stream->data.length && buffer[i] != '\n') {
+					i++;
+				}
 				i++;
+				j = i;
 			}
 
-			if ( i >= stream->data.length ) {
-				break;
-			}
+			i = stream->data.length;
 
-			// If we have leftovers from last buffer
 			if ( buf_size > 0 && j == 0 ) {
-				memcpy(&buf[buf_size-1], &buffer[j], i-j);
-				string = buf;
+				memcpy(&buf[buf_size], &buffer[j], sizeof(uint32_t)-buf_size);
+				j += sizeof(uint32_t)-buf_size;
+
+				uid = (uint32_t)((uint8_t)buf[3] << 24)
+				    | (uint32_t)((uint8_t)buf[2] << 16)
+				    | (uint32_t)((uint8_t)buf[1] << 8 )
+					| (uint32_t)((uint8_t)buf[0]);
+				for (k = 0; k < impl_cnt; k++) {
+					heavy_hitter_update(impl[k], uid, 1);
+				}
+
 				buf_size = 0;
-			} else {
-				string = &buffer[j];
 			}
 
-			// Read NUST format
-			switch (format) {
-				case NUST:
-					c = sscanf(
-							string,
-"%lf %"SCNu16" %15s %15s %"SCNu16" %"SCNu16" %4s %"SCNu8" %"SCNu8" %2s %"SCNu32,
-							&nust.timestamp,
-							&nust.size,
-							nust.sourceIP,
-							nust.destinationIP,
-							&nust.sourcePort,
-							&nust.destinationPort,
-							nust.flags,
-							&nust.protocol,
-							&nust.direction,
-							nust.type,
-							&nust.random
-					);
+			while ( j+sizeof(uint32_t) <= i ) {
+				uid = (uint32_t)((uint8_t)buffer[j+3] << 24)
+				    | (uint32_t)((uint8_t)buffer[j+2] << 16)
+				    | (uint32_t)((uint8_t)buffer[j+1] << 8 )
+					| (uint32_t)((uint8_t)buffer[j]);
 
-					if ( unlikely(c < 11) ) {
-						xerror("Unable to read NUST data", __LINE__, __FILE__);
-					}
+				for (k = 0; k < impl_cnt; k++) {
+					heavy_hitter_update(impl[k], uid, 1);
+				}
 
-					#ifndef NDEBUG
-					printf("Timestamp: %lf\n", nust.timestamp);
-					printf("Size: %"PRIu16"\n", nust.size);
-					printf("Source IP: %s\n", nust.sourceIP);
-					printf("Source Port: %"PRIu16"\n", nust.sourcePort);
-					printf("Destination IP: %s\n", nust.destinationIP);
-					printf("Destination Port: %"PRIu16"\n", nust.destinationPort);
-					printf("Flags: %s\n", nust.flags);
-					printf("Protocol: %"PRIu8"\n", nust.protocol);
-					printf("Serv: %"PRIu8"\n", nust.direction);
-					printf("Type: %s\n", nust.type);
-					printf("Random: %"PRIu32"\n\n", nust.random);
-					#endif
+				j += sizeof(uint32_t);
+			}
 
-					d = sscanf(
-							nust.sourceIP,
-							"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8,
-							&h1,
-							&h2,
-							&h3,
-							&h4
-					);
+			if ( i-j > 0 ) {
+				buf_size = i-j;
+				memset(buf, '\0', 256);
+				memcpy(&buf, &buffer[j], buf_size);
+			}
 
-					if ( unlikely(d < 4) ) {
-						xerror("Unable to read source IP", __LINE__, __FILE__);
-					}
+			j = 0;
+		} while ( !stream_eof(stream) );
+	} else {
+		do {
+			printf(".");
+			fflush(stdout);
+			buffer = stream_read(stream);
+			i = 0;
+			j = 0;
 
-					if (h1 != 10) {
+			do {
+				// Find end of line
+				while ( i < stream->data.length && buffer[i] != '\n') {
+					i++;
+				}
+
+				if ( unlikely(i >= stream->data.length) ) {
+					break;
+				}
+
+				// If we have leftovers from last buffer
+				if ( buf_size > 0 && j == 0 ) {
+					memcpy(&buf[buf_size-1], &buffer[j], i-j);
+					string = buf;
+					buf_size = 0;
+				} else {
+					string = &buffer[j];
+				}
+
+				// Read NUST format
+				switch (format) {
+					case NUST:
+						c = sscanf(
+								string,
+	"%lf %"SCNu16" %15s %15s %"SCNu16" %"SCNu16" %4s %"SCNu8" %"SCNu8" %2s %"SCNu32,
+								&nust.timestamp,
+								&nust.size,
+								nust.sourceIP,
+								nust.destinationIP,
+								&nust.sourcePort,
+								&nust.destinationPort,
+								nust.flags,
+								&nust.protocol,
+								&nust.direction,
+								nust.type,
+								&nust.random
+						);
+
+						if ( unlikely(c < 11) ) {
+							xerror("Unable to read NUST data", __LINE__, __FILE__);
+						}
+
+						#ifndef NDEBUG
+						printf("Timestamp: %lf\n", nust.timestamp);
+						printf("Size: %"PRIu16"\n", nust.size);
+						printf("Source IP: %s\n", nust.sourceIP);
+						printf("Source Port: %"PRIu16"\n", nust.sourcePort);
+						printf("Destination IP: %s\n", nust.destinationIP);
+						printf("Destination Port: %"PRIu16"\n", nust.destinationPort);
+						printf("Flags: %s\n", nust.flags);
+						printf("Protocol: %"PRIu8"\n", nust.protocol);
+						printf("Serv: %"PRIu8"\n", nust.direction);
+						printf("Type: %s\n", nust.type);
+						printf("Random: %"PRIu32"\n\n", nust.random);
+						#endif
+
+						d = sscanf(
+								nust.sourceIP,
+								"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8,
+								&h1,
+								&h2,
+								&h3,
+								&h4
+						);
+
+						if ( unlikely(d < 4) ) {
+							xerror("Unable to read source IP", __LINE__, __FILE__);
+						}
+
 						uid = (uint32_t)(h1 << 24) | (h2 << 16) | (h3 << 8) | h4;
-
 						for (k = 0; k < impl_cnt; k++) {
 							heavy_hitter_update(impl[k], uid, 1);
 						}
-					}
 
-					break;
-				case DARPA:
-					c = sscanf(
-							string,
-						"%"PRIu32" %10s %8s %8s %s %5s %5s %15s %15s %lf %s",
-							&darpa.id,
-							darpa.date,
-							darpa.time,
-							darpa.duration,
-							darpa.serv,
-							darpa.sourcePort,
-							darpa.destinationPort,
-							darpa.sourceIP,
-							darpa.destinationIP,
-							&darpa.attack_score,
-							darpa.attack_name
-					);
+						break;
+					case DARPA:
+						c = sscanf(
+								string,
+							"%"PRIu32" %10s %8s %8s %s %5s %5s %15s %15s %lf %s",
+								&darpa.id,
+								darpa.date,
+								darpa.time,
+								darpa.duration,
+								darpa.serv,
+								darpa.sourcePort,
+								darpa.destinationPort,
+								darpa.sourceIP,
+								darpa.destinationIP,
+								&darpa.attack_score,
+								darpa.attack_name
+						);
 
-					if ( unlikely(c < 11) ) {
-						xerror("Unable to read DARPA data", __LINE__, __FILE__);
-					}
+						if ( unlikely(c < 11) ) {
+							xerror("Unable to read DARPA data", __LINE__, __FILE__);
+						}
 
-					#ifndef NDEBUG
-					printf("ID: %d\n", darpa.id);
-					printf("Date: %s\n", darpa.date);
-					printf("Time: %s\n", darpa.time);
-					printf("Duration: %s\n", darpa.duration);
-					printf("Serv: %s\n", darpa.serv);
-					printf("Source Port: %s\n", darpa.sourcePort);
-					printf("Destination Port: %s\n", darpa.destinationPort);
-					printf("Source IP: %s\n", darpa.sourceIP);
-					printf("Destination IP: %s\n", darpa.destinationIP);
-					printf("Attack Score: %lf\n", darpa.attack_score);
-					printf("Attack Name: %s\n\n", darpa.attack_name);
-					#endif
+						#ifndef NDEBUG
+						printf("ID: %d\n", darpa.id);
+						printf("Date: %s\n", darpa.date);
+						printf("Time: %s\n", darpa.time);
+						printf("Duration: %s\n", darpa.duration);
+						printf("Serv: %s\n", darpa.serv);
+						printf("Source Port: %s\n", darpa.sourcePort);
+						printf("Destination Port: %s\n", darpa.destinationPort);
+						printf("Source IP: %s\n", darpa.sourceIP);
+						printf("Destination IP: %s\n", darpa.destinationIP);
+						printf("Attack Score: %lf\n", darpa.attack_score);
+						printf("Attack Name: %s\n\n", darpa.attack_name);
+						#endif
 
-					d = sscanf(
-							darpa.sourceIP,
-							"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8,
-							&h1,
-							&h2,
-							&h3,
-							&h4
-					);
+						d = sscanf(
+								darpa.sourceIP,
+								"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8,
+								&h1,
+								&h2,
+								&h3,
+								&h4
+						);
 
-					if ( unlikely(d < 4) ) {
-						xerror("Unable to read source IP", __LINE__, __FILE__);
-					}
+						if ( unlikely(d < 4) ) {
+							xerror("Unable to read source IP", __LINE__, __FILE__);
+						}
 
-					uid = (uint32_t)(h1 << 24) | (h2 << 16) | (h3 << 8) | h4;
-					for (k = 0; k < impl_cnt; k++) {
-						heavy_hitter_update(impl[k], uid, 1);
-					}
+						uid = (uint32_t)(h1 << 24) | (h2 << 16) | (h3 << 8) | h4;
+						for (k = 0; k < impl_cnt; k++) {
+							heavy_hitter_update(impl[k], uid, 1);
+						}
 
-					break;
-				default:
-					xerror("Invalid format received", __LINE__, __FILE__);
+						break;
+					default:
+						xerror("Invalid format received", __LINE__, __FILE__);
+				}
+
+				if ( unlikely( (c == EOF && errno < 0) ) ) {
+					xerror(strerror(errno), __LINE__, __FILE__);
+				}
+
+				i++;
+				j = i;
+			} while( 1 );
+
+			if ( likely(buffer[i] != '\n' && !stream_eof(stream)) ) {
+				assert(i-j <= 256);
+
+				buf_size = i-j;
+
+				memset(buf, '\0', 256);
+				memcpy(&buf, &buffer[j+1], buf_size);
 			}
 
-			if ( unlikely( (c == EOF && errno < 0) ) ) {
-				xerror(strerror(errno), __LINE__, __FILE__);
-			}
-
-			i++;
-			j = i;
-		} while( 1 );
-
-		if (buffer[i] != '\n' && !stream_eof(stream)) {
-			assert(i-j <= 256);
-
-			buf_size = i-j;
-
-			memset(buf, '\0', 256);
-			memcpy(&buf, &buffer[j+1], buf_size);
-		}
-
-	} while (!stream_eof(stream));
+		} while (!stream_eof(stream));
+	}
 
 	printf("\n\nFinding heavy hitters..\n\n");
 
@@ -413,8 +477,8 @@ int main (int argc, char **argv) {
 			h2 = (hitters->hitters[i] & (0xff << 16)) >> 16;
 			h3 = (hitters->hitters[i] & (0xff << 8)) >> 8;
 			h4 = (hitters->hitters[i] & 0xff);
-			printf("Heavy Hitter IP-Address: %03"PRIu8".%03"PRIu8".%03"PRIu8".%03"PRIu8"\n",
-					h1, h2, h3, h4);
+	printf("Heavy Hitter IP-Address: %03"PRIu8".%03"PRIu8".%03"PRIu8".%03"PRIu8" (%"PRIu32")\n",
+					h1, h2, h3, h4, hitters->hitters[i]);
 		}
 		printf("\n");
 
@@ -422,6 +486,7 @@ int main (int argc, char **argv) {
 	}
 
 	stream_close(stream);
+	free(filename);
 
 	return EXIT_SUCCESS;
 }

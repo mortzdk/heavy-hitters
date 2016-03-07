@@ -93,22 +93,28 @@ void hh_const_sketch_destroy(hh_const_sketch_t *restrict hh) {
 void hh_const_sketch_update(hh_const_sketch_t *restrict hh, const uint32_t idx, 
 		const int64_t c) {
 	uint8_t i;
-	uint32_t left, right, mid, offset, hash, x, a, b;
+	uint32_t left, right, mid, offset, h, x, a, b;
+	uint8_t  exact_cnt      = hh->exact_cnt;
+	uint8_t  logm           = hh->logm;
+	uint8_t  M              = hh->M;
+	uint32_t w              = hh->w;
+	uint64_t *restrict tree = hh->tree;
+	hash hash               = hh->hash->hash;
 
 	x     = 0;
 	left  = 0;
 	right = hh->params->m-1;
 
 	// Update exact counts as long as |x| <= next_pow_2(wd)
-	for (i = 0; i < hh->exact_cnt; i++) {
+	for (i = 0; i < exact_cnt; i++) {
 		mid = left + ( (right - left)/2 );
 		x   = 2*x;
 		if (mid < idx) {
 			x++;
-			hh->tree[x+(1 << (i+1))-2] += c;
+			tree[x+(1 << (i+1))-2] += c;
 			left = mid+1;
 		} else {
-			hh->tree[x+(1 << (i+1))-2] += c;
+			tree[x+(1 << (i+1))-2] += c;
 			right = mid;
 		}
 	}
@@ -116,24 +122,24 @@ void hh_const_sketch_update(hh_const_sketch_t *restrict hh, const uint32_t idx,
 	offset = (1 << (i+1))-2;
 
 	// Use sketches to estimate count instead
-	for (i = 0; i < hh->logm-hh->exact_cnt; i++) {
+	for (i = 0; i < logm-exact_cnt; i++) {
 		mid  = left + ( (right - left)/2 );
 		x   *= 2;
-		a    = (hh->tree[offset] >> 32);
-		b    = (uint32_t) hh->tree[offset];
+		a    = (tree[offset] >> 32);
+		b    = (uint32_t) tree[offset];
 
 		if (mid < idx) {
 			x++;
-			hash = hh->hash->hash(hh->w, hh->M, x, a, b);
-			hh->tree[offset + 1 + hash] += c; 
+			h = hash(w, M, x, a, b);
+			hh->tree[offset + 1 + h] += c; 
 			left = mid+1;
 		} else {
-			hash = hh->hash->hash(hh->w, hh->M, x, a, b);
-			hh->tree[offset + 1 + hash] += c; 
+			h = hash(w, M, x, a, b);
+			hh->tree[offset + 1 + h] += c; 
 			right = mid;
 		}
 
-		offset += (hh->w +1);
+		offset += (w +1);
 	}
 
 	sketch_update(hh->sketch, x, c);
@@ -146,20 +152,27 @@ static void hh_const_sketch_query_bottom_recursive(
 		hh_const_sketch_t *restrict hh, const uint8_t layer, uint32_t x, 
 		const double th) {
 	uint8_t i;
-	uint32_t offset, a, b, hash;
+	uint32_t offset, a, b, h;
+	uint8_t  exact_cnt      = hh->exact_cnt;
+	uint8_t  logm           = hh->logm;
+	uint8_t  M              = hh->M;
+	uint32_t w              = hh->w;
+	uint64_t *restrict tree = hh->tree;
+	hash hash               = hh->hash->hash;
+
 	x *= 2;
 
-	offset = (1 << (hh->exact_cnt +1))-2   + ((hh->w+1) * layer);
+	offset = (1 << (exact_cnt +1))-2   + ((w+1) * layer);
 
 	for (i = 0; i < 2; i++) {
 		x += i;	
-		a    = (hh->tree[offset] >> 32);
-		b    = (uint32_t) hh->tree[offset];
-		hash = hh->hash->hash(hh->w, hh->M, x, a, b);
+		a    = (tree[offset] >> 32);
+		b    = (uint32_t) tree[offset];
+		h = hash(w, M, x, a, b);
 
 		// Plus one to get away from a and b
-		if ( hh->tree[offset + 1 + hash] >= th ) {
-			if ( unlikely( layer+hh->exact_cnt == hh->logm-1 ) ) {
+		if ( tree[offset + 1 + h] >= th ) {
+			if ( unlikely( layer+exact_cnt == logm-1 ) ) {
 				if ( sketch_above_thresshold(hh->sketch, x, th) ) {
 					hh->result.hitters[hh->result.count] = x;
 
@@ -177,19 +190,23 @@ static void hh_const_sketch_query_bottom_recursive(
 static void hh_const_sketch_query_top_recursive(hh_const_sketch_t *restrict hh, 
 		const uint8_t layer, uint32_t x, const double th) {
 	uint8_t i;
+	uint8_t  exact_cnt      = hh->exact_cnt;
+	uint8_t  logm           = hh->logm;
+	uint64_t *restrict tree = hh->tree;
+
 	x *= 2;
 
 	for (i = 0; i < 2; i++) {
 		x += i;	
 
-		if ( hh->tree[x+(1 << (layer+1))-2] >= th ) {
-			if ( unlikely(layer == hh->logm-1) ) {
+		if ( tree[x+(1 << (layer+1))-2] >= th ) {
+			if ( unlikely(layer == logm-1) ) {
 				hh->result.hitters[hh->result.count] = x;
 
 				assert( x < hh->params->m );
 
 				hh->result.count++;
-			} else if ( unlikely(layer == hh->exact_cnt-1) ) {
+			} else if ( unlikely(layer == exact_cnt-1) ) {
 				hh_const_sketch_query_bottom_recursive(hh, 0, x, th);
 			} else {
 				hh_const_sketch_query_top_recursive(hh, layer+1, x, th);

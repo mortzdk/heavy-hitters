@@ -106,35 +106,39 @@ void hh_sketch_update(hh_sketch_t *restrict hh, const uint32_t idx,
 		const int64_t c) {
 	uint8_t i;
 	uint32_t left, right, mid, x;
+	sketch_t **restrict tree = hh->tree;
+	uint32_t  *restrict top  = hh->top;
+	uint8_t    top_cnt       = hh->top_cnt; 
+	uint8_t    logm          = hh->logm;
 
 	x     = 0;
 	left  = 0;
 	right = hh->params->m-1;
 
 	// Update exact counts as long as |x| <= next_pow_2(wd)
-	for (i = 0; i < hh->top_cnt; i++) {
+	for (i = 0; i < top_cnt; i++) {
 		mid = left + ( (right - left)/2 );
 		x   = 2*x;
 		if (mid < idx) {
 			x++;
-			hh->top[x+(1 << (i+1))-2] += c;
+			top[x+(1 << (i+1))-2] += c;
 			left = mid+1;
 		} else {
-			hh->top[x+(1 << (i+1))-2] += c;
+			top[x+(1 << (i+1))-2] += c;
 			right = mid;
 		}
 	}
 
 	// Use sketches to estimate count instead
-	for (i = 0; i < hh->logm-hh->top_cnt; i++) {
+	for (i = 0; i < logm-top_cnt; i++) {
 		mid = left + ( (right - left)/2 );
 		x  *= 2;
 		if (mid < idx) {
 			x++;
-			sketch_update(hh->tree[i], x, c);
+			sketch_update(tree[i], x, c);
 			left = mid+1;
 		} else {
-			sketch_update(hh->tree[i], x, c);
+			sketch_update(tree[i], x, c);
 			right = mid;
 		}
 	}
@@ -145,12 +149,16 @@ void hh_sketch_update(hh_sketch_t *restrict hh, const uint32_t idx,
 static void hh_sketch_query_bottom_recursive(hh_sketch_t *restrict hh, 
 		const uint8_t layer, uint32_t x, const double th) {
 	uint8_t i;
+	sketch_t **restrict tree = hh->tree;
+	uint8_t    top_cnt       = hh->top_cnt; 
+	uint8_t    logm          = hh->logm;
+
 	x *= 2;
 
 	for (i = 0; i < 2; i++) {
 		x += i;	
-		if ( sketch_point(hh->tree[layer], x) >= th ) {
-			if ( unlikely( layer+hh->top_cnt == hh->logm-1 ) ) {
+		if ( sketch_point(tree[layer], x) >= th ) {
+			if ( unlikely( layer+top_cnt == logm-1 ) ) {
 				hh->result.hitters[hh->result.count] = x;
 
 				assert( x < hh->params->m );
@@ -166,21 +174,24 @@ static void hh_sketch_query_bottom_recursive(hh_sketch_t *restrict hh,
 static void hh_sketch_query_top_recursive(hh_sketch_t *restrict hh, 
 		const uint8_t layer, uint32_t x, const double th) {
 	uint8_t i;
+	uint32_t  *restrict top  = hh->top;
+	uint8_t    top_cnt       = hh->top_cnt; 
+	uint8_t    logm          = hh->logm;
+
 	x *= 2;
 
 	for (i = 0; i < 2; i++) {
 		x += i;	
 
-		if ( hh->top[x+(1 << (layer+1))-2] >= th ) {
-			if ( unlikely(layer == hh->logm-1) ) {
+		if ( top[x+(1 << (layer+1))-2] >= th ) {
+			if ( unlikely(layer == logm-1) ) {
 				hh->result.hitters[hh->result.count] = x;
 
 				assert( x < hh->params->m );
 
 				hh->result.count++;
-			} else if ( unlikely(layer == hh->top_cnt-1) ) {
-				hh_sketch_query_bottom_recursive(hh, 0, x, sketch_thresshold(
-							hh->tree[0], hh->norm, hh->params->epsilon, th));
+			} else if ( unlikely(layer == top_cnt-1) ) {
+				hh_sketch_query_bottom_recursive(hh, 0, x, th);
 			} else {
 				hh_sketch_query_top_recursive(hh, layer+1, x, th);
 			}
