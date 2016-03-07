@@ -131,11 +131,11 @@ void hh_const_sketch_update(hh_const_sketch_t *restrict hh, const uint32_t idx,
 		if (mid < idx) {
 			x++;
 			h = hash(w, M, x, a, b);
-			hh->tree[offset + 1 + h] += c; 
+			tree[offset + 1 + h] += c; 
 			left = mid+1;
 		} else {
 			h = hash(w, M, x, a, b);
-			hh->tree[offset + 1 + h] += c; 
+			tree[offset + 1 + h] += c; 
 			right = mid;
 		}
 
