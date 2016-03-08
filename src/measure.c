@@ -48,6 +48,8 @@ static void printusage(char *argv[]) {
             "\t[--min                    {OPTIONAL} (Run HH with count-min-sketch)]\n"
             "\t[--median                 {OPTIONAL} (Run HH with count-median-sketch)]\n"
             "\t[--const                  {OPTIONAL} (Run HH with constant-count-min-sketch)]\n"
+            "\t[-1 --seed1    [uint32_t] {OPTIONAL} (First seed value)]\n"
+            "\t[-2 --seed2    [uint32_t] {OPTIONAL} (Second seed value)]\n"
             "\t[-h --help                {OPTIONAL} (Shows this guideline)]\n"
             , argv[0]);
 }
@@ -77,7 +79,7 @@ int main (int argc, char **argv) {
 	/* getopt */
 	int option_index = 0;
 	static int flag  = 0;
-	static const char *optstring = "e:d:p:m:f:r:hs";
+	static const char *optstring = "1:2:e:d:p:m:f:r:h";
 	static const struct option long_options[] = {
 		{"min",            no_argument, &flag,     MIN },
 		{"median",         no_argument, &flag,  MEDIAN },
@@ -89,6 +91,8 @@ int main (int argc, char **argv) {
 		{"file",     required_argument,     0,      'f'},
 		{"runs",     required_argument,     0,      'r'},
 		{"help",           no_argument,     0,      'h'},
+        {"seed1",    required_argument,     0,      '1'},
+        {"seed2",    required_argument,     0,      '2'},
 	};
 
 	while ((opt = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1) {
@@ -115,6 +119,12 @@ int main (int argc, char **argv) {
 				break;
 			case 'r':
 				runs    = strtol(optarg, NULL, 10);
+				break;
+			case '1':
+				I1 = strtoll(optarg, NULL, 10);
+				break;
+			case '2':
+				I2 = strtoll(optarg, NULL, 10);
 				break;
 			case 'h':
 			default:

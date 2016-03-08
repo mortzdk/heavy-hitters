@@ -72,6 +72,8 @@ static void printusage(char *argv[]) {
             "\t[--min                    {OPTIONAL} (Run HH with count-min-sketch)]\n"
             "\t[--median                 {OPTIONAL} (Run HH with count-median-sketch)]\n"
             "\t[--const                  {OPTIONAL} (Run HH with constant-count-min-sketch)]\n"
+            "\t[-1 --seed1    [uint32_t] {OPTIONAL} (First seed value)]\n"
+            "\t[-2 --seed2    [uint32_t] {OPTIONAL} (Second seed value)]\n"
             "\t[-h --help                {OPTIONAL} (Shows this guideline)]\n"
             , argv[0]);
 }
@@ -99,7 +101,7 @@ int main (int argc, char **argv) {
 	/* getopt */
 	int option_index = 0;
 	static int flag  = 0;
-	static const char *optstring = "e:d:p:m:f:h";
+	static const char *optstring = "1:2:e:d:p:m:f:h";
 	static const struct option long_options[] = {
 		{"min",            no_argument, &flag,     MIN },
 		{"median",         no_argument, &flag,  MEDIAN },
@@ -110,6 +112,8 @@ int main (int argc, char **argv) {
 		{"universe", required_argument,     0,      'm'},
 		{"file",     required_argument,     0,      'f'},
 		{"help",           no_argument,     0,      'h'},
+        {"seed1",    required_argument,     0,      '1'},
+        {"seed2",    required_argument,     0,      '2'},
 	};
 
 	NUST_t nust;
@@ -160,6 +164,12 @@ int main (int argc, char **argv) {
 					format = BINARY;
 				}
 				break;
+			case '1':
+				I1 = strtoll(optarg, NULL, 10);
+				break;
+			case '2':
+				I2 = strtoll(optarg, NULL, 10);
+				break;
 			case 'h':
 			default:
 				printusage(argv);
@@ -173,6 +183,8 @@ int main (int argc, char **argv) {
 	}
 
 	if ( epsilon >= phi ) {
+		printf("#epsilon: %lf\n", epsilon);
+		printf("#phi:     %lf\n", phi);
 		free(filename);
 		xerror("Epsilon cannot be bigger than phi", __LINE__, __FILE__);
 	}
@@ -186,14 +198,16 @@ int main (int argc, char **argv) {
 		}
 	}
 
-	printf("===========\n");
-	printf("Parameters:\n");
-	printf("===========\n");
-	printf("m:       %"PRIu32"\n", m);
-	printf("delta:   %lf\n", delta);
-	printf("epsilon: %lf\n", epsilon);
-	printf("phi:     %lf\n", phi);
-	printf("===========\n\n");
+	printf("#===========\n");
+	printf("#Parameters:\n");
+	printf("#===========\n");
+	printf("#m:       %"PRIu32"\n", m);
+	printf("#delta:   %lf\n", delta);
+	printf("#epsilon: %lf\n", epsilon);
+	printf("#phi:     %lf\n", phi);
+	printf("#seed1:   %"PRIu32"\n", I1);
+	printf("#seed2:   %"PRIu32"\n", I2);
+	printf("#===========\n\n");
 
 	stream = stream_open(filename);
 	stream_set_data_size(stream, 1048576);
@@ -249,12 +263,16 @@ int main (int argc, char **argv) {
 		}
 	}
 
-	printf("Reading Stream");
+#ifdef PRINT
+	printf("#Reading Stream");
+#endif
 	if ( format == BINARY ) {
 		i = 0;
 		j = 0;
 		do {
+#ifdef PRINT
 			printf(".");
+#endif
 			fflush(stdout);
 			buffer = stream_read(stream);
 
@@ -306,7 +324,9 @@ int main (int argc, char **argv) {
 		} while ( !stream_eof(stream) );
 	} else {
 		do {
+#ifdef PRINT
 			printf(".");
+#endif
 			fflush(stdout);
 			buffer = stream_read(stream);
 			i = 0;
@@ -465,25 +485,28 @@ int main (int argc, char **argv) {
 		} while (!stream_eof(stream));
 	}
 
+#ifdef PRINT
 	printf("\n\nFinding heavy hitters..\n\n");
+#endif
 
 	heavy_hitter_t *hitters;
+
+	printf("Implementation,IP-Address,Index\n");
 	for (k = 0; k < impl_cnt; k++) {
 		hitters = heavy_hitter_query(impl[k]);
 
-		printf("Heavy Hitters - %s:\n", long_options[alg[k].index].name);
 		for (i = 0; i < hitters->count; i++) {
 			h1 = (hitters->hitters[i] & (0xff << 24)) >> 24;
 			h2 = (hitters->hitters[i] & (0xff << 16)) >> 16;
 			h3 = (hitters->hitters[i] & (0xff << 8)) >> 8;
 			h4 = (hitters->hitters[i] & 0xff);
-	printf("Heavy Hitter IP-Address: %03"PRIu8".%03"PRIu8".%03"PRIu8".%03"PRIu8" (%"PRIu32")\n",
-					h1, h2, h3, h4, hitters->hitters[i]);
+			printf("%s,%03"PRIu8".%03"PRIu8".%03"PRIu8".%03"PRIu8",%"PRIu32"\n",
+				long_options[alg[k].index].name, h1, h2, h3, h4, hitters->hitters[i]);
 		}
-		printf("\n");
 
 		heavy_hitter_destroy(impl[k]);
 	}
+	printf("\n");
 
 	stream_close(stream);
 	free(filename);
