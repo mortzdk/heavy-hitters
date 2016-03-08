@@ -6,8 +6,8 @@ CC = gcc
 #CC = clang
 
 # Debug or Release
-PROFILE = -g -DRUPIFY -DNDEBUG
-DEBUG = -g
+PROFILE = -Og -g -DRUPIFY -DNDEBUG
+DEBUG = -Og -g
 RELEASE = -O3 -DNDEBUG
 EXEC = ${RELEASE}
 
@@ -159,7 +159,7 @@ clean:
 	@echo ================ [Cleaning $(NAME)] ================
 	@echo
 	rm -f ${OBJ} ${TEST} ${DEPS} ${ASM} ${addprefix bin/,${TEST_NAMES}}
-	rm -f gmon.out callgrind.* $(LOG) ${TESTS:.c=} main profile
+	rm -f gmon.out callgrind.* $(LOG) ${TESTS:.c=} main profile measure
 	if [[ -d build ]] ; then rmdir --ignore-fail-on-non-empty $(addprefix ${BUILD_FOLDER}, ${SRC_DIRS}); rmdir --ignore-fail-on-non-empty build; fi
 	if [[ -d bin ]] ; then rmdir --ignore-fail-on-non-empty bin; fi
 	#$(MAKE) -C libmeasure clean
