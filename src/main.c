@@ -89,6 +89,7 @@ int main (int argc, char **argv) {
 	char     *buffer;
 	char     *filename = NULL;
 	uint64_t  buf_size = 0;
+	bool start         = true;
 
 	alg_t     alg[AMOUNT_OF_IMPLEMENTATIONS];
 	hh_t     *impl[AMOUNT_OF_IMPLEMENTATIONS];
@@ -267,26 +268,39 @@ int main (int argc, char **argv) {
 	printf("#Reading Stream");
 #endif
 	if ( format == BINARY ) {
-		i = 0;
-		j = 0;
+		i      = 0;
+		j      = 0;
+		buffer = stream_read(stream);
+
+		while ( unlikely(j < stream->data.length && buffer[j] == '#') ) {
+			while ( likely(i < stream->data.length && buffer[i] != '\n') ) {
+				i++;
+				if ( unlikely(i == stream->data.length) ) {
+					buffer = stream_read(stream);
+					i      = 0;
+					j      = 0;
+				}
+			}
+			i++;
+			if ( unlikely(i == stream->data.length) ) {
+				buffer = stream_read(stream);
+				i      = 0;
+			}
+			j = i;
+		}
+
 		do {
 #ifdef PRINT
 			printf(".");
-#endif
 			fflush(stdout);
-			buffer = stream_read(stream);
-
-			while ( buffer[j] == '#' ) {
-				while ( i < stream->data.length && buffer[i] != '\n') {
-					i++;
-				}
-				i++;
-				j = i;
+#endif
+			if (!start) {
+				buffer = stream_read(stream);
 			}
 
 			i = stream->data.length;
 
-			if ( buf_size > 0 && j == 0 ) {
+			if ( unlikely(buf_size > 0 && j == 0) ) {
 				memcpy(&buf[buf_size], &buffer[j], sizeof(uint32_t)-buf_size);
 				j += sizeof(uint32_t)-buf_size;
 
@@ -301,7 +315,7 @@ int main (int argc, char **argv) {
 				buf_size = 0;
 			}
 
-			while ( j+sizeof(uint32_t) <= i ) {
+			while ( likely(j+sizeof(uint32_t) <= i) ) {
 				uid = (uint32_t)((uint8_t)buffer[j+3] << 24)
 				    | (uint32_t)((uint8_t)buffer[j+2] << 16)
 				    | (uint32_t)((uint8_t)buffer[j+1] << 8 )
@@ -314,20 +328,21 @@ int main (int argc, char **argv) {
 				j += sizeof(uint32_t);
 			}
 
-			if ( i-j > 0 ) {
+			if ( likely(i-j > 0) ) {
 				buf_size = i-j;
 				memset(buf, '\0', 256);
 				memcpy(&buf, &buffer[j], buf_size);
 			}
 
-			j = 0;
+			j      = 0;
+			start = false;
 		} while ( !stream_eof(stream) );
 	} else {
 		do {
 #ifdef PRINT
 			printf(".");
-#endif
 			fflush(stdout);
+#endif
 			buffer = stream_read(stream);
 			i = 0;
 			j = 0;

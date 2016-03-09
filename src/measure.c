@@ -65,6 +65,7 @@ int main (int argc, char **argv) {
 	char     *filename = NULL;
 	uint64_t  buf_size = 0;
 	uint32_t  runs     = 5;
+	bool      start    = true;
 
 	alg_t                   alg[AMOUNT_OF_IMPLEMENTATIONS];
 	hh_measure_t          **impl;
@@ -241,15 +242,28 @@ int main (int argc, char **argv) {
 
 	i = 0;
 	j = 0;
-	do {
-		buffer = stream_read(stream);
+	buffer = stream_read(stream);
 
-		while ( buffer[j] == '#' ) {
-			while ( i < stream->data.length && buffer[i] != '\n') {
-				i++;
-			}
+	while ( unlikely(j < stream->data.length && buffer[j] == '#') ) {
+		while ( likely(i < stream->data.length && buffer[i] != '\n') ) {
 			i++;
-			j = i;
+			if ( unlikely(i == stream->data.length) ) {
+				buffer = stream_read(stream);
+				i      = 0;
+				j      = 0;
+			}
+		}
+		i++;
+		if ( unlikely(i == stream->data.length) ) {
+			buffer = stream_read(stream);
+			i      = 0;
+		}
+		j = i;
+	}
+
+	do {
+		if (!start) {
+			buffer = stream_read(stream);
 		}
 
 		i = stream->data.length;
@@ -323,6 +337,7 @@ int main (int argc, char **argv) {
 		}
 
 		j = 0;
+		start = false;
 	} while ( !stream_eof(stream) );
 
 	for (i = 0; i < 10; i++) {
