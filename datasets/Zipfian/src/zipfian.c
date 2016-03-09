@@ -13,7 +13,7 @@
 #include "alias.h"
 
 #define BUFFER (1024*512)
-#define TOPK 10
+#define TOPK 1024
 
 
 static void printusage(char *argv[]) {
@@ -126,7 +126,7 @@ int main (int argc, char**argv) {
 
 	// Print the weights of the top k probabilities into header of file
 	fprintf(file, "#====== TOP %d ======\n", TOPK);
-	for (i = 0; i < TOPK; i++) {
+	for (i = 0; i < TOPK && i < N; i++) {
 		fprintf(file, "#%"PRIu32": %lf\n", map[i], table[i]);
 	}
 
