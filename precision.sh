@@ -22,10 +22,20 @@ do
 	shift # past argument or value
 done
 
-echo -n "# COMMIT: " >> ${OUT}
-git log -1 --oneline >> ${OUT}
-echo -n "# " >> ${OUT}
-date >> ${OUT}
+echo -n "# COMMIT: " >> ${OUT}.const
+git log -1 --oneline >> ${OUT}.const
+echo -n "# "         >> ${OUT}.const
+date                 >> ${OUT}.const
+
+echo -n "# COMMIT: " >> ${OUT}.min
+git log -1 --oneline >> ${OUT}.min
+echo -n "# "         >> ${OUT}.min
+date                 >> ${OUT}.min
+
+echo -n "# COMMIT: " >> ${OUT}.median
+git log -1 --oneline >> ${OUT}.median
+echo -n "# "         >> ${OUT}.median
+date                 >> ${OUT}.median
 
 limit=2048
 p=2
@@ -40,9 +50,9 @@ do
 		SEED1=$[ 1 + $[ RANDOM % 32768 ]]
 		SEED2=$[ 1 + $[ RANDOM % 32768 ]]
 		EPSILON=$(echo "1/${e}" | bc -l)
-		./main -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --const >> ${OUT}.const
-		./main -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --min >> ${OUT}.min
-		./main -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e ${EPSILON} -d ${DELTA} -p ${PHI} -f ${FILE} --median >> ${OUT}.median
+		./main -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --const  >> ${OUT}.const
+		./main -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --min    >> ${OUT}.min
+		./main -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e ${EPSILON}                -d ${DELTA} -p ${PHI} -f ${FILE} --median >> ${OUT}.median
 		((e*=2))
 	done
 	((p*=2))
