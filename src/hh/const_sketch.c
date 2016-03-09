@@ -45,7 +45,8 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 	hh->result.count   = 0; 
 	hh->w              = w;
 	hh->hash           = p->hash;
-	hh->result.hitters = xmalloc( result_size);
+	hh->result.hitters = xmalloc(result_size);
+	hh->result.size    = result_size;
 	memset(hh->result.hitters, '\0', result_size);
 	hh->sketch         = s;
 	hh->exact_cnt      = np2_base;
@@ -166,8 +167,8 @@ static void hh_const_sketch_query_bottom_recursive(
 
 	for (i = 0; i < 2; i++) {
 		x += i;	
-		a    = (tree[offset] >> 32);
-		b    = (uint32_t) tree[offset];
+		a = (tree[offset] >> 32);
+		b = (uint32_t) tree[offset];
 		h = hash(w, M, x, a, b);
 
 		// Plus one to get away from a and b
@@ -179,6 +180,14 @@ static void hh_const_sketch_query_bottom_recursive(
 					assert( x < hh->params->m );
 
 					hh->result.count++;
+
+					if ( unlikely(hh->result.count >= hh->result.size) ) { 
+						hh->result.hitters = xrealloc(hh->result.hitters, 
+								hh->result.size*2);
+						memset(hh->result.hitters+hh->result.size, '\0', 
+								hh->result.size);
+							hh->result.size += hh->result.size;
+					}
 				}
 			} else {
 				hh_const_sketch_query_bottom_recursive(hh, layer+1, x, th);
@@ -190,8 +199,8 @@ static void hh_const_sketch_query_bottom_recursive(
 static void hh_const_sketch_query_top_recursive(hh_const_sketch_t *restrict hh, 
 		const uint8_t layer, uint32_t x, const double th) {
 	uint8_t i;
-	uint8_t  exact_cnt      = hh->exact_cnt;
-	uint8_t  logm           = hh->logm;
+	uint8_t exact_cnt       = hh->exact_cnt;
+	uint8_t logm            = hh->logm;
 	uint64_t *restrict tree = hh->tree;
 
 	x *= 2;
@@ -206,6 +215,13 @@ static void hh_const_sketch_query_top_recursive(hh_const_sketch_t *restrict hh,
 				assert( x < hh->params->m );
 
 				hh->result.count++;
+				if ( unlikely(hh->result.count >= hh->result.size) ) { 
+					hh->result.hitters = xrealloc(hh->result.hitters, 
+							hh->result.size*2);
+					memset(hh->result.hitters+hh->result.size, '\0', 
+							hh->result.size);
+						hh->result.size += hh->result.size;
+				}
 			} else if ( unlikely(layer == exact_cnt-1) ) {
 				hh_const_sketch_query_bottom_recursive(hh, 0, x, th);
 			} else {
@@ -217,6 +233,9 @@ static void hh_const_sketch_query_top_recursive(hh_const_sketch_t *restrict hh,
 
 heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *restrict hh) {
 	const double thresshold = hh->params->phi*hh->norm;
+
+	hh->result.count = 0;
+	memset(hh->result.hitters, '\0', hh->result.size);
 
 	hh_const_sketch_query_top_recursive(hh, 0, 0, thresshold);
 

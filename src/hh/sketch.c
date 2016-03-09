@@ -36,7 +36,7 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	hh->params         = params;
 	hh->norm           = 0;
 	hh->result.count   = 0; 
-	result_size        = sizeof(uint32_t) * ceil(2./phi);
+	hh->result.size    = result_size = sizeof(uint32_t) * ceil(2./phi);
 	hh->result.hitters = xmalloc( result_size );
 	memset(hh->result.hitters, '\0', result_size);
 
@@ -164,6 +164,13 @@ static void hh_sketch_query_bottom_recursive(hh_sketch_t *restrict hh,
 				assert( x < hh->params->m );
 
 				hh->result.count++;
+				if ( unlikely(hh->result.count >= hh->result.size) ) { 
+					hh->result.hitters = xrealloc(hh->result.hitters, 
+							hh->result.size*2);
+					memset(hh->result.hitters+hh->result.size, '\0', 
+							hh->result.size);
+						hh->result.size += hh->result.size;
+				}
 			} else {
 				hh_sketch_query_bottom_recursive(hh, layer+1, x, th);
 			}
@@ -190,6 +197,13 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *restrict hh,
 				assert( x < hh->params->m );
 
 				hh->result.count++;
+				if ( unlikely(hh->result.count >= hh->result.size) ) { 
+					hh->result.hitters = xrealloc(hh->result.hitters, 
+							hh->result.size*2);
+					memset(hh->result.hitters+hh->result.size, '\0', 
+							hh->result.size);
+						hh->result.size += hh->result.size;
+				}
 			} else if ( unlikely(layer == top_cnt-1) ) {
 				hh_sketch_query_bottom_recursive(hh, 0, x, th);
 			} else {
@@ -202,6 +216,9 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *restrict hh,
 // Query
 heavy_hitter_t *hh_sketch_query(hh_sketch_t *restrict hh) {
 	const double threshold = hh->params->phi*hh->norm;
+
+	hh->result.count = 0;
+	memset(hh->result.hitters, '\0', hh->result.size);
 
 	hh_sketch_query_top_recursive(hh, 0, 0, threshold);
 

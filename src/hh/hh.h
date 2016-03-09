@@ -9,6 +9,7 @@
 typedef struct {
 	uint32_t *restrict hitters;
 	uint32_t count;
+	uint32_t size;
 } heavy_hitter_t;
 
 typedef void*(*hh_create)(void *restrict params);

@@ -325,15 +325,17 @@ int main (int argc, char **argv) {
 		j = 0;
 	} while ( !stream_eof(stream) );
 
-	for (k = 0; k < impl_cnt; k++) {
-		measure_with_sideeffects(
-				filename, 
-				(char *)long_options[alg[k].index].name, 
-				"query", 
-				(testfunc)heavy_hitter_measure_query, 
-				(void **)&impl[IDX(runs, k, 0, 0)],
-				runs
-		);
+	for (i = 0; i < 10; i++) {
+		for (k = 0; k < impl_cnt; k++) {
+			measure_with_sideeffects(
+					filename, 
+					(char *)long_options[alg[k].index].name, 
+					"query", 
+					(testfunc)heavy_hitter_measure_query, 
+					(void **)&impl[IDX(runs, k, 0, 0)],
+					runs
+			);
+		}
 	}
 
 	for (k = 0; k < impl_cnt; k++) {
