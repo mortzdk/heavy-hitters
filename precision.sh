@@ -27,14 +27,14 @@ git log -1 --oneline >> ${OUT}
 echo -n "# " >> ${OUT}
 date >> ${OUT}
 
-limit=256
+limit=2048
 p=2
 for ((i=1; p<limit; i++));
 do
 	DELTA=0.25
 	PHI=$(echo "1/${p}" | bc -l)
 	
-	e=4
+	e=$((p*2))
 	for ((j=1; e<=limit; j++));
 	do
 		SEED1=$[ 1 + $[ RANDOM % 32768 ]]
