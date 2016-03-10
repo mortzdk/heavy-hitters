@@ -95,7 +95,7 @@ static int64_t quick_select(int64_t *restrict v, const uint32_t n) {
 
 /*
  * Algorithm from N. Wirth's book, implementation by N. Devillard.
- * This code in public domain.
+ * This code is public domain.
  */
 
 /*---------------------------------------------------------------------------
