@@ -70,15 +70,6 @@ DEPS = ${ALL:%.o=%.d}
 # log name
 LOG = VALGRIND_LOG
 
-# executeable name
-#ifeq (${EXEC}, -g -DRUPIFY)
-#	NAME = profile
-#	FILTER = ${BUILD_FOLDER}/main.o
-#else
-#	FILTER = ${BUILD_FOLDER}/profile.o
-#endif
-
-
 # what we are trying to build
 all:  build $(NAME)
 asm:  build $(OBJ) $(ASM)
@@ -181,7 +172,7 @@ ${TEST_NAMES}: bin build ${OBJ} ${TEST}
 	@echo ================ [Linking Tests] ================
 	@echo
 	$(CC) ${CFLAGS} ${CVER} -o ${BIN_FOLDER}/$@ ${BUILD_FOLDER}/$@.o\
-		$(filter-out ${FILTER}, $(filter-out ${BUILD_FOLDER}/$(NAME).o, $(filter-out ${BUILD_FOLDER}/test_%.o, $(ALL))))\
+		$(filter-out $(addsuffix .o, $(addprefix ${BUILD_FOLDER}/, ${NAME})), $(filter-out ${BUILD_FOLDER}/test_%.o, $(ALL)))\
 		${FLAGS_LD} $(FLAGS_GENERAL) $(LD_TEST)
 	@echo
 	@echo ================ [$@ compiled succesfully] ================
