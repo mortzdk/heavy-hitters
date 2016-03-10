@@ -171,9 +171,9 @@ int main (int argc, char **argv) {
 	stream_set_data_size(stream, 1048576);
 
 	impl   = xmalloc( sizeof(hh_measure_t *) * 
-			AMOUNT_OF_IMPLEMENTATIONS*N_EVENTS*runs);
+			impl_cnt*N_EVENTS*runs);
 	params = xmalloc( sizeof(heavy_hitter_params_t *) * 
-			AMOUNT_OF_IMPLEMENTATIONS*N_EVENTS*runs);
+			impl_cnt*N_EVENTS*runs);
 
 	hh_sketch_params_t params_min = {
 		.b       = 2,
