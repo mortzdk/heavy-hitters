@@ -39,6 +39,7 @@ typedef struct {
 
 static void printusage(char *argv[]) {
     fprintf(stderr, "Usage: %s \n"
+            "\t[-o --output   [char *]   {REQUIRED} (Filename to write to)]\n"
             "\t[-f --file     [char *]   {REQUIRED} (Filename to hand to stream)]\n"
             "\t[-e --epsilon  [double]   {OPTIONAL} (Epsilon value)]\n"
             "\t[-d --delta    [double]   {OPTIONAL} (Delta value)]\n"
@@ -63,6 +64,7 @@ int main (int argc, char **argv) {
 	char      buf[256];
 	char     *buffer;
 	char     *filename = NULL;
+	char     *output   = NULL;
 	uint64_t  buf_size = 0;
 	uint32_t  runs     = 5;
 	bool      start    = true;
@@ -80,7 +82,7 @@ int main (int argc, char **argv) {
 	/* getopt */
 	int option_index = 0;
 	static int flag  = 0;
-	static const char *optstring = "1:2:e:d:p:m:f:r:h";
+	static const char *optstring = "1:2:e:d:p:m:f:o:r:h";
 	static const struct option long_options[] = {
 		{"min",            no_argument, &flag,     MIN },
 		{"median",         no_argument, &flag,  MEDIAN },
@@ -90,6 +92,7 @@ int main (int argc, char **argv) {
 		{"phi",      required_argument,     0,      'p'},
 		{"universe", required_argument,     0,      'm'},
 		{"file",     required_argument,     0,      'f'},
+		{"output",   required_argument,     0,      'o'},
 		{"runs",     required_argument,     0,      'r'},
 		{"help",           no_argument,     0,      'h'},
         {"seed1",    required_argument,     0,      '1'},
@@ -118,6 +121,9 @@ int main (int argc, char **argv) {
 			case 'f':
 				filename = strndup(optarg, 256);
 				break;
+			case 'o':
+				output   = strndup(optarg, 256);
+				break;
 			case 'r':
 				runs    = strtol(optarg, NULL, 10);
 				break;
@@ -134,7 +140,7 @@ int main (int argc, char **argv) {
 		}
 	}
 
-	if ( NULL == filename ) {
+	if ( NULL == filename || NULL == output ) {
 		printusage(argv);
 		exit(EXIT_FAILURE);
 	}
@@ -163,7 +169,7 @@ int main (int argc, char **argv) {
 	printf("runs:    %d\n", runs);
 	printf("===========\n\n");
 
-	if ( !measure_init() ) {
+	if ( !measure_init(output) ) {
 		xerror("Unable to initialize libmeasure", __LINE__, __FILE__);
 	}
 

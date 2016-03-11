@@ -53,9 +53,9 @@ do
 		echo -n "# "         >> ${OUT}.${p}.${e}.median
 		date                 >> ${OUT}.${p}.${e}.median
 
-		./measure -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --const  -r ${RUNS} >> ${OUT}.${p}.${e}.const
-		./measure -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --min    -r ${RUNS} >> ${OUT}.${p}.${e}.min
-		./measure -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e ${EPSILON}                -d ${DELTA} -p ${PHI} -f ${FILE} --median -r ${RUNS} >> ${OUT}.${p}.${e}.median
+		./measure -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --const  -r ${RUNS} -o ${OUT}.${p}.${e}.const
+		./measure -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --min    -r ${RUNS} -o ${OUT}.${p}.${e}.min
+		./measure -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e ${EPSILON}                -d ${DELTA} -p ${PHI} -f ${FILE} --median -r ${RUNS} -o ${OUT}.${p}.${e}.median
 		((e*=2))
 	done
 	((p*=2))
