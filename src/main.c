@@ -164,6 +164,9 @@ int main (int argc, char **argv) {
 				if ((NULL != strstr(filename, "Zipfian"))) {
 					format = BINARY;
 				}
+				if ((NULL != strstr(filename, "Weighted"))) {
+					format = BINARY;
+				}
 				break;
 			case '1':
 				I1 = strtoll(optarg, NULL, 10);
