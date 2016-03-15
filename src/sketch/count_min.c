@@ -108,6 +108,17 @@ uint64_t count_min_point(count_min_t *restrict s, const uint32_t i) {
 	return estimate;
 }
 
+uint64_t count_min_point_partial(count_min_t *restrict s, const uint32_t i,
+		const uint32_t d) {
+	(void) s;
+	(void) i;
+	(void) d;
+
+	xerror("NOT IMPLEMENTED: count_min_point_partial", __LINE__, __FILE__);
+
+	return 0;
+}
+
 bool count_min_above_thresshold(count_min_t *restrict s, const uint32_t i, 
 		const uint64_t th) {
 	uint32_t di, wi;

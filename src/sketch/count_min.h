@@ -34,6 +34,8 @@ void count_min_update(count_min_t *restrict s, const uint32_t i,
 
 // Query
 uint64_t count_min_point(count_min_t *restrict s, const uint32_t i);
+uint64_t count_min_point_partial(count_min_t *restrict s, const uint32_t i,
+		const uint32_t d);
 bool count_min_above_thresshold(count_min_t *restrict s, const uint32_t i, 
 		const uint64_t th);
 uint64_t count_min_range_sum(count_min_t *restrict s, const uint32_t l, 

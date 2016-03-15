@@ -122,6 +122,26 @@ int64_t count_median_point(count_median_t *restrict s, const uint32_t i) {
 	return median_wirth(median, d);
 }
 
+int64_t count_median_point_partial(count_median_t *restrict s,
+		const uint32_t i, const uint32_t d) {
+	uint32_t wi;
+	const uint32_t w         = s->size.w;
+	const uint8_t  M         = s->size.M;
+	int64_t *restrict table  = s->table;
+	hash hash                = s->hash->hash;
+
+	assert( d < s->size.d );
+
+	wi = hash(w, M, i, (uint32_t)(table[d*(w+2)]>>32),
+				(uint32_t)table[d*(w+2)]);
+
+	assert( wi < w );
+
+	return table[COUNT_MEDIAN_INDEX(w, d, wi)] * sign(i,
+				(uint8_t)(table[d*(w+2)+1]>>32),
+				(uint8_t)(table[d*(w+2)+1]));
+}
+
 int64_t count_median_range_sum(count_median_t *restrict s, const uint32_t l, 
 		const uint32_t r) {
 	int64_t sum = 0, i;
