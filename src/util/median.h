@@ -104,9 +104,9 @@ static int64_t median_quick_select(int64_t *restrict v, const uint32_t n) {
  ---------------------------------------------------------------------------*/
 
 static int64_t median_wirth(int64_t *restrict v, const uint32_t n) {
-    register uint32_t i, j, l, m;
+    register int32_t i, j, l, m;
     register int64_t x;
-	register const uint32_t k = (n-1)/2;
+	register const int32_t k = (n-1)/2;
 
     l = 0;
 	m = n-1;
