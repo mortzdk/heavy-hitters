@@ -17,3 +17,4 @@ datasets/Zipfian/zipfian
 datasets/Zipfian/*.dat
 datasets/Zipfian/weighted
 datasets/Zipfian/*.dat
+results
