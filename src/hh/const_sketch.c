@@ -24,13 +24,15 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 	const double error         = 0.25; // 1./4.
 	const uint8_t logm         = xceil_log2(m);
 	const uint32_t result_size = sizeof(uint32_t) * ceil(2./phi);
+	const uint32_t w           = ceil(1. / (epsilon * error)); // b/(epsilon*error*b)
+	uint8_t np2_base           = MultiplyDeBruijnBitPosition2[
+		(uint32_t)(next_pow_2(w) * 0x077CB531U) >> 27
+	]; //We only do exact when it is below size of sketch
+
 	hh_const_sketch_t *restrict hh  = xmalloc( sizeof(hh_const_sketch_t) );
 	sketch_t          *restrict s   = sketch_create(params->f, p->hash, b,
 			(epsilon * p->hash->c), (double)((delta*phi)/(logm * 2.)));
-	const uint32_t w      = ceil(1. / (epsilon * error)); // b/(epsilon*error*b)
-	uint8_t np2_base      = MultiplyDeBruijnBitPosition2[
-		(uint32_t)(next_pow_2(w) * 0x077CB531U) >> 27
-	]; //+ 1; We only do exact when it is below size of sketch
+
 
 	hash_init(&hh->M, w);
 
@@ -186,7 +188,7 @@ static void hh_const_sketch_query_bottom_recursive(
 								hh->result.size*2);
 						memset(hh->result.hitters+hh->result.size, '\0', 
 								hh->result.size);
-							hh->result.size += hh->result.size;
+						hh->result.size += hh->result.size;
 					}
 				}
 			} else {
@@ -220,7 +222,7 @@ static void hh_const_sketch_query_top_recursive(hh_const_sketch_t *restrict hh,
 							hh->result.size*2);
 					memset(hh->result.hitters+hh->result.size, '\0', 
 							hh->result.size);
-						hh->result.size += hh->result.size;
+					hh->result.size += hh->result.size;
 				}
 			} else if ( unlikely(layer == exact_cnt-1) ) {
 				hh_const_sketch_query_bottom_recursive(hh, 0, x, th);

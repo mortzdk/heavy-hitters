@@ -65,7 +65,7 @@ LOG = VALGRIND_LOG
 # executeable name
 ifeq (${EXEC}, -g -DRUPIFY)
 	NAME = profile
-	FILTER = ${BUILD_FOLDER}/zipfian.o
+	FILTER = ${BUILD_FOLDER}/weighted.o
 else
 	NAME = weighted
 	FILTER = ${BUILD_FOLDER}/profile.o
@@ -150,7 +150,7 @@ clean:
 	@echo ================ [Cleaning $(NAME)] ================
 	@echo
 	rm -f ${OBJ} ${TEST} ${DEPS} ${ASM} ${addprefix bin/,${TEST_NAMES}}
-	rm -f gmon.out callgrind.* $(LOG) ${TESTS:.c=} zipfian profile
+	rm -f gmon.out callgrind.* $(LOG) ${TESTS:.c=}
 	if [[ -d build ]] ; then rmdir --ignore-fail-on-non-empty build; fi
 	if [[ -d bin ]] ; then rmdir --ignore-fail-on-non-empty bin; fi
 	#$(MAKE) -C libmeasure clean

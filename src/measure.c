@@ -145,7 +145,7 @@ int main (int argc, char **argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	if ( epsilon >= phi ) {
+	if ( epsilon > phi ) {
 		free(filename);
 		xerror("Epsilon cannot be bigger than phi", __LINE__, __FILE__);
 	}

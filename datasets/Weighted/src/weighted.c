@@ -1,5 +1,4 @@
 #define _DEFAULT_SOURCE
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -87,7 +86,7 @@ int main (int argc, char**argv) {
 	}
 
 	map     = xmalloc( sizeof(uint32_t) * N );
-	weights = xmalloc( sizeof(double) * N );
+	weights = xmalloc( sizeof(double) * 33554432); // 2^25
 	res     = xmalloc( sizeof(uint32_t) * BUFFER );
 	file    = fopen(filename, "wb");
 	if ( file == NULL ) {
@@ -105,15 +104,22 @@ int main (int argc, char**argv) {
 	fprintf(file, "#Seed2:    %"PRIu32"\n", I2);
 
 	for (i = 0; i < N; i++) {
-		weights[i] = xuni_rand();
+		weights[i] = ((double)(i+1)/100) * count;
 		map[i]     = xuni_rand()*m;
 		sum       += weights[i];
+	}
+
+	for (i = 0; i < 33554432; i++) {
+		if ( unlikely(i < N) ) {
+			continue;
+		}
+		weights[i] = 1/(33554432-N) * (count*(sum/100));
 	}
 
 	// Print the weights of the top k probabilities into header of file
 	fprintf(file, "#====== Weights ======\n");
 	for (i = 0; i < N; i++) {
-		fprintf(file, "#%"PRIu32": %lf\n", map[i], (double)weights[i]/sum);
+		fprintf(file, "#%"PRIu32": %lf\n", map[i], (double)(i+1)/100);
 	}
 
 	alias_t *a = alias_preprocess(N, weights);
