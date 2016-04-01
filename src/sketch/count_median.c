@@ -9,6 +9,7 @@
 
 // User defined libraries
 #include "sketch/count_median.h"
+#include "sketch/sketch.h"
 #include "util/xutil.h"
 #include "util/hash.h"
 #include "util/median.h"
@@ -21,10 +22,12 @@ count_median_t *count_median_create(hash_t *restrict hash, const uint8_t b,
 		const double epsilon, const double delta) {
 	register uint32_t i;
 	count_median_t *restrict s = xmalloc(sizeof(count_median_t));
-	register const uint32_t w  = s->size.w = ceil(b / (epsilon*epsilon)) * hash->c;
-	register const uint32_t d  = s->size.d = ceil( log((1./delta)) * 
-		1); //6*(log(1/delta)+1);
+	uint32_t w                 = ceil(b / (epsilon*epsilon)) * hash->c;
+	uint32_t d                 = ceil( log((1./delta))); //6*(log(1/delta)+1);
+
+	sketch_fix_size(&d, &w);
 	hash_init(&s->size.M, w);
+
 	const uint32_t table_size  = sizeof(int64_t) * ((w+2)*d);
 	const uint32_t median_size = sizeof(int64_t) * d;
 
@@ -33,6 +36,8 @@ count_median_t *count_median_create(hash_t *restrict hash, const uint8_t b,
 	s->table   = xmalloc(table_size);
 	s->median  = xmalloc(median_size);
 	s->hash    = hash;
+	s->size.w  = w;
+	s->size.d  = d;
 
 	memset(s->table,  '\0', table_size);
 	memset(s->median, '\0', median_size);

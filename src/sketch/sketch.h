@@ -39,6 +39,19 @@ typedef struct {
 	sketch_func_t *restrict funcs;
 } sketch_t;
 
+extern uint32_t depth;
+extern uint32_t width;
+
+inline void sketch_fix_size(uint32_t *restrict d, uint32_t *restrict w){
+	if ( depth > 0 ) {
+		*d = depth;
+	}
+
+	if ( width > 0 ) {
+		*w = width;
+	}
+}
+
 inline uint32_t sketch_depth(void *restrict sketch) {
 	return ((sketch_size_t *)sketch)->d;
 }

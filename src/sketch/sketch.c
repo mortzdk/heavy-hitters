@@ -8,6 +8,10 @@
 
 #include "util/xutil.h"
 
+uint32_t depth = 0;
+uint32_t width = 0;
+
+inline void sketch_fix_size(uint32_t *restrict depth, uint32_t *restrict width);
 extern inline uint32_t sketch_depth(void *sketch);
 extern inline uint32_t sketch_width(void *sketch);
 

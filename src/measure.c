@@ -82,7 +82,7 @@ int main (int argc, char **argv) {
 	/* getopt */
 	int option_index = 0;
 	static int flag  = 0;
-	static const char *optstring = "1:2:e:d:p:m:f:o:r:h";
+	static const char *optstring = "1:2:e:d:p:m:f:o:r:h:w:i";
 	static const struct option long_options[] = {
 		{"min",            no_argument, &flag,     MIN },
 		{"median",         no_argument, &flag,  MEDIAN },
@@ -94,9 +94,11 @@ int main (int argc, char **argv) {
 		{"file",     required_argument,     0,      'f'},
 		{"output",   required_argument,     0,      'o'},
 		{"runs",     required_argument,     0,      'r'},
-		{"help",           no_argument,     0,      'h'},
+		{"info",           no_argument,     0,      'i'},
         {"seed1",    required_argument,     0,      '1'},
         {"seed2",    required_argument,     0,      '2'},
+        {"width",    required_argument,     0,      'w'},
+        {"height",   required_argument,     0,      'h'},
 	};
 
 	while ((opt = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1) {
@@ -133,7 +135,13 @@ int main (int argc, char **argv) {
 			case '2':
 				I2 = strtoll(optarg, NULL, 10);
 				break;
+			case 'w':
+				width = strtoll(optarg, NULL, 10);
+				break;
 			case 'h':
+				depth = strtoll(optarg, NULL, 10);
+				break;
+			case 'i':
 			default:
 				printusage(argv);
 				exit(EXIT_FAILURE);

@@ -9,6 +9,7 @@
 
 // User defined libraries
 #include "sketch/count_min.h"
+#include "sketch/sketch.h"
 #include "util/hash.h"
 #include "util/xutil.h"
 
@@ -16,15 +17,20 @@ count_min_t *count_min_create(hash_t *restrict hash, const uint8_t b,
 		const double epsilon, const double delta) {
 	uint32_t i;
 	count_min_t *restrict s = xmalloc(sizeof(count_min_t));
-	const uint32_t w        = s->size.w = ceil(b / epsilon) * hash->c;
-	const uint32_t d        = s->size.d = ceil(log2(1 / delta) / log2(b));
-	const uint32_t dw       = w*d;
+	uint32_t w              = ceil(b / epsilon) * hash->c;
+	uint32_t d              = ceil(log2(1 / delta) / log2(b));
+
+	sketch_fix_size(&d, &w);
 	hash_init(&s->size.M, w);
+
+	const uint32_t dw       = w*d;
 	const uint32_t M        = s->size.M;
 	const uint32_t size     = sizeof(uint64_t) * (dw + d);
 
-	s->table   = xmalloc(size);
-	s->hash    = hash;
+	s->table  = xmalloc(size);
+	s->hash   = hash;
+	s->size.w = w;
+	s->size.d = d;
 
 	memset(s->table, '\0', size);
 

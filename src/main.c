@@ -69,12 +69,14 @@ static void printusage(char *argv[]) {
             "\t[-d --delta    [double]   {OPTIONAL} (Delta value)]\n"
             "\t[-p --phi      [double]   {OPTIONAL} (Phi value)]\n"
             "\t[-m --universe [uint32_t] {OPTIONAL} (Universe i.e. amount of unique items)]\n"
+            "\t[-w --width    [double]   {OPTIONAL} (Height of sketch)]\n"
+            "\t[-h --height   [double]   {OPTIONAL} (Width of sketch)]\n"
             "\t[--min                    {OPTIONAL} (Run HH with count-min-sketch)]\n"
             "\t[--median                 {OPTIONAL} (Run HH with count-median-sketch)]\n"
             "\t[--const                  {OPTIONAL} (Run HH with constant-count-min-sketch)]\n"
             "\t[-1 --seed1    [uint32_t] {OPTIONAL} (First seed value)]\n"
             "\t[-2 --seed2    [uint32_t] {OPTIONAL} (Second seed value)]\n"
-            "\t[-h --help                {OPTIONAL} (Shows this guideline)]\n"
+            "\t[-i --info                {OPTIONAL} (Shows this guideline)]\n"
             , argv[0]);
 }
 
@@ -102,7 +104,7 @@ int main (int argc, char **argv) {
 	/* getopt */
 	int option_index = 0;
 	static int flag  = 0;
-	static const char *optstring = "1:2:e:d:p:m:f:h";
+	static const char *optstring = "1:2:e:d:p:m:f:h:w:i";
 	static const struct option long_options[] = {
 		{"min",            no_argument, &flag,     MIN },
 		{"median",         no_argument, &flag,  MEDIAN },
@@ -112,9 +114,11 @@ int main (int argc, char **argv) {
 		{"phi",      required_argument,     0,      'p'},
 		{"universe", required_argument,     0,      'm'},
 		{"file",     required_argument,     0,      'f'},
-		{"help",           no_argument,     0,      'h'},
+		{"info",           no_argument,     0,      'i'},
         {"seed1",    required_argument,     0,      '1'},
         {"seed2",    required_argument,     0,      '2'},
+        {"width",    required_argument,     0,      'w'},
+        {"height",   required_argument,     0,      'h'},
 	};
 
 	NUST_t nust;
@@ -174,7 +178,13 @@ int main (int argc, char **argv) {
 			case '2':
 				I2 = strtoll(optarg, NULL, 10);
 				break;
+			case 'w':
+				width = strtoll(optarg, NULL, 10);
+				break;
 			case 'h':
+				depth = strtoll(optarg, NULL, 10);
+				break;
+			case 'i':
 			default:
 				printusage(argv);
 				exit(EXIT_FAILURE);
@@ -186,9 +196,7 @@ int main (int argc, char **argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	if ( epsilon >= phi ) {
-		printf("#epsilon: %lf\n", epsilon);
-		printf("#phi:     %lf\n", phi);
+	if ( epsilon > phi ) {
 		free(filename);
 		xerror("Epsilon cannot be bigger than phi", __LINE__, __FILE__);
 	}
