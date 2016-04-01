@@ -2,10 +2,10 @@
 #include <stdint.h>
 
 // User defined libraries
-#include "xutil.h"
-
 #include "sketch/sketch.h"
 #include "sketch/sketch_measure.h"
+
+#include "util/xutil.h"
 
 sketch_measure_t *sketch_measure_create(sketch_measure_create_t *params) {
 	sketch_measure_t *restrict s = xmalloc( sizeof(sketch_measure_t) ); 

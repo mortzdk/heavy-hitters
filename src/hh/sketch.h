@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 // User defined libraries
-#include "hash.h"
+#include "util/hash.h"
 #include "hh/hh.h"
 #include "sketch/sketch.h"
 

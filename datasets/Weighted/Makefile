@@ -149,7 +149,7 @@ clean:
 	@echo
 	@echo ================ [Cleaning $(NAME)] ================
 	@echo
-	rm -f ${OBJ} ${TEST} ${DEPS} ${ASM} ${addprefix bin/,${TEST_NAMES}}
+	rm -f ${OBJ} ${TEST} ${DEPS} ${ASM} ${addprefix bin/,${TEST_NAMES}} ${NAME}
 	rm -f gmon.out callgrind.* $(LOG) ${TESTS:.c=}
 	if [[ -d build ]] ; then rmdir --ignore-fail-on-non-empty build; fi
 	if [[ -d bin ]] ; then rmdir --ignore-fail-on-non-empty bin; fi

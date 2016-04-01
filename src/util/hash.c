@@ -3,8 +3,8 @@
 #include <assert.h>
 #include <math.h>
 
-#include "xutil.h"
 #include "hash.h"
+#include "xutil.h"
 
 /*****************************************************************************
  *        HASH_31 by MASSDAL: http://www.cs.rutgers.edu/~muthu/prng.c        *

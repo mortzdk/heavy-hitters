@@ -4,12 +4,11 @@
 #include <assert.h>
 #include <math.h>
 
-#include "xutil.h"
-#include "hash.h"
-
 #include "hh/hh.h"
 #include "hh/const_sketch.h"
 #include "sketch/sketch.h"
+#include "util/xutil.h"
+#include "util/hash.h"
 
 // Initialization
 hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {

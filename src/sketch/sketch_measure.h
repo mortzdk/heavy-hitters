@@ -6,8 +6,8 @@
 #include <stdbool.h>
 
 // User defined libraries
-#include "hash.h"
 #include "sketch/sketch.h"
+#include "util/hash.h"
 
 typedef struct {
 	void          *restrict sketch;

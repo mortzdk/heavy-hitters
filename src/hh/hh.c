@@ -2,11 +2,10 @@
 #include <stdint.h>
 
 // User defined libraries
-#include "xutil.h"
-
 #include "hh/hh.h"
 #include "hh/const_sketch.h"
 #include "hh/sketch.h"
+#include "util/xutil.h"
 
 hh_func_t hh_sketch = {
 	.create     = (hh_create)  hh_sketch_create,

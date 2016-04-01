@@ -9,11 +9,11 @@
 #include <assert.h>
 #include <math.h>
 
-#include "xutil.h"
 #include "stream/stream.h"
 #include "sketch/sketch.h"
 #include "hh/hh.h"
 #include "hh/sketch.h"
+#include "util/xutil.h"
 
 #define AMOUNT_OF_IMPLEMENTATIONS 3
 

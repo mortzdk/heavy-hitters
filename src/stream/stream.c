@@ -9,8 +9,8 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include "xutil.h"
 #include "stream.h"
+#include "util/xutil.h"
 
 stream_t *stream_open(char const *filename) {
 	int fd;

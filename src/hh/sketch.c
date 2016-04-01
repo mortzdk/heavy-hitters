@@ -5,7 +5,7 @@
 #include <math.h>
 #include <assert.h>
 
-#include "xutil.h"
+#include "util/xutil.h"
 #include "hh/hh.h"
 #include "hh/sketch.h"
 #include "sketch/sketch.h"

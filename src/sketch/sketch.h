@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 // User defined libraries
-#include "hash.h"
+#include "util/hash.h"
 
 typedef void*(*s_create)(hash_t *restrict hash, const uint8_t b, 
 		const double epsilon, const double delta);

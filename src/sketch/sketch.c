@@ -2,11 +2,11 @@
 #include <stdint.h>
 
 // User defined libraries
-#include "xutil.h"
-
 #include "sketch/count_min.h"
 #include "sketch/count_median.h"
 #include "sketch/sketch.h"
+
+#include "util/xutil.h"
 
 extern inline uint32_t sketch_depth(void *sketch);
 extern inline uint32_t sketch_width(void *sketch);

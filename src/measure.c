@@ -11,12 +11,12 @@
 
 #include <libmeasure/measure.h>
 
-#include "xutil.h"
 #include "stream/stream.h"
 #include "sketch/sketch.h"
 #include "hh/hh.h"
 #include "hh/hh_measure.h"
 #include "hh/sketch.h"
+#include "util/xutil.h"
 
 #define AMOUNT_OF_IMPLEMENTATIONS 3
 #define IDX(STEP, x, y, z)  (z) + ((y) * (STEP)) + (N_EVENTS * (STEP) * (x))

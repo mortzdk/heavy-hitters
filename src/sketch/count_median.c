@@ -8,9 +8,9 @@
 #include <math.h>
 
 // User defined libraries
-#include "xutil.h"
 #include "sketch/count_median.h"
-#include "hash.h"
+#include "util/xutil.h"
+#include "util/hash.h"
 #include "util/median.h"
 
 /*****************************************************************************

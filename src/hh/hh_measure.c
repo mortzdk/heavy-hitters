@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 // User defined libraries
-#include "xutil.h"
+#include "util/xutil.h"
 
 #include "hh/hh.h"
 #include "hh/hh_measure.h"

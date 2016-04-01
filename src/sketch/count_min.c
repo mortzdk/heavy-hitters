@@ -8,9 +8,9 @@
 #include <math.h>
 
 // User defined libraries
-#include "xutil.h"
 #include "sketch/count_min.h"
-#include "hash.h"
+#include "util/hash.h"
+#include "util/xutil.h"
 
 count_min_t *count_min_create(hash_t *restrict hash, const uint8_t b, 
 		const double epsilon, const double delta) {

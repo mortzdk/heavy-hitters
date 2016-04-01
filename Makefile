@@ -32,9 +32,10 @@ BUILD_FOLDER   = ${DIR}/build
 BIN_FOLDER     = ${DIR}/bin
 TESTS_FOLDER   = ${DIR}/tests
 MODULES_FOLDER = ${DIR}/modules
+UTIL_FOLDER    = ${DIR}/util
 
 # FLAGS
-FLAGS_GENERAL = -I${SRC_FOLDER} -I${MODULES_FOLDER}
+FLAGS_GENERAL = -I${SRC_FOLDER} -I${MODULES_FOLDER} -I${UTIL_FOLDER}
 FLAGS_LD      = -Wl,-z,relro -Wl,-z,now -lm -L ${MODULES_FOLDER}/libmeasure \
 				-lmeasure -Wl,-rpath=${MODULES_FOLDER}/libmeasure
 LD_TEST       = -lcriterion

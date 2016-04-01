@@ -5,9 +5,9 @@
 #include <stdint.h>
 
 // User defined libraries
-#include "hash.h"
 #include "hh/hh.h"
 #include "sketch/sketch.h"
+#include "util/hash.h"
 
 // Structures
 typedef struct {

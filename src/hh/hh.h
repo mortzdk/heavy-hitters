@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 // User defined libraries
-#include "hash.h"
+#include "util/hash.h"
 
 typedef struct {
 	uint32_t *restrict hitters;
