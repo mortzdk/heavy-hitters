@@ -26,35 +26,22 @@ DIR = $(shell pwd)
 
 SRC_FOLDER     = ${DIR}/src
 BUILD_FOLDER   = ${DIR}/build
-BIN_FOLDER     = ${DIR}/bin
-TESTS_FOLDER   = ${DIR}/tests
 
 # FLAGS
 FLAGS_GENERAL = -I${SRC_FOLDER}
 FLAGS_LD      = -Wl,-z,relro -Wl,-z,now -lm
-LD_TEST       = -lcriterion
-FLAGS_TEST    = -I ${SRC_FOLDER}
 
 # all c source files
 SRC   := $(shell find -L ${SRC_FOLDER} -name "*.c" -type f;)
 
-# all test files
-TESTS := $(shell find ${TESTS_FOLDER} -name "test_*.c" -type f;)
-
-# non-test obect files
+# object files
 OBJ  = ${subst ${SRC_FOLDER}, ${BUILD_FOLDER}, ${patsubst %.c, %.o, $(SRC)}}
 
-# non-test assembly files
+# assembly files
 ASM  = ${subst ${SRC_FOLDER}, ${BUILD_FOLDER}, ${patsubst %.c, %.S, $(SRC)}}
 
-# test object files
-TEST = ${subst ${TESTS_FOLDER}, ${BUILD_FOLDER}, ${patsubst %.c, %.o, $(TESTS)}}
-
-# names of tests
-TEST_NAMES = ${patsubst ${TESTS_FOLDER}/%.c, %, ${TESTS}}
-
 # all object files
-ALL  = ${OBJ} ${TEST}
+ALL  = ${OBJ}
 
 # object files and .d files
 DEPS = ${ALL:%.o=%.d}
@@ -74,8 +61,6 @@ endif
 # what we are trying to build
 all:  build $(NAME)
 asm:  build $(OBJ) $(ASM)
-
-test: bin build $(TEST_NAMES) ${addprefix run_,${TEST_NAMES}}
 
 # Recompile when headers change
 -include $(DEPS)
@@ -117,15 +102,6 @@ $(BUILD_FOLDER)/%.o: $(SRC_FOLDER)/%.c
 	@echo OK [$<] - [$@]
 	@echo
 
-$(BUILD_FOLDER)/%.o: $(TESTS_FOLDER)/%.c
-	@echo
-	@echo ================ [Building Object] ================
-	@echo
-	$(CC) $(FLAGS_TEST) $(CFLAGS) $(CVER) -c $< -o $@
-	@echo
-	@echo OK [$<] - [$@]
-	@echo
-
 valgrind: clean all
 	@echo
 	@echo ================ [Executing $(NAME) using Valgrind] ================
@@ -149,11 +125,10 @@ clean:
 	@echo
 	@echo ================ [Cleaning $(NAME)] ================
 	@echo
-	rm -f ${OBJ} ${TEST} ${DEPS} ${ASM} ${addprefix bin/,${TEST_NAMES}} ${NAME}
-	rm -f gmon.out callgrind.* $(LOG) ${TESTS:.c=}
+	rm -f ${OBJ} ${DEPS} ${ASM} ${NAME}
+	rm -f gmon.out callgrind.* $(LOG)
 	if [[ -d build ]] ; then rmdir --ignore-fail-on-non-empty build; fi
 	if [[ -d bin ]] ; then rmdir --ignore-fail-on-non-empty bin; fi
-	#$(MAKE) -C libmeasure clean
 
 count:
 	@echo
@@ -166,18 +141,3 @@ callgrind:
 	@echo ================ [Profiling $(NAME)] ================
 	@echo
 	valgrind --tool=callgrind ./$(NAME)
-
-${TEST_NAMES}: bin build ${OBJ} ${TEST}
-	@echo
-	@echo ================ [Linking Tests] ================
-	@echo
-	$(CC) ${CFLAGS} ${CVER} -o ${BIN_FOLDER}/$@ ${BUILD_FOLDER}/$@.o\
-		$(filter-out ${FILTER}, $(filter-out ${BUILD_FOLDER}/$(NAME).o, $(filter-out ${BUILD_FOLDER}/test_%.o, $(ALL))))\
-		${FLAGS_LD} $(FLAGS_GENERAL) $(LD_TEST)
-	@echo
-	@echo ================ [$@ compiled succesfully] ================
-
-${addprefix run_,${TEST_NAMES}}: ${TEST_NAMES}
-	@echo ================ [Running test ${patsubst run_%,%,$@}] ================
-	@echo
-	${BIN_FOLDER}/${patsubst run_%,%,$@} --verbose --no-early-exit

@@ -22,11 +22,6 @@
 #define IDX(STEP, x, y, z)  (z) + ((y) * (STEP)) + (N_EVENTS * (STEP) * (x))
 
 typedef enum {
-	HH,
-	SKETCH,
-} type_t;
-
-typedef enum {
 	MIN,
 	MEDIAN,
 	CONST,
@@ -46,6 +41,8 @@ static void printusage(char *argv[]) {
             "\t[-p --phi      [double]   {OPTIONAL} (Phi value)]\n"
             "\t[-m --universe [uint32_t] {OPTIONAL} (Universe i.e. amount of unique items)]\n"
             "\t[-r --runs     [uint32_t] {OPTIONAL} (Amount of runs to average over)]\n"
+            "\t[-w --width    [double]   {OPTIONAL} (Height of sketch)]\n"
+            "\t[-h --height   [double]   {OPTIONAL} (Width of sketch)]\n"
             "\t[--min                    {OPTIONAL} (Run HH with count-min-sketch)]\n"
             "\t[--median                 {OPTIONAL} (Run HH with count-median-sketch)]\n"
             "\t[--const                  {OPTIONAL} (Run HH with constant-count-min-sketch)]\n"

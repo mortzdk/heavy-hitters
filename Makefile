@@ -12,7 +12,7 @@ RELEASE = -O3 -DNDEBUG
 EXEC = ${RELEASE}
 
 # Which binary to compile
-NAME = main profile measure
+NAME = precision_hh precision_sketch profile measure_hh
 
 # Compiler options
 CFLAGS = -MMD -pipe -fno-exceptions -fstack-protector\
@@ -151,7 +151,7 @@ clean:
 	@echo ================ [Cleaning $(NAME)] ================
 	@echo
 	rm -f ${OBJ} ${TEST} ${DEPS} ${ASM} ${addprefix bin/,${TEST_NAMES}}
-	rm -f gmon.out callgrind.* $(LOG) ${TESTS:.c=} main profile measure
+	rm -f gmon.out callgrind.* $(LOG) ${TESTS:.c=} ${NAME}
 	if [[ -d build ]] ; then rmdir --ignore-fail-on-non-empty $(addprefix ${BUILD_FOLDER}, ${SRC_DIRS}); rmdir --ignore-fail-on-non-empty build; fi
 	if [[ -d bin ]] ; then rmdir --ignore-fail-on-non-empty bin; fi
 	#$(MAKE) -C libmeasure clean

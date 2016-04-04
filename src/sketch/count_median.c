@@ -23,9 +23,9 @@ count_median_t *count_median_create(hash_t *restrict hash, const uint8_t b,
 	register uint32_t i;
 	count_median_t *restrict s = xmalloc(sizeof(count_median_t));
 	uint32_t w                 = ceil(b / (epsilon*epsilon)) * hash->c;
-	uint32_t d                 = ceil( log((1./delta))); //6*(log(1/delta)+1);
+	uint32_t d                 = ceil( 6*(log(1/delta)+1) );
 
-	sketch_fix_size(&d, &w);
+	sketch_fixed_size(&d, &w);
 	hash_init(&s->size.M, w);
 
 	const uint32_t table_size  = sizeof(int64_t) * ((w+2)*d);

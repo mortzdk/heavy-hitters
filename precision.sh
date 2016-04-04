@@ -50,9 +50,9 @@ do
 		SEED1=$[ 1 + $[ RANDOM % 32768 ]]
 		SEED2=$[ 1 + $[ RANDOM % 32768 ]]
 		EPSILON=$(echo "1/${e}" | bc -l)
-		./main -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --const  >> ${OUT}.const
-		./main -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --min    >> ${OUT}.min
-		./main -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e ${EPSILON}                -d ${DELTA} -p ${PHI} -f ${FILE} --median >> ${OUT}.median
+		./precision_hh -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --const  >> ${OUT}.const
+		./precision_hh -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --min    >> ${OUT}.min
+		./precision_hh -m 4294967295 -1 ${SEED1} -2 ${SEED2} -e ${EPSILON}                -d ${DELTA} -p ${PHI} -f ${FILE} --median >> ${OUT}.median
 		((e*=2))
 	done
 	((p*=2))

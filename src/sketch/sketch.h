@@ -42,7 +42,7 @@ typedef struct {
 extern uint32_t depth;
 extern uint32_t width;
 
-inline void sketch_fix_size(uint32_t *restrict d, uint32_t *restrict w){
+inline void sketch_fixed_size(uint32_t *restrict d, uint32_t *restrict w){
 	if ( depth > 0 ) {
 		*d = depth;
 	}

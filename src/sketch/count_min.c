@@ -20,7 +20,7 @@ count_min_t *count_min_create(hash_t *restrict hash, const uint8_t b,
 	uint32_t w              = ceil(b / epsilon) * hash->c;
 	uint32_t d              = ceil(log2(1 / delta) / log2(b));
 
-	sketch_fix_size(&d, &w);
+	sketch_fixed_size(&d, &w);
 	hash_init(&s->size.M, w);
 
 	const uint32_t dw       = w*d;

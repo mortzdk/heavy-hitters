@@ -81,14 +81,14 @@ static void printusage(char *argv[]) {
 }
 
 int main (int argc, char **argv) {
-	uint32_t  i, j, k, uid;
-	uint8_t   h1, h2, h3, h4;
-	int32_t   opt, c = 0, d = 0;
-	format_t  format = -1;
-	stream_t *stream;
 	char     *string;
 	char      buf[256];
 	char     *buffer;
+	uint32_t  i, j, k, uid;
+	uint8_t   h1, h2, h3, h4;
+	stream_t *stream;
+	int32_t   opt, c   = 0, d = 0;
+	format_t  format   = -1;
 	char     *filename = NULL;
 	uint64_t  buf_size = 0;
 	bool start         = true;
@@ -201,8 +201,8 @@ int main (int argc, char **argv) {
 		xerror("Epsilon cannot be bigger than phi", __LINE__, __FILE__);
 	}
 
+	// This only work since the implementations appear first in long_options
 	if ( impl_cnt == 0 ) {
-		// This only work since the implementations appear first in long_options
 		while (impl_cnt < AMOUNT_OF_IMPLEMENTATIONS) {
 			alg[impl_cnt].impl  = long_options[impl_cnt].val;
 			alg[impl_cnt].index = impl_cnt;

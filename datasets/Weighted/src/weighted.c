@@ -21,7 +21,7 @@ static void printusage(char *argv[]) {
             "\t[-m --universe [uint32_t] {OPTIONAL} (Amount of elements in universe)]\n"
             "\t[-1 --seed1    [uint32_t] {OPTIONAL} (First seed value)]\n"
             "\t[-2 --seed2    [uint32_t] {OPTIONAL} (Second seed value)]\n"
-            "\t[-h --help                {OPTIONAL} (Shows this guideline)]\n"
+            "\t[-i --info                {OPTIONAL} (Shows this guideline)]\n"
             , argv[0]);
 }
 
@@ -44,6 +44,7 @@ int main (int argc, char**argv) {
         {"file",     required_argument,     0,    'f'},
         {"seed1",    required_argument,     0,    '1'},
         {"seed2",    required_argument,     0,    '2'},
+        {"info",    required_argument,     0,     'i'},
     };
 
 	uint64_t count = (1 << 25);
@@ -71,7 +72,7 @@ int main (int argc, char**argv) {
 			case '2':
 				I2 = strtoll(optarg, NULL, 10);
 				break;
-			case 'h':
+			case 'i':
 			default:
 				printusage(argv);
 				exit(EXIT_FAILURE);
@@ -85,9 +86,15 @@ int main (int argc, char**argv) {
 		}
 	}
 
+	if (filename == NULL) {
+		printusage(argv);
+		exit(EXIT_FAILURE);
+	}
+
 	map     = xmalloc( sizeof(uint32_t) * N );
 	weights = xmalloc( sizeof(double) * 33554432); // 2^25
 	res     = xmalloc( sizeof(uint32_t) * BUFFER );
+
 	file    = fopen(filename, "wb");
 	if ( file == NULL ) {
 		free(res);
