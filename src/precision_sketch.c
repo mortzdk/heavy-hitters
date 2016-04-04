@@ -107,6 +107,7 @@ int main (int argc, char **argv) {
 				break;
 			case 'w':
 				width = strtoll(optarg, NULL, 10);
+				epsilon = (double)2/width;
 				break;
 			case 'h':
 				depth = strtoll(optarg, NULL, 10);
@@ -141,7 +142,10 @@ int main (int argc, char **argv) {
 	printf("#seed1:    %"PRIu32"\n", I1);
 	printf("#seed2:    %"PRIu32"\n", I2);
 	printf("#m:        %"PRIu32"\n", m);
-	printf("#delta:    %lf\n", delta);
+
+	if ( !depth ) {
+		printf("#delta:    %lf\n", delta);
+	}
 	printf("#epsilon:  %lf\n", epsilon);
 
 	stream = stream_open(filename);
@@ -259,12 +263,12 @@ int main (int argc, char **argv) {
 	L2 = 0;
 	for (i = 0; i < m; i++) {
 		L1 += exact[i]; 
-		L2 += pow(exact[i], 2);
+		L2 += (uint64_t)powl((long double)exact[i], 2.);
 	}
-	L2 = sqrt(L2);
+	L2 = (uint64_t)sqrtl((long double)L2);
 
-	printf("#L1: %"PRIu64"\n", L1);
-	printf("#L2: %"PRIu64"\n", L2);
+	printf("#L1 NORM: %"PRIu64"\n", L1);
+	printf("#L2 NORM: %"PRIu64"\n", L2);
 
 	for (k = 0; k < impl_cnt; k++) {
 		errors[k][0] = 0;
@@ -284,9 +288,9 @@ int main (int argc, char **argv) {
 			}
 		}
 
-		printf("#%s L1 error: %lf\n", long_options[alg[k].index].name, 
+		printf("#%s L1 error: %0.17lf\n", long_options[alg[k].index].name, 
 				(double)errors[k][0]/m);
-		printf("#%s L2 error: %lf\n", long_options[alg[k].index].name, 
+		printf("#%s L2 error: %0.17lf\n", long_options[alg[k].index].name, 
 				(double)errors[k][1]/m);
 	}
 

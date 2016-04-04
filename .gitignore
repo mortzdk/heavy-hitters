@@ -4,9 +4,11 @@ build/
 prof/
 bin/test_*
 *.pyc
-main
+precision_hh
+precision_sketch
 profile
-measure
+measure_hh
+measure_sketch
 gmon.out
 callgrind.*.*
 datasets/DARPA/
