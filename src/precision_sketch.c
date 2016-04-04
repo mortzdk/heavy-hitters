@@ -46,8 +46,7 @@ int main (int argc, char **argv) {
 	char     *buffer;
 	uint32_t  i, j, k, uid;
 	uint64_t  *exact;
-	int64_t   point, diff;
-	uint64_t  L1, L2;
+	int64_t   point, diff, L1, L2;
 	stream_t *stream;
 	int32_t   opt;
 	char     *filename = NULL;
@@ -141,12 +140,7 @@ int main (int argc, char **argv) {
 	printf("#===========\n");
 	printf("#seed1:    %"PRIu32"\n", I1);
 	printf("#seed2:    %"PRIu32"\n", I2);
-	printf("#m:        %"PRIu32"\n", m);
-
-	if ( !depth ) {
-		printf("#delta:    %lf\n", delta);
-	}
-	printf("#epsilon:  %lf\n", epsilon);
+	printf("#===========\n");
 
 	stream = stream_open(filename);
 	stream_set_data_size(stream, 1048576);
@@ -167,14 +161,6 @@ int main (int argc, char **argv) {
 				xerror("Unknown sketch implementation.", __LINE__, __FILE__);
 		}
 	}
-
-	for (k = 0; k < impl_cnt; k++) {
-		printf("#%s width: %d\n", long_options[alg[k].index].name, 
-					sketch_width(impl[k]->sketch));
-		printf("#%s depth: %d\n", long_options[alg[k].index].name, 
-					sketch_depth(impl[k]->sketch));
-	}
-	printf("#===========\n");
 
 #ifdef PRINT
 	printf("#Reading Stream");
@@ -263,12 +249,9 @@ int main (int argc, char **argv) {
 	L2 = 0;
 	for (i = 0; i < m; i++) {
 		L1 += exact[i]; 
-		L2 += (uint64_t)powl((long double)exact[i], 2.);
+		L2 += (int64_t)powl((long double)exact[i], 2.);
 	}
-	L2 = (uint64_t)sqrtl((long double)L2);
-
-	printf("#L1 NORM: %"PRIu64"\n", L1);
-	printf("#L2 NORM: %"PRIu64"\n", L2);
+	L2 = (int64_t)sqrtl((long double)L2);
 
 	for (k = 0; k < impl_cnt; k++) {
 		errors[k][0] = 0;
@@ -277,22 +260,28 @@ int main (int argc, char **argv) {
 		for (i = 0; i < m; i++) {
 			point = sketch_point(impl[k], i);
 			diff  = (int64_t)point - (int64_t)exact[i];
-			if ( diff < (int64_t)(-epsilon*L1) ||
+			if ( diff < -epsilon*L1 ||
 			     diff > epsilon*L1 ) {
 				errors[k][0] += 1;
 			}
 
-			if ( diff < (int64_t)(-epsilon*L2) ||
+			if ( diff < -epsilon*L2 ||
 			     diff > epsilon*L2 ) {
 				errors[k][1] += 1;
 			}
 		}
 
-		printf("#%s L1 error: %0.17lf\n", long_options[alg[k].index].name, 
-				(double)errors[k][0]/m);
-		printf("#%s L2 error: %0.17lf\n", long_options[alg[k].index].name, 
-				(double)errors[k][1]/m);
+		printf("%s,", long_options[alg[k].index].name);
+		printf("%0.10lf,", (double)errors[k][0]/m);
+		printf("%0.10lf,", (double)errors[k][1]/m);
+		printf("%0.10lf,", epsilon);
+		printf("%"PRIu32",", width);
+		printf("%"PRIu32",", depth);
+		printf("%"PRIu32",", m);
+		printf("%"PRIu64",", L1);
+		printf("%"PRIu64"\n", L2);
 	}
+
 
 	free(exact);
 	stream_close(stream);
