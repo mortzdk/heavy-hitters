@@ -7,8 +7,9 @@
 #include "hh/hh.h"
 #include "hh/const_sketch.h"
 #include "sketch/sketch.h"
-#include "util/xutil.h"
+#include "util/fifo.h"
 #include "util/hash.h"
+#include "util/xutil.h"
 
 // Initialization
 hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
@@ -46,6 +47,7 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 	hh->result.count   = 0; 
 	hh->w              = w;
 	hh->hash           = p->hash;
+	hh->fifo           = fifo_create(ceil(2./phi));
 	hh->result.hitters = xmalloc(result_size);
 	hh->result.size    = result_size;
 	memset(hh->result.hitters, '\0', result_size);
@@ -80,6 +82,11 @@ void hh_const_sketch_destroy(hh_const_sketch_t *restrict hh) {
 	if (hh->tree != NULL) {
 		free(hh->tree);
 		hh->tree = NULL;
+	}
+
+	if (hh->fifo != NULL) {
+		fifo_destroy(hh->fifo);
+		hh->fifo = NULL;
 	}
 
 	if (hh->result.hitters != NULL) {
@@ -216,6 +223,7 @@ static void hh_const_sketch_query_top_recursive(hh_const_sketch_t *restrict hh,
 				assert( x < hh->params->m );
 
 				hh->result.count++;
+
 				if ( unlikely(hh->result.count >= hh->result.size) ) { 
 					hh->result.hitters = xrealloc(hh->result.hitters, 
 							hh->result.size*2);
@@ -232,7 +240,86 @@ static void hh_const_sketch_query_top_recursive(hh_const_sketch_t *restrict hh,
 	}
 }
 
+static inline void hh_const_sketch_resize_result(heavy_hitter_t *res) {
+	if ( unlikely(res->count >= res->size) ) { 
+		res->hitters = xrealloc(res->hitters, res->size*2);
+		memset(res->hitters+res->size, '\0', res->size);
+		res->size += res->size;
+	}
+}
+
 heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *restrict hh) {
+	uint32_t x, idx, offset, a, b, h;
+	uint8_t i, layer;
+	elm_t *res;
+	uint8_t  M               = hh->M;
+	uint32_t w               = hh->w;
+	uint8_t  exact_cnt       = hh->exact_cnt;
+	const uint8_t logm       = hh->logm;
+	const double threshold   = hh->params->phi*hh->norm;
+	uint64_t *restrict tree  = hh->tree;
+	fifo_t    *restrict fifo = hh->fifo;
+	hash hash                = hh->hash->hash;
+
+	hh->result.count         = 0;
+
+	memset(hh->result.hitters, '\0', hh->result.size); 
+
+	fifo_push_back(fifo, 0, 0);
+
+	while ( !fifo_empty(fifo) ) {
+		res   = fifo_pop_front(fifo);
+		idx   = 2*res->elm;
+		layer = res->layer;
+
+		for (i = 0; i < 2; i++) { // branch=2
+			x = idx+i;
+
+			if ( layer < exact_cnt ) {
+				if ( tree[x+(1 << (layer+1))-2] >= threshold ) {
+					if ( unlikely(layer == logm-1) ) {
+						hh->result.hitters[hh->result.count] = x;
+
+						assert( x < hh->params->m );
+
+						hh->result.count++;
+
+						hh_const_sketch_resize_result(&hh->result);
+					} else {
+						fifo_push_back(fifo, x, layer+1);
+					}
+				}
+			} else {
+				offset = (1 << (exact_cnt+1))-2 + ((w+1) * (layer-exact_cnt));
+				a = (tree[offset] >> 32);
+				b = (uint32_t) tree[offset];
+				h = hash(w, M, x, a, b);
+
+				// Plus one to get away from a and b
+				if ( tree[offset + 1 + h] >= threshold ) {
+					if ( unlikely( layer == logm-1 ) ) {
+						if ( sketch_above_thresshold(hh->sketch, x, 
+									threshold) ) {
+							hh->result.hitters[hh->result.count] = x;
+
+							assert( x < hh->params->m );
+
+							hh->result.count++;
+
+							hh_const_sketch_resize_result(&hh->result);
+						}
+					} else {
+						fifo_push_back(fifo, x, layer+1);
+					}
+				}
+			}
+		}
+	}
+
+	return &hh->result;
+}
+
+heavy_hitter_t *hh_const_sketch_query_recursive(hh_const_sketch_t *restrict hh) {
 	const double thresshold = hh->params->phi*hh->norm;
 
 	hh->result.count = 0;

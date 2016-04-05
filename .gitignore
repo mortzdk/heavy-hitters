@@ -7,8 +7,8 @@ bin/test_*
 precision_hh
 precision_sketch
 profile
-measure_hh
-measure_sketch
+benchmark_hh
+benchmark_sketch
 gmon.out
 callgrind.*.*
 datasets/DARPA/

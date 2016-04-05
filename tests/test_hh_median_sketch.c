@@ -3,9 +3,9 @@
 #include <math.h>
 #include <criterion/criterion.h>
 
-#include "hash.h"
-#include "alias.h"
-#include "xutil.h"
+#include "util/hash.h"
+#include "util/alias.h"
+#include "util/xutil.h"
 
 #include "hh/hh.h"
 #include "hh/sketch.h"
@@ -178,9 +178,6 @@ Test(hh_sketch, hh_top_and_bottom_close_non_hh_median, .disabled=0) {
 	for (uint32_t i = 0; i < pow(2, 25); i++) {
 		idx = alias_draw(a);
 		heavy_hitter_update(hh, idx, 1);
-		if (i % 1000000 == 0) {
-			printf("here\n");
-		}
 	}
 
 	heavy_hitter_t *result = heavy_hitter_query(hh);

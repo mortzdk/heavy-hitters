@@ -3,9 +3,9 @@
 #include <math.h>
 #include <criterion/criterion.h>
 
-#include "hash.h"
-#include "alias.h"
-#include "xutil.h"
+#include "util/hash.h"
+#include "util/alias.h"
+#include "util/xutil.h"
 
 #include "hh/hh.h"
 #include "hh/const_sketch.h"

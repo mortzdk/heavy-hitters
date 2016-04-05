@@ -6,6 +6,7 @@
 
 // User defined libraries
 #include "util/hash.h"
+#include "util/fifo.h"
 #include "hh/hh.h"
 #include "sketch/sketch.h"
 
@@ -26,6 +27,7 @@ typedef struct {
 	uint8_t                logm;
 	uint64_t               norm;
 	hh_sketch_params_t    *restrict params;
+	fifo_t                *restrict fifo;
 	heavy_hitter_t         result;
 } hh_sketch_t; 
 
@@ -41,5 +43,6 @@ void hh_sketch_update(hh_sketch_t *restrict hh, const uint32_t idx,
 
 // Query
 heavy_hitter_t *hh_sketch_query(hh_sketch_t *restrict hh);
+heavy_hitter_t *hh_sketch_query_recursive(hh_sketch_t *restrict hh);
 
 #endif

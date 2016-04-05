@@ -6,6 +6,7 @@
 #include <assert.h>
 
 #include "util/xutil.h"
+#include "util/fifo.h"
 #include "hh/hh.h"
 #include "hh/sketch.h"
 #include "sketch/sketch.h"
@@ -36,6 +37,7 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	hh->params         = params;
 	hh->norm           = 0;
 	hh->result.count   = 0; 
+	hh->fifo           = fifo_create(ceil(1./phi));
 	hh->result.size    = result_size = sizeof(uint32_t) * ceil(2./phi);
 	hh->result.hitters = xmalloc( result_size );
 	memset(hh->result.hitters, '\0', result_size);
@@ -86,6 +88,11 @@ void hh_sketch_destroy(hh_sketch_t *restrict hh) {
 	if (hh->top != NULL) {
 		free(hh->top);
 		hh->top = NULL;
+	}
+
+	if (hh->fifo != NULL) {
+		fifo_destroy(hh->fifo);
+		hh->fifo = NULL;
 	}
 
 	if (hh->result.hitters != NULL) {
@@ -150,8 +157,8 @@ static void hh_sketch_query_bottom_recursive(hh_sketch_t *restrict hh,
 		const uint8_t layer, uint32_t x, const double th) {
 	uint8_t i;
 	sketch_t **restrict tree = hh->tree;
-	uint8_t    top_cnt       = hh->top_cnt; 
-	uint8_t    logm          = hh->logm;
+	uint8_t top_cnt          = hh->top_cnt; 
+	uint8_t logm             = hh->logm;
 
 	x *= 2;
 
@@ -164,6 +171,7 @@ static void hh_sketch_query_bottom_recursive(hh_sketch_t *restrict hh,
 				assert( x < hh->params->m );
 
 				hh->result.count++;
+
 				if ( unlikely(hh->result.count >= hh->result.size) ) { 
 					hh->result.hitters = xrealloc(hh->result.hitters, 
 							hh->result.size*2);
@@ -181,9 +189,9 @@ static void hh_sketch_query_bottom_recursive(hh_sketch_t *restrict hh,
 static void hh_sketch_query_top_recursive(hh_sketch_t *restrict hh, 
 		const uint8_t layer, uint32_t x, const double th) {
 	uint8_t i;
-	uint32_t  *restrict top  = hh->top;
-	uint8_t    top_cnt       = hh->top_cnt; 
-	uint8_t    logm          = hh->logm;
+	uint32_t *restrict top = hh->top;
+	uint8_t top_cnt        = hh->top_cnt; 
+	uint8_t logm           = hh->logm;
 
 	x *= 2;
 
@@ -197,6 +205,7 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *restrict hh,
 				assert( x < hh->params->m );
 
 				hh->result.count++;
+
 				if ( unlikely(hh->result.count >= hh->result.size) ) { 
 					hh->result.hitters = xrealloc(hh->result.hitters, 
 							hh->result.size*2);
@@ -213,8 +222,76 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *restrict hh,
 	}
 }
 
-// Query
+static inline void hh_sketch_resize_result(heavy_hitter_t *res) {
+	if ( unlikely(res->count >= res->size) ) { 
+		res->hitters = xrealloc(res->hitters, res->size*2);
+		memset(res->hitters+res->size, '\0', res->size);
+		res->size += res->size;
+	}
+}
+
 heavy_hitter_t *hh_sketch_query(hh_sketch_t *restrict hh) {
+	uint32_t x, idx;
+	uint8_t i, layer;
+	elm_t *res;
+	const uint8_t top_cnt    = hh->top_cnt; 
+	const uint8_t logm       = hh->logm;
+	const double threshold   = hh->params->phi*hh->norm;
+	sketch_t **restrict tree = hh->tree;
+	uint32_t  *restrict top  = hh->top;
+	fifo_t    *restrict fifo = hh->fifo;
+
+	hh->result.count         = 0;
+
+	memset(hh->result.hitters, '\0', hh->result.size); 
+
+	fifo_push_back(fifo, 0, 0);
+
+	while ( !fifo_empty(fifo) ) {
+		res   = fifo_pop_front(fifo);
+		idx   = 2*res->elm;
+		layer = res->layer;
+
+		for (i = 0; i < 2; i++) { // branch=2
+			x = idx+i;
+
+			if ( layer < top_cnt  ) {
+				if ( top[x+(1 << (layer+1))-2] >= threshold ) {
+					if ( unlikely(layer == logm-1) ) {
+						hh->result.hitters[hh->result.count] = x;
+
+						assert( x < hh->params->m );
+
+						hh->result.count++;
+
+						hh_sketch_resize_result(&hh->result);
+					} else {
+						fifo_push_back(fifo, x, layer+1);
+					}
+				}
+			} else {
+				if ( sketch_point(tree[layer-top_cnt], x) >= threshold ) {
+					if ( unlikely( layer == logm-1 ) ) {
+						hh->result.hitters[hh->result.count] = x;
+
+						assert( x < hh->params->m );
+
+						hh->result.count++;
+
+						hh_sketch_resize_result(&hh->result);
+					} else {
+						fifo_push_back(fifo, x, layer+1);
+					}
+				} 
+			}
+		}
+	}
+
+	return &hh->result;
+}
+
+// Query
+heavy_hitter_t *hh_sketch_query_recursive(hh_sketch_t *restrict hh) {
 	const double threshold = hh->params->phi*hh->norm;
 
 	hh->result.count = 0;

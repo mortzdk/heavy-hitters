@@ -1,3 +1,6 @@
+#ifndef H_MEDIAN
+#define H_MEDIAN
+
 #include <inttypes.h>
 
 #include "xutil.h"
@@ -37,3 +40,5 @@ int64_t median_quick_select(int64_t *restrict v, const uint32_t n);
  ---------------------------------------------------------------------------*/
 
 int64_t median_wirth(int64_t *restrict v, const uint32_t n);
+
+#endif

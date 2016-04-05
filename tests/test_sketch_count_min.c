@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <criterion/criterion.h>
 
-#include "hash.h"
+#include "util/hash.h"
 #include "sketch/count_min.h"
 #include "sketch/sketch.h"
 
