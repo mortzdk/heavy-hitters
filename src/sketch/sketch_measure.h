@@ -10,8 +10,14 @@
 #include "util/hash.h"
 
 typedef struct {
+	uint32_t i;
+	int64_t  c;
+} sketch_measure_params_t;
+
+typedef struct {
 	void          *restrict sketch;
 	sketch_func_t *restrict funcs;
+	sketch_measure_params_t params;
 } sketch_measure_t;
 
 typedef struct {
@@ -22,15 +28,9 @@ typedef struct {
 	const double delta;
 } sketch_measure_create_t;
 
-typedef struct {
-	sketch_measure_t *s;
-	const uint32_t i;
-	const int64_t  c;
-} sketch_measure_params_t;
-
 sketch_measure_t *sketch_measure_create(sketch_measure_create_t *params);
-void              sketch_measure_destroy(sketch_measure_params_t *params);
-void              sketch_measure_update(sketch_measure_params_t *params);
-int64_t           sketch_measure_point(sketch_measure_params_t *params);
+void              sketch_measure_destroy(sketch_measure_t *sm);
+void              sketch_measure_update(sketch_measure_t *sm);
+int64_t           sketch_measure_point(sketch_measure_t *sm);
 
 #endif

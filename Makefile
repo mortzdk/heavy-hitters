@@ -12,7 +12,7 @@ RELEASE = -O3 -DNDEBUG
 EXEC = ${RELEASE}
 
 # Which binary to compile
-NAME = precision_hh precision_sketch profile measure_hh
+NAME = precision_hh precision_sketch benchmark_hh benchmark_sketch
 
 # Compiler options
 CFLAGS = -MMD -pipe -fno-exceptions -fstack-protector\

@@ -15,21 +15,21 @@ sketch_measure_t *sketch_measure_create(sketch_measure_create_t *params) {
 	return s;
 }
 
-void sketch_measure_destroy(sketch_measure_params_t *params) {
-	if ( unlikely(params->s == NULL) ) {
+void sketch_measure_destroy(sketch_measure_t *sm) {
+	if ( unlikely(sm->sketch == NULL) ) {
 		return;
 	}
 
-	params->s->funcs->destroy(params->s->sketch);
+	sm->funcs->destroy(sm->sketch);
 
-	free(params->s);
-	params->s = NULL;
+	free(sm->sketch);
+	sm->sketch = NULL;
 }
 
-void sketch_measure_update(sketch_measure_params_t *params) {
-	params->s->funcs->update(params->s->sketch, params->i, params->c);
+void sketch_measure_update(sketch_measure_t *sm) {
+	sm->funcs->update(sm->sketch, sm->params.i, sm->params.c);
 }
 
-int64_t sketch_measure_point(sketch_measure_params_t *params) {
-	return params->s->funcs->point(params->s->sketch, params->i);
+int64_t sketch_measure_point(sketch_measure_t *sm) {
+	return sm->funcs->point(sm->sketch, sm->params.i);
 }
