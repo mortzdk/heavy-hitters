@@ -238,6 +238,8 @@ int main (int argc, char **argv) {
 		j = i;
 	}
 
+	j++;
+
 	do {
 		if (!start) {
 			buffer = stream_read(stream);

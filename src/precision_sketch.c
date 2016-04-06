@@ -169,6 +169,7 @@ int main (int argc, char **argv) {
 	j      = 0;
 	buffer = stream_read(stream);
 
+	// Skip comments
 	while ( unlikely(j < stream->data.length && buffer[j] == '#') ) {
 		while ( likely(i < stream->data.length && buffer[i] != '\n') ) {
 			i++;
@@ -186,6 +187,7 @@ int main (int argc, char **argv) {
 		j = i;
 	}
 
+	// Start working on data
 	do {
 #ifdef PRINT
 		printf(".");
