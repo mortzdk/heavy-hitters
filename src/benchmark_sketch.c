@@ -158,6 +158,8 @@ int main (int argc, char **argv) {
 	printf("===========\n\n");
 
 	if ( !measure_init(output) ) {
+		free(output);
+		free(filename);
 		xerror("Unable to initialize libmeasure", __LINE__, __FILE__);
 	}
 
@@ -196,7 +198,9 @@ int main (int argc, char **argv) {
 						params[IDX(runs, k, k2, k3)] = &params_median;
 						break;
 					default:
-						xerror("Unknown heavy hitter implementation.", __LINE__, __FILE__);
+						free(output);
+						free(filename);
+						xerror("Unknown sketch implementation.", __LINE__, __FILE__);
 				}
 			}
 		}
@@ -355,6 +359,7 @@ int main (int argc, char **argv) {
 
 	stream_close(stream);
 	free(filename);
+	free(output);
 
 	return EXIT_SUCCESS;
 }

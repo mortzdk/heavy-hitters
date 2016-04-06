@@ -16,14 +16,14 @@ sketch_measure_t *sketch_measure_create(sketch_measure_create_t *params) {
 }
 
 void sketch_measure_destroy(sketch_measure_t *sm) {
-	if ( unlikely(sm->sketch == NULL) ) {
+	if ( unlikely(sm == NULL) ) {
 		return;
 	}
 
 	sm->funcs->destroy(sm->sketch);
 
-	free(sm->sketch);
-	sm->sketch = NULL;
+	free(sm);
+	sm = NULL;
 }
 
 void sketch_measure_update(sketch_measure_t *sm) {

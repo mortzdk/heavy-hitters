@@ -37,7 +37,7 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	hh->params         = params;
 	hh->norm           = 0;
 	hh->result.count   = 0; 
-	hh->fifo           = fifo_create(ceil(1./phi));
+	hh->fifo           = fifo_create(ceil(2./phi));
 	hh->result.size    = result_size = sizeof(uint32_t) * ceil(2./phi);
 	hh->result.hitters = xmalloc( result_size );
 	memset(hh->result.hitters, '\0', result_size);
