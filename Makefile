@@ -9,7 +9,7 @@ CC = gcc
 PROFILE = -Og -g -DRUPIFY -DNDEBUG
 DEBUG = -Og -g
 RELEASE = -O3 -DNDEBUG
-EXEC = ${RELEASE}
+EXEC = ${DEBUG}
 
 # Which binary to compile
 NAME = precision_hh precision_sketch benchmark_hh benchmark_sketch

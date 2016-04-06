@@ -216,30 +216,42 @@ int main (int argc, char **argv) {
 		);
 	}
 
-
 	i = 0;
 	j = 0;
 	buffer = stream_read(stream);
 
+	// Skip comments
 	while ( unlikely(j < stream->data.length && buffer[j] == '#') ) {
+		// Read line until newline appears
 		while ( likely(i < stream->data.length && buffer[i] != '\n') ) {
 			i++;
+			// If we run out of buffer we read a new chunk
 			if ( unlikely(i == stream->data.length) ) {
 				buffer = stream_read(stream);
 				i      = 0;
 				j      = 0;
 			}
 		}
+
+		// Goto next character
 		i++;
-		if ( unlikely(i == stream->data.length) ) {
+
+		// If we run out of buffer we read a new chunk
+		if ( unlikely(i >= stream->data.length) ) {
 			buffer = stream_read(stream);
 			i      = 0;
 		}
+
+		if ( unlikely(buffer[i] == '\n') ) {
+			i++;
+			j = i;
+			break;
+		}
+
 		j = i;
 	}
 
-	j++;
-
+	// Start reading binary
 	do {
 		if (!start) {
 			buffer = stream_read(stream);
