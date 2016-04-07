@@ -35,6 +35,8 @@ void count_median_update(count_median_t *restrict s, const uint32_t i,
 
 // Query
 int64_t count_median_point(count_median_t *restrict s, const uint32_t i);
+int64_t count_median_point_partial(count_median_t *restrict s,
+		const uint32_t i, const uint32_t d);
 bool count_median_above_thresshold(count_median_t *restrict s,
 		const uint32_t i, const uint64_t th);
 int64_t count_median_range_sum(count_median_t *restrict s, const uint32_t l, 
