@@ -136,14 +136,15 @@ int main (int argc, char**argv) {
 
 	for (i = 0; i < m; i++) {
 		map[i] = i;
+
 		if ( unlikely(i < N) ) {
 			continue;
 		}
 
 		if ( N == 0 ) {
-			weights[i] = 1/m;
+			weights[i] = (double)1./m;
 		} else {
-			weights[i] = 1/(m-N) * (count*(sum/100));
+			weights[i] = (double)1./(m-N) * (double)(count*(sum/100.));
 		}
 	}
 
@@ -153,7 +154,7 @@ int main (int argc, char**argv) {
 	if ( N > 0 ) {
 		fprintf(file, "#====== Weights ======\n");
 		for (i = 0; i < N && i < 1024; i++) {
-			fprintf(file, "#%"PRIu32": %lf\n", map[i], (double)(i+1)/100);
+			fprintf(file, "#%"PRIu32": %lf\n", map[i], (double)(i+1)/100.);
 		}
 		fprintf(file, "\n");
 	}
