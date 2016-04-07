@@ -25,6 +25,18 @@ static void printusage(char *argv[]) {
             , argv[0]);
 }
 
+static void shuffle(uint32_t *map, uint32_t m) {
+	int64_t i;
+	uint32_t j, tmp;
+
+	for ( i = m-1; i >= 0; i-- ) {
+		j = (uint32_t) xuni_rand() * (i+1);
+		tmp = map[j];
+		map[j] = map[i];
+		map[i] = tmp;
+
+	}
+}
 int main (int argc, char**argv) {
 	FILE *file;
 	uint64_t j, i = 0;
@@ -86,13 +98,20 @@ int main (int argc, char**argv) {
 		}
 	}
 
+	if ( m < N ) {
+		if (filename != NULL) {
+			free(filename);
+		}
+		xerror(strerror(errno), __LINE__, __FILE__);
+	}
+
 	if (filename == NULL) {
 		printusage(argv);
 		exit(EXIT_FAILURE);
 	}
 
-	map     = xmalloc( sizeof(uint32_t) * N );
-	weights = xmalloc( sizeof(double) * 33554432); // 2^25
+	map     = xmalloc( sizeof(uint32_t) * m );
+	weights = xmalloc( sizeof(double) * m); // 2^25
 	res     = xmalloc( sizeof(uint32_t) * BUFFER );
 
 	file    = fopen(filename, "wb");
@@ -112,25 +131,34 @@ int main (int argc, char**argv) {
 
 	for (i = 0; i < N; i++) {
 		weights[i] = ((double)(i+1)/100) * count;
-		map[i]     = xuni_rand()*m;
 		sum       += weights[i];
 	}
 
-	for (i = 0; i < 33554432; i++) {
+	for (i = 0; i < m; i++) {
+		map[i] = i;
 		if ( unlikely(i < N) ) {
 			continue;
 		}
-		weights[i] = 1/(33554432-N) * (count*(sum/100));
+
+		if ( N == 0 ) {
+			weights[i] = 1/m;
+		} else {
+			weights[i] = 1/(m-N) * (count*(sum/100));
+		}
 	}
+
+	shuffle(map, m);
 
 	// Print the weights of the top k probabilities into header of file
-	fprintf(file, "#====== Weights ======\n");
-	for (i = 0; i < N; i++) {
-		fprintf(file, "#%"PRIu32": %lf\n", map[i], (double)(i+1)/100);
+	if ( N > 0 ) {
+		fprintf(file, "#====== Weights ======\n");
+		for (i = 0; i < N && i < 1024; i++) {
+			fprintf(file, "#%"PRIu32": %lf\n", map[i], (double)(i+1)/100);
+		}
+		fprintf(file, "\n");
 	}
-	fprintf(file, "\n");
 
-	alias_t *a = alias_preprocess(N, weights);
+	alias_t *a = alias_preprocess(m, weights);
 
 	i = 0;
 	while ( likely(i < count) ) {
