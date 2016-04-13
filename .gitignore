@@ -1,3 +1,4 @@
+*.dat
 *.swp
 *.swo
 build/
@@ -9,6 +10,7 @@ precision_sketch
 profile
 benchmark_hh
 benchmark_sketch
+error_sketch
 gmon.out
 callgrind.*.*
 datasets/DARPA/
@@ -19,4 +21,5 @@ datasets/Zipfian/zipfian
 datasets/Zipfian/*.dat
 datasets/Zipfian/weighted
 datasets/Zipfian/*.dat
+datasets/Weighted/weighted
 results
