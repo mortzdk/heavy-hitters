@@ -27,15 +27,23 @@
 
 // Initialization
 CMH_type *hh_cormode_cmh_create(heavy_hitter_params_t *restrict p) {
-	hh_cormode_cmh_params_t *restrict params = (hh_cormode_cmh_params_t *)p->params;
+	uint32_t w,d;
 
+	hh_cormode_cmh_params_t *restrict params = (hh_cormode_cmh_params_t *) p->params;
 	int gran           = 1;
-
 	const uint8_t logm = ceil(log2(params->m)/log2(2*gran));
 	double delta       = (double)((params->delta*params->phi)/(2.*gran*logm));
 
-	uint32_t width     = ceil(params->b / params->epsilon) * p->hash->c;
-	uint32_t depth     = ceil(log2(1 / delta) / log2(params->b));
+	if (width == 0) {
+		w = ceil(params->b / params->epsilon) * p->hash->c;
+	} else {
+		w = width;
+	}
+	if (depth == 0) {
+		d     = ceil(log2(1 / delta) / log2(params->b));
+	} else {
+		d = depth;
+	}
 
 	int U              = xceil_log2(params->m);
 
@@ -61,8 +69,8 @@ CMH_type *hh_cormode_cmh_create(heavy_hitter_params_t *restrict p) {
 
   if (cmh && prng)
     {
-      cmh->depth=depth;
-      cmh->width=width;
+      cmh->depth=d;
+      cmh->width=w;
       cmh->count=0;
       cmh->U=U;
       cmh->gran=gran;
