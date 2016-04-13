@@ -51,7 +51,8 @@ int main (int argc, char **argv) {
 	uint32_t  i, j, k, uid;
 	uint64_t  *exact;
 	uint64_t  *diffs;
-	int64_t   point, diff, L1, L2;
+	uint64_t  L1, L2;
+	int64_t   point, diff;
 	stream_t *stream;
 	int32_t   opt;
 	char     *filename = NULL;
@@ -111,10 +112,11 @@ int main (int argc, char **argv) {
 				break;
 			case 'w':
 				width = strtoll(optarg, NULL, 10);
-				epsilon = (double)2/width;
+				epsilon = (double)2./width;
 				break;
 			case 'h':
 				depth = strtoll(optarg, NULL, 10);
+				delta = 1./pow(2., depth);
 				break;
 			case 'i':
 			default:
@@ -145,7 +147,6 @@ int main (int argc, char **argv) {
 	printf("#===========\n");
 	printf("#seed1:    %"PRIu32"\n", I1);
 	printf("#seed2:    %"PRIu32"\n", I2);
-	printf("#delta:    %f\n", delta);
 	printf("#===========\n");
 
 	stream = stream_open(filename);
@@ -271,17 +272,17 @@ int main (int argc, char **argv) {
 	L2 = 0;
 	for (i = 0; i < m; i++) {
 		L1 += exact[i]; 
-		L2 += (int64_t)powl((long double)exact[i], 2.);
+		L2 += (uint64_t)powl((long double)exact[i], 2.);
 	}
-	L2 = (int64_t)sqrtl((long double)L2);
+	L2 = (uint64_t)sqrtl((long double)L2);
 
 	diffs = xmalloc( m * sizeof(uint64_t) );
 	memset(diffs, '\0', m*sizeof(uint64_t)) ;
 
 	for (k = 0; k < impl_cnt; k++) {
 		for (i = 0; i < m; i++) {
-			point = sketch_point(impl[k], i);
-			diff  = (int64_t)point - (int64_t)exact[i];
+			point    = sketch_point(impl[k], i);
+			diff     = (int64_t)point - (int64_t)exact[i];
 			diffs[i] = llabs(diff);
 
 #ifdef PRINT
@@ -299,6 +300,7 @@ int main (int argc, char **argv) {
 		printf("%s,", long_options[alg[k].index].name);
 		printf("%0.10lf,", (double)error);
 		printf("%0.10lf,", epsilon);
+		printf("%0.10lf,", delta);
 		printf("%"PRIu32",", width);
 		printf("%"PRIu32",", depth);
 		printf("%"PRIu32",", m);

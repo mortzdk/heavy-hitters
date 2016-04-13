@@ -77,11 +77,15 @@ else
 	e=2;
 	for ((i=1; e<=limit; i++));
 	do
-		SEED1=$[ 1 + $[ RANDOM % 32768 ]]
-		SEED2=$[ 1 + $[ RANDOM % 32768 ]]
-		WIDTH=$(echo "2/(1/${e})" | bc -l)
-		./precision_sketch -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -f ${FILE} -w ${WIDTH} -h 1 --min    >> ${OUT}.min
-		./precision_sketch -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -f ${FILE} -w ${WIDTH} -h 1 --median >> ${OUT}.median
+		for ((j=0; j<10; j++));
+		do
+			SEED1=$[ 1 + $[ RANDOM % 32768 ]]
+			SEED2=$[ 1 + $[ RANDOM % 32768 ]]
+			WIDTH=$(echo "2/(1/${e})" | bc -l)
+			HEIGHT=1
+			./precision_sketch -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -f ${FILE} -w ${WIDTH} -h ${HEIGHT} --min    >> ${OUT}.min
+			./precision_sketch -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -f ${FILE} -w ${WIDTH} -h ${HEIGHT} --median >> ${OUT}.median
+		done
 		((e*=2))
 	done
 fi
