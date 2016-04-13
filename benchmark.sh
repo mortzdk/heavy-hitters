@@ -36,13 +36,13 @@ done
 # Universe
 : "${UNIVERSE:=4294967295}"
 
+# HEIGHT and WIDTH is those satisfying the Count Min Sketch guarantees
 if [ "$TYPE" == "hh" ]; then
 	limit=128
 	p=8
 	for ((i=1; p<limit; i++));
 	do
 		RUNS=10
-		DELTA=0.25
 		PHI=$(echo "1/${p}" | bc -l)
 		
 		e=$((p*2))
@@ -50,7 +50,8 @@ if [ "$TYPE" == "hh" ]; then
 		do
 			SEED1=$[ 1 + $[ RANDOM % 32768 ]]
 			SEED2=$[ 1 + $[ RANDOM % 32768 ]]
-			EPSILON=$(echo "1/${e}" | bc -l)
+			WIDTH=$(echo "2/(1/${e})" | bc -l)
+			HEIGHT=4
 
 			echo -n "# COMMIT: " >> ${OUT}.${p}.${e}.const
 			git log -1 --oneline >> ${OUT}.${p}.${e}.const
@@ -67,9 +68,15 @@ if [ "$TYPE" == "hh" ]; then
 			echo -n "# "         >> ${OUT}.${p}.${e}.median
 			date                 >> ${OUT}.${p}.${e}.median
 
-			./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --const  -r ${RUNS} -o ${OUT}.${p}.${e}.const
-			./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --min    -r ${RUNS} -o ${OUT}.${p}.${e}.min
-			./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -e ${EPSILON}                -d ${DELTA} -p ${PHI} -f ${FILE} --median -r ${RUNS} -o ${OUT}.${p}.${e}.median
+			echo -n "# COMMIT: " >> ${OUT}.${p}.${e}.cmh
+			git log -1 --oneline >> ${OUT}.${p}.${e}.cmh
+			echo -n "# "         >> ${OUT}.${p}.${e}.cmh
+			date                 >> ${OUT}.${p}.${e}.cmh
+
+			./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} -h ${HEIGHT} -p ${PHI} -f ${FILE} --const  -r ${RUNS} -o ${OUT}.${p}.${e}.const
+			./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} -h ${HEIGHT} -p ${PHI} -f ${FILE} --min    -r ${RUNS} -o ${OUT}.${p}.${e}.min
+			./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} -h ${HEIGHT} -p ${PHI} -f ${FILE} --median -r ${RUNS} -o ${OUT}.${p}.${e}.median
+			./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} -h ${HEIGHT} -p ${PHI} -f ${FILE} --cormode -r ${RUNS} -o ${OUT}.${p}.${e}.cmh
 			((e*=2))
 		done
 		((p*=2))

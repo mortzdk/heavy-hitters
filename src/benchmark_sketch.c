@@ -30,19 +30,19 @@ typedef struct {
 } alg_t;
 
 static void printusage(char *argv[]) {
-    fprintf(stderr, "Usage: %s \n"
+    fprintf(stderr, "Usage (order is significant): %s \n"
             "\t[-o --output   [char *]   {REQUIRED} (Filename to write to)]\n"
             "\t[-f --file     [char *]   {REQUIRED} (Filename to hand to stream)]\n"
+            "\t[-m --universe [uint32_t] {OPTIONAL} (Universe i.e. amount of unique items)]\n"
             "\t[-e --epsilon  [double]   {OPTIONAL} (Epsilon value)]\n"
             "\t[-d --delta    [double]   {OPTIONAL} (Delta value)]\n"
-            "\t[-m --universe [uint32_t] {OPTIONAL} (Universe i.e. amount of unique items)]\n"
-            "\t[-r --runs     [uint32_t] {OPTIONAL} (Amount of runs to average over)]\n"
             "\t[-w --width    [double]   {OPTIONAL} (Height of sketch)]\n"
             "\t[-h --height   [double]   {OPTIONAL} (Width of sketch)]\n"
-            "\t[--min                    {OPTIONAL} (Run Count-Min Sketch)]\n"
-            "\t[--median                 {OPTIONAL} (Run Count-Median Sketch)]\n"
+            "\t[--min                    {OPTIONAL} (Run Count Min Sketch)]\n"
+            "\t[--median                 {OPTIONAL} (Run Count Median Sketch)]\n"
             "\t[-1 --seed1    [uint32_t] {OPTIONAL} (First seed value)]\n"
             "\t[-2 --seed2    [uint32_t] {OPTIONAL} (Second seed value)]\n"
+            "\t[-r --runs     [uint32_t] {OPTIONAL} (Amount of runs to average over)]\n"
             "\t[-i --info                {OPTIONAL} (Shows this guideline)]\n"
             , argv[0]);
 }

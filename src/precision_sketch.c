@@ -23,13 +23,13 @@ typedef enum {
 static void printusage(char *argv[]) {
     fprintf(stderr, "Usage: %s \n"
             "\t[-f --file     [char *]   {REQUIRED} (Filename to hand to stream)]\n"
+            "\t[-m --universe [uint32_t] {OPTIONAL} (Universe i.e. amount of unique items)]\n"
             "\t[-e --epsilon  [double]   {OPTIONAL} (Epsilon value)]\n"
             "\t[-d --delta    [double]   {OPTIONAL} (Delta value)]\n"
-            "\t[-m --universe [uint32_t] {OPTIONAL} (Universe i.e. amount of unique items)]\n"
             "\t[-w --width    [double]   {OPTIONAL} (Height of sketch)]\n"
             "\t[-h --height   [double]   {OPTIONAL} (Width of sketch)]\n"
-            "\t[--min                    {OPTIONAL} (Run HH with count-min-sketch)]\n"
-            "\t[--median                 {OPTIONAL} (Run HH with count-median-sketch)]\n"
+            "\t[--min                    {OPTIONAL} (Run HH with Count Min Sketch)]\n"
+            "\t[--median                 {OPTIONAL} (Run HH with Count Median Sketch)]\n"
             "\t[-1 --seed1    [uint32_t] {OPTIONAL} (First seed value)]\n"
             "\t[-2 --seed2    [uint32_t] {OPTIONAL} (Second seed value)]\n"
             "\t[-i --info                {OPTIONAL} (Shows this guideline)]\n"
@@ -46,7 +46,8 @@ int main (int argc, char **argv) {
 	char     *buffer;
 	uint32_t  i, j, k, uid;
 	uint64_t  *exact;
-	int64_t   point, diff, L1, L2;
+	uint64_t  L1, L2;
+	int64_t   point, diff;
 	stream_t *stream;
 	int32_t   opt;
 	char     *filename = NULL;
@@ -110,6 +111,7 @@ int main (int argc, char **argv) {
 				break;
 			case 'h':
 				depth = strtoll(optarg, NULL, 10);
+				delta = 1./pow(2., depth);
 				break;
 			case 'i':
 			default:
@@ -265,9 +267,9 @@ int main (int argc, char **argv) {
 	L2 = 0;
 	for (i = 0; i < m; i++) {
 		L1 += exact[i]; 
-		L2 += (int64_t)powl((long double)exact[i], 2.);
+		L2 += (uint64_t)powl((long double)exact[i], 2.);
 	}
-	L2 = (int64_t)sqrtl((long double)L2);
+	L2 = (uint64_t)sqrtl((long double)L2);
 
 	for (k = 0; k < impl_cnt; k++) {
 		errors[k][0] = 0;
@@ -276,13 +278,11 @@ int main (int argc, char **argv) {
 		for (i = 0; i < m; i++) {
 			point = sketch_point(impl[k], i);
 			diff  = (int64_t)point - (int64_t)exact[i];
-			if ( diff < -epsilon*L1 ||
-			     diff > epsilon*L1 ) {
+			if ( (uint64_t)llabs( diff ) > (uint64_t)epsilon*L1 ) {
 				errors[k][0] += 1;
 			}
 
-			if ( diff < -epsilon*L2 ||
-			     diff > epsilon*L2 ) {
+			if ( (uint64_t)llabs( diff ) > (uint64_t)epsilon*L2 ) {
 				errors[k][1] += 1;
 			}
 		}
@@ -291,6 +291,7 @@ int main (int argc, char **argv) {
 		printf("%0.10lf,", (double)errors[k][0]/m);
 		printf("%0.10lf,", (double)errors[k][1]/m);
 		printf("%0.10lf,", epsilon);
+		printf("%0.10lf,", delta);
 		printf("%"PRIu32",", width);
 		printf("%"PRIu32",", depth);
 		printf("%"PRIu32",", m);

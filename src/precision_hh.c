@@ -64,17 +64,17 @@ typedef struct {
 } alg_t;
 
 static void printusage(char *argv[]) {
-    fprintf(stderr, "Usage: %s \n"
+    fprintf(stderr, "Usage (order is significant): %s \n"
             "\t[-f --file     [char *]   {REQUIRED} (Filename to hand to stream)]\n"
+            "\t[-m --universe [uint32_t] {OPTIONAL} (Universe i.e. amount of unique items)]\n"
+            "\t[-p --phi      [double]   {OPTIONAL} (Phi value)]\n"
             "\t[-e --epsilon  [double]   {OPTIONAL} (Epsilon value)]\n"
             "\t[-d --delta    [double]   {OPTIONAL} (Delta value)]\n"
-            "\t[-p --phi      [double]   {OPTIONAL} (Phi value)]\n"
-            "\t[-m --universe [uint32_t] {OPTIONAL} (Universe i.e. amount of unique items)]\n"
             "\t[-w --width    [double]   {OPTIONAL} (Height of sketch)]\n"
             "\t[-h --height   [double]   {OPTIONAL} (Width of sketch)]\n"
-            "\t[--min                    {OPTIONAL} (Run HH with count-min-sketch)]\n"
-            "\t[--median                 {OPTIONAL} (Run HH with count-median-sketch)]\n"
-            "\t[--const                  {OPTIONAL} (Run HH with constant-count-min-sketch)]\n"
+            "\t[--min                    {OPTIONAL} (Run HH with Count Min Sketch)]\n"
+            "\t[--median                 {OPTIONAL} (Run HH with Count Median Sketch)]\n"
+            "\t[--const                  {OPTIONAL} (Run HH with Constant Count Min Sketch)]\n"
             "\t[--cormode                {OPTIONAL} (Run HH with Cormode et al.'s Count Min Sketch)]\n"
             "\t[-1 --seed1    [uint32_t] {OPTIONAL} (First seed value)]\n"
             "\t[-2 --seed2    [uint32_t] {OPTIONAL} (Second seed value)]\n"
@@ -183,9 +183,11 @@ int main (int argc, char **argv) {
 				break;
 			case 'w':
 				width = strtoll(optarg, NULL, 10);
+				epsilon = (double)2./width;
 				break;
 			case 'h':
 				depth = strtoll(optarg, NULL, 10);
+				delta = (2. * log2(m)) / (pow(2., depth)*phi); // branch = 2
 				break;
 			case 'i':
 			default:

@@ -71,8 +71,8 @@ if [ "$TYPE" == "hh" ]; then
 		((p*=2))
 	done
 else
-	echo "Name,L1 Error,L2 Error,Epsilon,Width,Depth,M,L1,L2" >> ${OUT}.min
-	echo "Name,L1 Error,L2 Error,Epsilon,Width,Depth,M,L1,L2" >> ${OUT}.median
+	echo "Name,L1 Error,L2 Error,Epsilon,Delta,Width,Depth,M,L1,L2" >> ${OUT}.min
+	echo "Name,L1 Error,L2 Error,Epsilon,Delta,Width,Depth,M,L1,L2" >> ${OUT}.median
 	limit=16777216
 	e=2;
 	for ((i=1; e<=limit; i++));
