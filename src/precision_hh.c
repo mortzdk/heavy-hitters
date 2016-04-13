@@ -15,7 +15,7 @@
 #include "hh/sketch.h"
 #include "util/xutil.h"
 
-#define AMOUNT_OF_IMPLEMENTATIONS 3
+#define AMOUNT_OF_IMPLEMENTATIONS 4
 
 typedef struct {
 	double   timestamp;
@@ -55,6 +55,7 @@ typedef enum {
 	MIN,
 	MEDIAN,
 	CONST,
+	CORMODE,
 } hh_impl_t;
 
 typedef struct {
@@ -74,6 +75,7 @@ static void printusage(char *argv[]) {
             "\t[--min                    {OPTIONAL} (Run HH with count-min-sketch)]\n"
             "\t[--median                 {OPTIONAL} (Run HH with count-median-sketch)]\n"
             "\t[--const                  {OPTIONAL} (Run HH with constant-count-min-sketch)]\n"
+            "\t[--cormode                {OPTIONAL} (Run HH with Cormode et al.'s Count Min Sketch)]\n"
             "\t[-1 --seed1    [uint32_t] {OPTIONAL} (First seed value)]\n"
             "\t[-2 --seed2    [uint32_t] {OPTIONAL} (Second seed value)]\n"
             "\t[-i --info                {OPTIONAL} (Shows this guideline)]\n"
@@ -109,6 +111,7 @@ int main (int argc, char **argv) {
 		{"min",            no_argument, &flag,     MIN },
 		{"median",         no_argument, &flag,  MEDIAN },
 		{"const",          no_argument, &flag,   CONST },
+		{"cormode",        no_argument, &flag, CORMODE },
 		{"epsilon",  required_argument,     0,      'e'},
 		{"delta",    required_argument,     0,      'd'},
 		{"phi",      required_argument,     0,      'p'},
@@ -256,6 +259,11 @@ int main (int argc, char **argv) {
 		.params = &params_min,
 		.f      = &hh_const_sketch,
 	};
+	heavy_hitter_params_t p_cormode = {
+		.hash   = &multiplyShift,
+		.params = &params_min,
+		.f      = &hh_cormode_cmh,
+	};
 
 	for (k = 0; k < impl_cnt; k++) {
 		switch (alg[k].impl) {
@@ -267,6 +275,9 @@ int main (int argc, char **argv) {
 				break;
 			case CONST:
 				impl[k] = heavy_hitter_create(&p_const);
+				break;
+			case CORMODE:
+				impl[k] = heavy_hitter_create(&p_cormode);
 				break;
 			default:
 				stream_close(stream);
