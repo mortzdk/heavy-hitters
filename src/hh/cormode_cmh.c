@@ -1,3 +1,24 @@
+/********************************************************************
+ * The following license applies to the code between the solid rows
+ * of comments. The code was obtained from:
+ *  - http://hadjieleftheriou.com/frequent-items/index.html
+ *
+*********************************************************************
+Count-Min Sketches
+
+G. Cormode 2003,2004
+
+Updated: 2004-06 Added a floating point sketch and support for
+                 inner product point estimation
+Initial version: 2003-12
+
+This work is licensed under the Creative Commons
+Attribution-NonCommercial License. To view a copy of this license,
+visit http://creativecommons.org/licenses/by-nc/1.0/ or send a letter
+to Creative Commons, 559 Nathan Abbott Way, Stanford, California
+94305, USA.
+*********************************************************************/
+
 #include "cormode_cmh.h"
 
 #include <math.h>
