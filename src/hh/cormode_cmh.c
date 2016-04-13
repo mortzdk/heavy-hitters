@@ -14,7 +14,7 @@ CMH_type *hh_cormode_cmh_create(heavy_hitter_params_t *restrict p) {
 	int gran           = 1;
 
 	const uint8_t logm = ceil(log2(params->m)/log2(2*gran));
-	double delta       = (double)((params->delta*params->phi)/(2.*logm));
+	double delta       = (double)((params->delta*params->phi)/(2.*gran*logm));
 
 	uint32_t width     = ceil(params->b / params->epsilon) * p->hash->c;
 	uint32_t depth     = ceil(log2(1 / delta) / log2(params->b));
