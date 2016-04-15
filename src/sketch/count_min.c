@@ -25,7 +25,7 @@ count_min_t *count_min_create(hash_t *restrict hash, const uint8_t b,
 
 	const uint32_t dw       = w*d;
 	const uint32_t M        = s->size.M;
-	const uint32_t size     = sizeof(uint64_t) * (dw + d);
+	const uint32_t size     = sizeof(uint64_t) * (dw + 2*d);
 
 	s->table  = xmalloc(size);
 	s->hash   = hash;
@@ -35,8 +35,8 @@ count_min_t *count_min_create(hash_t *restrict hash, const uint8_t b,
 	memset(s->table, '\0', size);
 
 	for (i = 0; i < d; i++) {
-		s->table[i*(w+1)] |= ((uint64_t) hash->agen()) << 32;
-		s->table[i*(w+1)] |= (uint64_t) hash->bgen(M);
+		s->table[i*(w+2)]   = (uint64_t) hash->agen();
+		s->table[i*(w+2)+1] = (uint64_t) hash->bgen(M);
 	}
 
 	#ifdef SPACE
@@ -70,8 +70,8 @@ void count_min_update(count_min_t *restrict s, const uint32_t i,
 	hash hash                = s->hash->hash;                  
 
 	for (di = 0; di < s->size.d; di++) {
-		wi = hash(w, M, i, (uint32_t)(table[di*(w+1)]>>32), 
-				(uint32_t)(table[di*(w+1)]));
+		wi = hash(w, M, i, (uint64_t)table[di*(w+2)], 
+				(uint64_t)table[di*(w+2)+1]);
 
 		assert( wi < w );
 
@@ -87,14 +87,14 @@ uint64_t count_min_point(count_min_t *restrict s, const uint32_t i) {
 	uint64_t *restrict table = s->table;
 	hash hash                = s->hash->hash;                  
 
-	wi = hash(w, M, i, (uint32_t)(table[0]>>32), (uint32_t)table[0]);
+	wi = hash(w, M, i, (uint64_t)table[0], (uint64_t)table[1]);
 
 	assert( wi < w );
 
 	estimate  = table[COUNT_MIN_INDEX(w, 0, wi)];
 	for (di = 1; di < s->size.d; di++) {
-		wi = hash(w, M, i, (uint32_t)(table[di*(w+1)]>>32), 
-		          	(uint32_t)table[di*(w+1)]);
+		wi = hash(w, M, i, (uint64_t)table[di*(w+2)], 
+				(uint64_t)table[di*(w+2)+1]);
 
 		assert( wi < w );
 
@@ -128,8 +128,8 @@ bool count_min_above_thresshold(count_min_t *restrict s, const uint32_t i,
 	hash hash                = s->hash->hash;                  
 
 	for (di = 0; di < s->size.d; di++) {
-		wi = hash(w, M, i, (uint32_t)(table[di*(w+1)]>>32), 
-		          	(uint32_t)table[di*(w+1)]);
+		wi = hash(w, M, i, (uint64_t)table[di*(w+2)], 
+				(uint64_t)table[di*(w+2)+1]);
 
 		assert( wi < w );
 

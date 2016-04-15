@@ -11,7 +11,7 @@
 
 // Helpers
 #define COUNT_MIN_INDEX(width, depth, index) \
-	( 1 + ( (1+(width)) * (depth) ) + (index) )
+	( 2 + ( (2+(width)) * (depth) ) + (index) )
 
 // Structures
 typedef struct {

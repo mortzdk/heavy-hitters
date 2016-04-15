@@ -11,7 +11,7 @@
 
 // Helpers
 #define COUNT_MEDIAN_INDEX(width, depth, index) \
-	( 2 + ( (2+(width)) * (depth) ) + (index) )
+	( 4 + ( (4+(width)) * (depth) ) + (index) )
 
 // Structures
 typedef struct {

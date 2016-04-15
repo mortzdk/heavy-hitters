@@ -38,7 +38,7 @@ Test(hh_const_sketch, hh_top_only, .disabled=0) {
 		.f       = &countMin,
 	};
 	heavy_hitter_params_t p = {
-		.hash   = &hash31,
+		.hash   = &carterWegman,
 		.params = &params,
 		.f      = &hh_const_sketch,
 	};

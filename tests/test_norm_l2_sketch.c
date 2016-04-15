@@ -18,7 +18,7 @@ Test(norm_l2_sketch, working_create_and_destroy, .disabled=0) {
 	double  delta     = 0.20;
 
 	l2_sketch_config cfg = {
-		.sketch = sketch_create(&countMedian, &hash31, b, epsilon, delta),
+		.sketch = sketch_create(&countMedian, &carterWegman, b, epsilon, delta),
 	};
 
 	norm_t *norm = norm_create(&cfg, &norm_func_l2_sketch);
@@ -32,7 +32,7 @@ Test(norm_l2_sketch, expect_simple_result, .disabled=0) {
 	double  delta     = 0.20;
 
 	l2_sketch_config cfg = {
-		.sketch = sketch_create(&countMedian, &hash31, b, epsilon, delta),
+		.sketch = sketch_create(&countMedian, &carterWegman, b, epsilon, delta),
 	};
 
 	norm_t *norm = norm_create(&cfg, &norm_func_l2_sketch);
@@ -59,7 +59,7 @@ Test(norm_l2_sketch, expect_between_l1, .disabled=0) {
 	double  delta     = 0.03125;
 
 	l2_sketch_config cfg = {
-		.sketch = sketch_create(&countMedian, &hash31, b, epsilon, delta),
+		.sketch = sketch_create(&countMedian, &carterWegman, b, epsilon, delta),
 	};
 
 	norm_t *norm = norm_create(&cfg, &norm_func_l2_sketch);
@@ -102,7 +102,7 @@ Test(norm_l2_sketch, expect_between_l1_duplicates, .disabled=0) {
 	double  delta     = 0.03125;
 
 	l2_sketch_config cfg = {
-		.sketch = sketch_create(&countMedian, &hash31, b, epsilon, delta),
+		.sketch = sketch_create(&countMedian, &carterWegman, b, epsilon, delta),
 	};
 
 	int unique = sketch_width(cfg.sketch->sketch) * 16;

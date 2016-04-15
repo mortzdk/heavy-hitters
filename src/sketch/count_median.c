@@ -28,7 +28,8 @@ count_median_t *count_median_create(hash_t *restrict hash, const uint8_t b,
 	sketch_fixed_size(&d, &w);
 	hash_init(&s->size.M, w);
 
-	const uint32_t table_size  = sizeof(int64_t) * ((w+2)*d);
+	const uint32_t M           = s->size.M;
+	const uint32_t table_size  = sizeof(int64_t) * ((w+4)*d);
 	const uint32_t median_size = sizeof(int64_t) * d;
 
 	assert( b > 2 );
@@ -43,10 +44,10 @@ count_median_t *count_median_create(hash_t *restrict hash, const uint8_t b,
 	memset(s->median, '\0', median_size);
 
 	for (i = 0; i < d; i++) {
-		s->table[i*(w+2)]   |= ((uint64_t) hash->agen()) << 32;
-		s->table[i*(w+2)]   |= (uint64_t) hash->bgen(s->size.M);
-		s->table[i*(w+2)+1] |= ((uint64_t) sign_agen()) << 32;
-		s->table[i*(w+2)+1] |= (uint64_t) sign_bgen();
+		s->table[i*(w+4)]   = (uint64_t) hash->agen();
+		s->table[i*(w+4)+1] = (uint64_t) hash->bgen(M);
+		s->table[i*(w+4)+2] = (uint64_t) sign_ms_agen();
+		s->table[i*(w+4)+3] = (uint64_t) sign_ms_bgen();
 	}
 
 	#ifdef SPACE
@@ -87,14 +88,14 @@ void count_median_update(count_median_t *restrict s, const uint32_t i,
 	hash hash               = s->hash->hash;
 
 	for (di = 0; di < d; di++) {
-		wi = hash(w, M, i, (uint32_t)(table[di*(w+2)]>>32), 
-				(uint32_t)(table[di*(w+2)]));
+		wi = hash(w, M, i, (uint64_t)table[di*(w+4)], 
+				(uint64_t)table[di*(w+4)+1]);
 
 		assert( wi < w );
 
-		table[COUNT_MEDIAN_INDEX(w, di, wi)] += c * sign(i, 
-				(uint8_t)(table[di*(w+2)+1]>>32), 
-				(uint8_t)(table[di*(w+2)+1]));
+		table[COUNT_MEDIAN_INDEX(w, di, wi)] += c * sign_ms(i, 
+				(uint64_t)table[di*(w+4)+2], 
+				(uint64_t)table[di*(w+4)+3]);
 	}
 }
 
@@ -108,14 +109,14 @@ int64_t count_median_point(count_median_t *restrict s, const uint32_t i) {
 	hash hash                = s->hash->hash;
 
 	for (di = 0; di < d; di++) {
-		wi = hash(w, M, i, (uint32_t)(table[di*(w+2)]>>32), 
-		          	(uint32_t)table[di*(w+2)]);
+		wi = hash(w, M, i, (uint64_t)table[di*(w+4)], 
+		          	(uint64_t)table[di*(w+4)+1]);
 
 		assert( wi < w );
 
-		median[di] = table[COUNT_MEDIAN_INDEX(w, di, wi)] * sign(i, 
-				(uint8_t)(table[di*(w+2)+1]>>32), 
-				(uint8_t)(table[di*(w+2)+1]));
+		median[di] = table[COUNT_MEDIAN_INDEX(w, di, wi)] * sign_ms(i, 
+				(uint64_t)table[di*(w+4)+2], 
+				(uint64_t)table[di*(w+4)+3]);
 	}
 
 //	return median_quick_select(median, d);
@@ -132,14 +133,13 @@ int64_t count_median_point_partial(count_median_t *restrict s,
 
 	assert( d < s->size.d );
 
-	wi = hash(w, M, i, (uint32_t)(table[d*(w+2)]>>32),
-				(uint32_t)table[d*(w+2)]);
+	wi = hash(w, M, i, (uint64_t)table[d*(w+4)], (uint64_t)table[d*(w+4)+1]);
 
 	assert( wi < w );
 
-	return table[COUNT_MEDIAN_INDEX(w, d, wi)] * sign(i,
-				(uint8_t)(table[d*(w+2)+1]>>32),
-				(uint8_t)(table[d*(w+2)+1]));
+	return table[COUNT_MEDIAN_INDEX(w, d, wi)] * sign_ms(i,
+				(uint64_t)table[d*(w+4)+2],
+				(uint64_t)table[d*(w+4)+3]);
 }
 
 int64_t count_median_range_sum(count_median_t *restrict s, const uint32_t l, 

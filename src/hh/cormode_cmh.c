@@ -51,66 +51,66 @@ CMH_type *hh_cormode_cmh_create(heavy_hitter_params_t *restrict p) {
 	//CMH_type *hh = CMH_Init(w, d, xceil_log2(params->m), 1);
 
 ///////////////////////////////////////////////////////////////////////////////
-  CMH_type * cmh;
-  int i,j,k;
-  prng_type * prng;
+	CMH_type * cmh;
+	int i,j,k;
+	prng_type * prng;
 
-  if (U<=0 || U>32) return(NULL);
-  // U is the log the size of the universe in bits
+	if (U<=0 || U>32) return(NULL);
+	// U is the log the size of the universe in bits
 
-  if (gran>U || gran<1) return(NULL);
-  // gran is the granularity to look at the universe in 
-  // check that the parameters make sense...
+	if (gran>U || gran<1) return(NULL);
+	// gran is the granularity to look at the universe in 
+	// check that the parameters make sense...
 
-  cmh=(CMH_type *) calloc(1,sizeof(CMH_type));
+	cmh=(CMH_type *) calloc(1,sizeof(CMH_type));
 
-  prng=prng_Init(-12784,2);
-  // initialize the generator for picking the hash functions
+	prng=prng_Init(-12784,2);
+	// initialize the generator for picking the hash functions
 
-  if (cmh && prng)
-    {
-      cmh->depth=d;
-      cmh->width=w;
-      cmh->count=0;
-      cmh->U=U;
-      cmh->gran=gran;
-      cmh->levels=(int) ceil(((float) U)/((float) gran));
-      for (j=0;j<cmh->levels;j++)
-	if ((int64_t) 1<<(cmh->gran*j) <= cmh->depth*cmh->width)
-	  cmh->freelim=j;
-      //find the level up to which it is cheaper to keep exact counts
-      cmh->freelim=cmh->levels-cmh->freelim;
-      
-      cmh->counts=(int **) calloc(sizeof(int *), 1+cmh->levels);
-      cmh->hasha=(unsigned int **)calloc(sizeof(unsigned int *),1+cmh->levels);
-      cmh->hashb=(unsigned int **)calloc(sizeof(unsigned int *),1+cmh->levels);
-      j=1;
-      for (i=cmh->levels-1;i>=0;i--)
+	if (cmh && prng)
 	{
-	  if (i>=cmh->freelim)
-	    { // allocate space for representing things exactly at high levels
-	      cmh->counts[i]=(int *) calloc(1<<(cmh->gran*j),sizeof(int));
-	      j++;
-	      cmh->hasha[i]=NULL;
-	      cmh->hashb[i]=NULL;
-	    }
-	  else 
-	    { // allocate space for a sketch
-	      cmh->counts[i]=(int *)calloc(sizeof(int), cmh->depth*cmh->width);
-	      cmh->hasha[i]=(unsigned int *)
-		calloc(sizeof(unsigned int),cmh->depth);
-	      cmh->hashb[i]=(unsigned int *)
-		calloc(sizeof(unsigned int),cmh->depth);
+		cmh->depth=d;
+		cmh->width=w;
+		cmh->count=0;
+		cmh->U=U;
+		cmh->gran=gran;
+		cmh->levels=(int) ceil(((float) U)/((float) gran));
+		for (j=0;j<cmh->levels;j++)
+			if ((int64_t) 1<<(cmh->gran*j) <= cmh->depth*cmh->width)
+				cmh->freelim=j;
+		//find the level up to which it is cheaper to keep exact counts
+		cmh->freelim=cmh->levels-cmh->freelim;
 
-	      if (cmh->hasha[i] && cmh->hashb[i])
-		for (k=0;k<cmh->depth;k++)
-		  { // pick the hash functions
-		    cmh->hasha[i][k]=prng_int(prng) & MOD;
-		    cmh->hashb[i][k]=prng_int(prng) & MOD;
-		  }
-	    }
+		cmh->counts=(int **) calloc(sizeof(int *), 1+cmh->levels);
+		cmh->hasha=(unsigned int **)calloc(sizeof(unsigned int *),1+cmh->levels);
+		cmh->hashb=(unsigned int **)calloc(sizeof(unsigned int *),1+cmh->levels);
+		j=1;
+		for (i=cmh->levels-1;i>=0;i--)
+		{
+			if (i>=cmh->freelim)
+			{ // allocate space for representing things exactly at high levels
+				cmh->counts[i]=(int *) calloc(1<<(cmh->gran*j),sizeof(int));
+				j++;
+				cmh->hasha[i]=NULL;
+				cmh->hashb[i]=NULL;
+			}
+			else 
+			{ // allocate space for a sketch
+				cmh->counts[i]=(int *)calloc(sizeof(int), cmh->depth*cmh->width);
+				cmh->hasha[i]=(unsigned int *)
+					calloc(sizeof(unsigned int),cmh->depth);
+				cmh->hashb[i]=(unsigned int *)
+					calloc(sizeof(unsigned int),cmh->depth);
+
+				if (cmh->hasha[i] && cmh->hashb[i])
+					for (k=0;k<cmh->depth;k++)
+					{ // pick the hash functions
+						cmh->hasha[i][k]=prng_int(prng) & MOD;
+						cmh->hashb[i][k]=prng_int(prng) & MOD;
+					}
+			}
+		}
 	}
-    }
 ///////////////////////////////////////////////////////////////////////////////
 
 
@@ -130,26 +130,26 @@ void hh_cormode_cmh_destroy(CMH_type *restrict cmh) {
 	//CMH_Destroy(hh);
 
 ///////////////////////////////////////////////////////////////////////////////
-  int i;
-  if (!cmh) return;
-  for (i=0;i<cmh->levels;i++)
-    {
-      if (i>=cmh->freelim)
+	int i;
+	if (!cmh) return;
+	for (i=0;i<cmh->levels;i++)
 	{
-	  free(cmh->counts[i]);
+		if (i>=cmh->freelim)
+		{
+			free(cmh->counts[i]);
+		}
+		else 
+		{
+			free(cmh->hasha[i]);
+			free(cmh->hashb[i]);
+			free(cmh->counts[i]);
+		}
 	}
-      else 
-	{
-	  free(cmh->hasha[i]);
-	  free(cmh->hashb[i]);
-	  free(cmh->counts[i]);
-	}
-    }
-  free(cmh->counts);
-  free(cmh->hasha);
-  free(cmh->hashb);
-  free(cmh);
-  cmh=NULL;
+	free(cmh->counts);
+	free(cmh->hasha);
+	free(cmh->hashb);
+	free(cmh);
+	cmh=NULL;
 ///////////////////////////////////////////////////////////////////////////////
 }
 
@@ -161,28 +161,28 @@ void hh_cormode_cmh_update(CMH_type *restrict cmh, const uint32_t idx,
 
 	uint32_t item = idx;
 ///////////////////////////////////////////////////////////////////////////////
-  int i,j,offset;
+	int i,j,offset;
 
-  if (!cmh) return;
-  cmh->count+=diff;
-  for (i=0;i<cmh->levels;i++)
-    {
-      offset=0;
-      if (i>=cmh->freelim)
+	if (!cmh) return;
+	cmh->count+=diff;
+	for (i=0;i<cmh->levels;i++)
 	{
-	  cmh->counts[i][item]+=diff;
-	  // keep exact counts at high levels in the hierarchy  
+		offset=0;
+		if (i>=cmh->freelim)
+		{
+			cmh->counts[i][item]+=diff;
+			// keep exact counts at high levels in the hierarchy  
+		}
+		else
+			for (j=0;j<cmh->depth;j++)
+			{
+				cmh->counts[i][(comode_hash31(cmh->hasha[i][j],cmh->hashb[i][j],item) 
+						% cmh->width) + offset]+=diff;
+				// this can be done more efficiently if the width is a power of two
+				offset+=cmh->width;
+			}
+		item>>=cmh->gran;
 	}
-      else
-	for (j=0;j<cmh->depth;j++)
-	  {
-	    cmh->counts[i][(comode_hash31(cmh->hasha[i][j],cmh->hashb[i][j],item) 
-			    % cmh->width) + offset]+=diff;
-	    // this can be done more efficiently if the width is a power of two
-	    offset+=cmh->width;
-	  }
-      item>>=cmh->gran;
-    }
 ///////////////////////////////////////////////////////////////////////////////
 
 	cmh->L1 += diff;
@@ -194,31 +194,31 @@ void hh_cormode_cmh_update(CMH_type *restrict cmh, const uint32_t idx,
 //
 static int CMH_count(CMH_type * cmh, int depth, int item)
 {
-  // return an estimate of item at level depth
+	// return an estimate of item at level depth
 
-  int j;
-  int offset;
-  int estimate;
+	int j;
+	int offset;
+	int estimate;
 
-  if (depth>=cmh->levels) return(cmh->count);
-  if (depth>=cmh->freelim)
-    { // use an exact count if there is one
-      return(cmh->counts[depth][item]);
-    }
-  // else, use the appropriate sketch to make an estimate
-  offset=0;
-  estimate=cmh->counts[depth][(comode_hash31(cmh->hasha[depth][0],
-				      cmh->hashb[depth][0],item) 
-			       % cmh->width) + offset];
-  for (j=1;j<cmh->depth;j++)
-    {
-      offset+=cmh->width;
-      estimate=min(estimate,
-		   cmh->counts[depth][(comode_hash31(cmh->hasha[depth][j],
-					      cmh->hashb[depth][j],item) 
-				       % cmh->width) + offset]);
-    }
-  return(estimate);
+	if (depth>=cmh->levels) return(cmh->count);
+	if (depth>=cmh->freelim)
+	{ // use an exact count if there is one
+		return(cmh->counts[depth][item]);
+	}
+	// else, use the appropriate sketch to make an estimate
+	offset=0;
+	estimate=cmh->counts[depth][(comode_hash31(cmh->hasha[depth][0],
+				cmh->hashb[depth][0],item) 
+			% cmh->width) + offset];
+	for (j=1;j<cmh->depth;j++)
+	{
+		offset+=cmh->width;
+		estimate=min(estimate,
+				cmh->counts[depth][(comode_hash31(cmh->hasha[depth][j],
+						cmh->hashb[depth][j],item) 
+					% cmh->width) + offset]);
+	}
+	return(estimate);
 }
 
 static void CMH_recursive(CMH_type * cmh, int depth, int start, 
@@ -239,10 +239,10 @@ static void CMH_recursive(CMH_type * cmh, int depth, int start,
 	{
 		if (depth==0)
 		{
-//			if (res.size()<cmh->width)
+			//			if (res.size()<cmh->width)
 			if (results[0]<cmh->width -1)
 			{
-//				res.insert(std::pair<uint32_t, uint32_t>(start, estcount));
+				//				res.insert(std::pair<uint32_t, uint32_t>(start, estcount));
 				results[0]++;
 				results[results[0]]=start;
 			}
@@ -253,7 +253,7 @@ static void CMH_recursive(CMH_type * cmh, int depth, int start,
 			itemshift=start<<cmh->gran;
 			// assumes that gran is an exact multiple of the bit dept
 			for (i=0;i<blocksize;i++)
-//				CMH_recursive(cmh,depth-1,itemshift+i,thresh,res);
+				//				CMH_recursive(cmh,depth-1,itemshift+i,thresh,res);
 				CMH_recursive(cmh,depth-1,itemshift+i,thresh,results);
 		}
 	}

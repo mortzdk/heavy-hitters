@@ -73,10 +73,18 @@ if [ "$TYPE" == "hh" ]; then
 			echo -n "# "         >> ${OUT}.${p}.${e}.cmh
 			date                 >> ${OUT}.${p}.${e}.cmh
 
-			./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} -h ${HEIGHT} -p ${PHI} -f ${FILE} --const  -r ${RUNS} -o ${OUT}.${p}.${e}.const
-			./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} -h ${HEIGHT} -p ${PHI} -f ${FILE} --min    -r ${RUNS} -o ${OUT}.${p}.${e}.min
-			./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} -h ${HEIGHT} -p ${PHI} -f ${FILE} --median -r ${RUNS} -o ${OUT}.${p}.${e}.median
-			./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} -h ${HEIGHT} -p ${PHI} -f ${FILE} --cormode -r ${RUNS} -o ${OUT}.${p}.${e}.cmh
+			./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+				-h ${HEIGHT} -p ${PHI} -f ${FILE} --const  -r ${RUNS} \
+				-o ${OUT}.${p}.${e}.const
+			./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+				-h ${HEIGHT} -p ${PHI} -f ${FILE} --min    -r ${RUNS} \
+				-o ${OUT}.${p}.${e}.min
+			./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+				-h ${HEIGHT} -p ${PHI} -f ${FILE} --median -r ${RUNS} \
+				-o ${OUT}.${p}.${e}.median
+			./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+				-h ${HEIGHT} -p ${PHI} -f ${FILE} --cormode -r ${RUNS} \
+				-o ${OUT}.${p}.${e}.cmh
 			((e*=2))
 		done
 		((p*=2))

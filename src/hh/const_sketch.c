@@ -40,7 +40,7 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 		np2_base = logm;
 	}
 
-	size               = ( ((1 << (np2_base+1))-2) + ((1+w)*(logm-np2_base)) );
+	size               = ( ((1 << (np2_base+1))-2) + ((2+w)*(logm-np2_base)) );
 	hh->params         = params;
 	hh->logm           = logm;
 	hh->norm           = 0;
@@ -56,10 +56,9 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 	hh->tree           = xmalloc( sizeof(uint64_t) * size );
 	memset(hh->tree, '\0', sizeof(uint64_t) * size);
 
-	//TODO allocate a and b for all hash functions
-	for (i = (1 << (np2_base+1))-2; i < size; i += 1+w) {
-		hh->tree[i] |= ((uint64_t) p->hash->agen()) << 32;
-		hh->tree[i] |= (uint64_t) p->hash->bgen(hh->M);
+	for (i = (1 << (np2_base+1))-2; i < size; i += 2+w) {
+		hh->tree[i]   = (uint64_t) p->hash->agen();
+		hh->tree[i+1] = (uint64_t) p->hash->bgen(hh->M);
 	}
 
 	#ifdef SPACE
@@ -134,21 +133,21 @@ void hh_const_sketch_update(hh_const_sketch_t *restrict hh, const uint32_t idx,
 	for (i = 0; i < logm-exact_cnt; i++) {
 		mid  = left + ( (right - left)/2 );
 		x   *= 2;
-		a    = (tree[offset] >> 32);
-		b    = (uint32_t) tree[offset];
+		a    = (uint64_t) tree[offset++];
+		b    = (uint64_t) tree[offset++];
 
 		if (mid < idx) {
 			x++;
 			h = hash(w, M, x, a, b);
-			tree[offset + 1 + h] += c; 
+			tree[offset + h] += c; 
 			left = mid+1;
 		} else {
 			h = hash(w, M, x, a, b);
-			tree[offset + 1 + h] += c; 
+			tree[offset + h] += c; 
 			right = mid;
 		}
 
-		offset += (w +1);
+		offset += w;
 	}
 
 	sketch_update(hh->sketch, x, c);
@@ -171,16 +170,16 @@ static void hh_const_sketch_query_bottom_recursive(
 
 	x *= 2;
 
-	offset = (1 << (exact_cnt +1))-2   + ((w+1) * layer);
+	offset = (1 << (exact_cnt +1))-2 + ((w+2) * layer);
 
 	for (i = 0; i < 2; i++) {
 		x += i;	
-		a = (tree[offset] >> 32);
-		b = (uint32_t) tree[offset];
+		a = (uint64_t) tree[offset];
+		b = (uint64_t) tree[offset+1];
 		h = hash(w, M, x, a, b);
 
 		// Plus one to get away from a and b
-		if ( tree[offset + 1 + h] >= th ) {
+		if ( tree[offset + 2 + h] >= th ) {
 			if ( unlikely( layer+exact_cnt == logm-1 ) ) {
 				if ( sketch_above_thresshold(hh->sketch, x, th) ) {
 					hh->result.hitters[hh->result.count] = x;
@@ -290,13 +289,13 @@ heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *restrict hh) {
 					}
 				}
 			} else {
-				offset = (1 << (exact_cnt+1))-2 + ((w+1) * (layer-exact_cnt));
-				a = (tree[offset] >> 32);
-				b = (uint32_t) tree[offset];
+				offset = (1 << (exact_cnt+1))-2 + ((w+2) * (layer-exact_cnt));
+				a = (uint64_t) tree[offset];
+				b = (uint64_t) tree[offset+1];
 				h = hash(w, M, x, a, b);
 
 				// Plus one to get away from a and b
-				if ( tree[offset + 1 + h] >= threshold ) {
+				if ( tree[offset + 2 + h] >= threshold ) {
 					if ( unlikely( layer == logm-1 ) ) {
 						if ( sketch_above_thresshold(hh->sketch, x, 
 									threshold) ) {

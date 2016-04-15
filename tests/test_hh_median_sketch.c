@@ -38,7 +38,7 @@ Test(hh_sketch, hh_top_only_median, .disabled=0) {
 		.f       = &countMedian,
 	};
 	heavy_hitter_params_t p = {
-		.hash   = &hash31,
+		.hash   = &carterWegman,
 		.params = &params,
 		.f      = &hh_sketch,
 	};

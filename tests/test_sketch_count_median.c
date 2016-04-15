@@ -10,7 +10,7 @@ Test(count_median_sketch, expected_d, .disabled=0) {
 	uint8_t b         = 6;
 	double  epsilon   = 0.25;
 	double  delta     = 0.20;
-	sketch_t *s = sketch_create(&countMedian, &hash31, b, epsilon, delta);
+	sketch_t *s = sketch_create(&countMedian, &carterWegman, b, epsilon, delta);
 	count_median_t *cm = s->sketch;
 
 	cr_assert_eq(cm->size.d, 16, "Wrong d value, expected %d got %"PRIu32, 16, 
@@ -23,7 +23,7 @@ Test(count_median_sketch, expected_w_16, .disabled=0) {
 	uint8_t b         = 6;
 	double  epsilon   = 0.25;
 	double  delta     = 0.20;
-	sketch_t *s = sketch_create(&countMedian, &hash31, b, epsilon, delta);
+	sketch_t *s = sketch_create(&countMedian, &carterWegman, b, epsilon, delta);
 	count_median_t *cm = s->sketch;
 
 	cr_assert_eq(cm->size.w, 96, "Wrong w value, expected %d got %"PRIu32, 
@@ -36,7 +36,7 @@ Test(count_median_sketch, update_point, .disabled=0) {
 	uint8_t b         = 6;
 	double  epsilon   = 0.30;
 	double  delta     = 0.20;
-	sketch_t *s = sketch_create(&countMedian, &hash31, b, epsilon, delta);
+	sketch_t *s = sketch_create(&countMedian, &carterWegman, b, epsilon, delta);
 
 	sketch_update(s, 9, 42);
 	int64_t estimate = sketch_point(s, 9);
@@ -64,8 +64,8 @@ Test(count_median_sketch, update_point_2, .disabled=0) {
 		{327, 78}
 	};
 
-	sketch_t *s0 = sketch_create(&countMedian, &hash31, b, epsilon, delta);
-	sketch_t *s1 = sketch_create(&countMedian, &hash31p2, b, epsilon, delta);
+	sketch_t *s0 = sketch_create(&countMedian, &carterWegman, b, epsilon, delta);
+	sketch_t *s1 = sketch_create(&countMedian, &carterWegmanp2, b, epsilon, delta);
 	sketch_t *s2 = sketch_create(&countMedian, &multiplyShift, b, epsilon, delta);
 
 	for (int i = 0; i < 10; i++) {
@@ -114,7 +114,7 @@ Test(count_median_sketch, update_point_3, .disabled=0) {
 		{42, 78}
 	};
 
-	sketch_t *s = sketch_create(&countMedian, &hash31, b, epsilon, delta);
+	sketch_t *s = sketch_create(&countMedian, &carterWegman, b, epsilon, delta);
 
 	for (int i = 0; i < 10; i++) {
 		sketch_update(s, A[i][0], A[i][1]);
@@ -138,7 +138,7 @@ Test(count_median_sketch, update_point_3, .disabled=0) {
 }
 
 Test(count_median_sketch, should_allocate_internals, .disabled=0) {
-	sketch_t *s        = sketch_create(&countMedian, &hash31, 3, 0.5, 0.2);
+	sketch_t *s        = sketch_create(&countMedian, &carterWegman, 3, 0.5, 0.2);
 	count_median_t *cm = s->sketch;
 
 	cr_assert_not_null(cm, "Expedted an allocated structure");
@@ -149,7 +149,7 @@ Test(count_median_sketch, should_allocate_internals, .disabled=0) {
 }
 
 Test(count_median_sketch, should_free_object, .disabled=1) {
-	sketch_t *s = sketch_create(&countMedian, &hash31, 3, 0.5, 0.2);
+	sketch_t *s = sketch_create(&countMedian, &carterWegman, 3, 0.5, 0.2);
 	sketch_destroy(s);
 
 	cr_assert_null(s, "Expedted an empty structure");

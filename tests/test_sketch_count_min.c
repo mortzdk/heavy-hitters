@@ -7,7 +7,7 @@
 #include "sketch/sketch.h"
 
 Test(count_min_sketch, expected_d, .disabled=0) {
-	sketch_t *s = sketch_create(&countMin, &hash31, 2, 0.25, 0.2);
+	sketch_t *s = sketch_create(&countMin, &carterWegman, 2, 0.25, 0.2);
 	count_min_t *cm = s->sketch;
 
 	cr_assert_eq(cm->size.d, 3, "Wrong d value, expected %d got %"PRIu32, 3, cm->size.d);
@@ -16,7 +16,7 @@ Test(count_min_sketch, expected_d, .disabled=0) {
 }
 
 Test(count_min_sketch, expected_w_16, .disabled=0) {
-	sketch_t *s = sketch_create(&countMin, &hash31, 2, 0.25, 0.2);
+	sketch_t *s = sketch_create(&countMin, &carterWegman, 2, 0.25, 0.2);
 	count_min_t *cm = s->sketch;
 
 	cr_assert_eq(cm->size.w, 8, "Wrong w value, expected %d got %"PRIu32, 8, cm->size.w);
@@ -25,7 +25,7 @@ Test(count_min_sketch, expected_w_16, .disabled=0) {
 }
 
 Test(count_min_sketch, update_point, .disabled=0) {
-	sketch_t *s = sketch_create(&countMin, &hash31, 2, 0.3, 0.2);
+	sketch_t *s = sketch_create(&countMin, &carterWegman, 2, 0.3, 0.2);
 
 	sketch_update(s, 9, 42);
 	uint32_t estimate = sketch_point(s, 9);
@@ -53,8 +53,8 @@ Test(count_min_sketch, update_point_2, .disabled=0) {
 		{327, 78}
 	};
 
-	sketch_t *s0 = sketch_create(&countMin, &hash31, b, epsilon, delta);
-	sketch_t *s1 = sketch_create(&countMin, &hash31p2, b, epsilon, delta);
+	sketch_t *s0 = sketch_create(&countMin, &carterWegman, b, epsilon, delta);
+	sketch_t *s1 = sketch_create(&countMin, &carterWegmanp2, b, epsilon, delta);
 	sketch_t *s2 = sketch_create(&countMin, &multiplyShift, b, epsilon, delta);
 
 	for (int i = 0; i < 10; i++) {
@@ -100,7 +100,7 @@ Test(count_min_sketch, update_point_3, .disabled=0) {
 		{42, 78}
 	};
 
-	sketch_t *s = sketch_create(&countMin, &hash31, 2, 0.3, 0.2);
+	sketch_t *s = sketch_create(&countMin, &carterWegman, 2, 0.3, 0.2);
 
 	for (int i = 0; i < 10; i++) {
 		sketch_update(s, A[i][0], A[i][1]);
@@ -138,7 +138,7 @@ Test(count_min_sketch, update_range_naive_1, .disabled=0) {
 		{42, 78}
 	};
 
-	sketch_t *s = sketch_create(&countMin, &hash31, 2, 0.3, 0.2);
+	sketch_t *s = sketch_create(&countMin, &carterWegman, 2, 0.3, 0.2);
 
 	for (int i = 0; i < 10; i++) {
 		sketch_update(s, A[i][0], A[i][1]);
@@ -158,7 +158,7 @@ Test(count_min_sketch, update_range_naive_1, .disabled=0) {
 }
 
 Test(count_min_sketch, should_allocate_internals, .disabled=0) {
-	sketch_t *s     = sketch_create(&countMin, &hash31, 2, 0.5, 0.2);
+	sketch_t *s     = sketch_create(&countMin, &carterWegman, 2, 0.5, 0.2);
 	count_min_t *cm = s->sketch;
 
 	cr_assert_not_null(cm, "Expedted an allocated structure");
@@ -168,7 +168,7 @@ Test(count_min_sketch, should_allocate_internals, .disabled=0) {
 }
 
 Test(count_min_sketch, should_free_object, .disabled=1) {
-	sketch_t *s = sketch_create(&countMin, &hash31, 2, 0.5, 0.2);
+	sketch_t *s = sketch_create(&countMin, &carterWegman, 2, 0.5, 0.2);
 	sketch_destroy(s);
 
 	cr_assert_null(s, "Expedted an empty structure");

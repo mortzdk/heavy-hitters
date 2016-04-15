@@ -50,22 +50,34 @@ if [ "$TYPE" == "hh" ]; then
 	echo -n "# "         >> ${OUT}.const
 	date                 >> ${OUT}.const
 
+	echo -n "# COMMIT: " >> ${OUT}.cormode
+	git log -1 --oneline >> ${OUT}.cormode
+	echo -n "# "         >> ${OUT}.cormode
+	date                 >> ${OUT}.cormode
+
 	limit=2048
 	p=2
 	for ((i=1; p<limit; i++));
 	do
-		DELTA=0.25
 		PHI=$(echo "1/${p}" | bc -l)
-		
 		e=$((p*2))
+
 		for ((j=1; e<=limit; j++));
 		do
 			SEED1=$[ 1 + $[ RANDOM % 32768 ]]
 			SEED2=$[ 1 + $[ RANDOM % 32768 ]]
-			EPSILON=$(echo "1/${e}" | bc -l)
-			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --const  >> ${OUT}.const
-			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -e $(echo "$EPSILON^2" | bc) -d ${DELTA} -p ${PHI} -f ${FILE} --min    >> ${OUT}.min
-			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -e ${EPSILON}                -d ${DELTA} -p ${PHI} -f ${FILE} --median >> ${OUT}.median
+			WIDTH=$(echo "2/(1/${e})" | bc -l)
+			HEIGHT=4
+
+			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w $(WIDTH) \
+				-d ${HEIGHT} -p ${PHI} -f ${FILE} --const   >> ${OUT}.const
+			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w $(WIDTH) \
+				-d ${HEIGHT} -p ${PHI} -f ${FILE} --min     >> ${OUT}.min
+			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+				-d ${HEIGHT} -p ${PHI} -f ${FILE} --median  >> ${OUT}.median
+			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+				-d ${HEIGHT} -p ${PHI} -f ${FILE} --cormode >> ${OUT}.cormode
+
 			((e*=2))
 		done
 		((p*=2))

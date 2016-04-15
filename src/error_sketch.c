@@ -12,6 +12,7 @@
 #include "stream/stream.h"
 #include "sketch/sketch.h"
 #include "util/xutil.h"
+#include "util/qsort.h"
 
 #define AMOUNT_OF_IMPLEMENTATIONS 2
 
@@ -292,7 +293,7 @@ int main (int argc, char **argv) {
 #endif
 		}
 
-		qsort(diffs, m, sizeof(int64_t), int64comp);
+		quicksort((Item *)diffs, 0, m-1);
 
 		assert(delta != 1);
 		error = diffs[m - (uint32_t)(delta * m) -1];
