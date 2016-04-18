@@ -85,7 +85,9 @@ static void printusage(char *argv[]) {
 int main (int argc, char **argv) {
 	char     *string;
 	char      buf[256];
+	char      line[256];
 	char     *buffer;
+	uint32_t *exact;
 	uint32_t  i, j, k, uid;
 	uint8_t   h1, h2, h3, h4;
 	stream_t *stream;
@@ -206,6 +208,8 @@ int main (int argc, char **argv) {
 		xerror("Epsilon cannot be bigger than phi", __LINE__, __FILE__);
 	}
 
+	exact = xmalloc( (double)1./phi * sizeof(uint32_t) );
+
 	// This only work since the implementations appear first in long_options
 	if ( impl_cnt == 0 ) {
 		while (impl_cnt < AMOUNT_OF_IMPLEMENTATIONS) {
@@ -215,16 +219,6 @@ int main (int argc, char **argv) {
 		}
 	}
 
-	printf("#===========\n");
-	printf("#Parameters:\n");
-	printf("#===========\n");
-	printf("#m:       %"PRIu32"\n", m);
-	printf("#delta:   %lf\n", delta);
-	printf("#epsilon: %lf\n", epsilon);
-	printf("#phi:     %lf\n", phi);
-	printf("#seed1:   %"PRIu32"\n", I1);
-	printf("#seed2:   %"PRIu32"\n", I2);
-	printf("#===========\n\n");
 
 	stream = stream_open(filename);
 	stream_set_data_size(stream, 1048576);
@@ -288,9 +282,10 @@ int main (int argc, char **argv) {
 		}
 	}
 
-#ifdef PRINT
-	printf("#Reading Stream");
-#endif
+	uint32_t id;
+	uint32_t exact_cnt = 0;
+	double frq;
+
 	if ( format == BINARY ) {
 		i      = 0;
 		j      = 0;
@@ -298,14 +293,26 @@ int main (int argc, char **argv) {
 
 		// Skip comments
 		while ( unlikely(j < stream->data.length && buffer[j] == '#') ) {
+			k = 0;
+			memset(line, '\0', 256);
 			// Read line until newline appears
 			while ( likely(i < stream->data.length && buffer[i] != '\n') ) {
+				line[k] = buffer[i];
 				i++;
+				k++;
 				// If we run out of buffer we read a new chunk
 				if ( unlikely(i == stream->data.length) ) {
 					buffer = stream_read(stream);
 					i      = 0;
 					j      = 0;
+				}
+			}
+			
+			if ( 2 == sscanf(line, "#%"SCNu32": %lf", &id, &frq) ) {
+				printf("%"PRIu32": %f\n", id, frq);
+				if ( frq >= phi ) {	
+					exact[exact_cnt] = id;
+					exact_cnt++;
 				}
 			}
 
@@ -328,10 +335,9 @@ int main (int argc, char **argv) {
 		}
 
 		do {
-#ifdef PRINT
 			printf(".");
 			fflush(stdout);
-#endif
+
 			if (!start) {
 				buffer = stream_read(stream);
 			}
@@ -377,10 +383,6 @@ int main (int argc, char **argv) {
 		} while ( !stream_eof(stream) );
 	} else {
 		do {
-#ifdef PRINT
-			printf(".");
-			fflush(stdout);
-#endif
 			buffer = stream_read(stream);
 			i = 0;
 			j = 0;
@@ -538,31 +540,55 @@ int main (int argc, char **argv) {
 		} while (!stream_eof(stream));
 	}
 
-#ifdef PRINT
-	printf("\n\nFinding heavy hitters..\n\n");
-#endif
-
 	heavy_hitter_t *hitters;
+	uint32_t recalled = 0;
 
-	printf("Implementation,IP-Address,Index\n");
+	printf("\n");
+	printf("Implementation,Recall,Precision,M,Delta,Epsilon,Phi");
+	if (width != 0) {
+		printf(",Width");
+	}
+	if (depth != 0) {
+		printf(",Depth");
+	}
+	printf("\n");
+
 	for (k = 0; k < impl_cnt; k++) {
 		hitters = heavy_hitter_query(impl[k]);
 
 		for (i = 0; i < hitters->count; i++) {
-			h1 = (hitters->hitters[i] & (0xff << 24)) >> 24;
-			h2 = (hitters->hitters[i] & (0xff << 16)) >> 16;
-			h3 = (hitters->hitters[i] & (0xff << 8)) >> 8;
-			h4 = (hitters->hitters[i] & 0xff);
-			printf("%s,%03"PRIu8".%03"PRIu8".%03"PRIu8".%03"PRIu8",%"PRIu32"\n",
-				long_options[alg[k].index].name, h1, h2, h3, h4, hitters->hitters[i]);
+			for (j = 0; j < exact_cnt; j++) {
+				if (hitters->hitters[i] == exact[j]) {
+					recalled++;
+					break;
+				}
+			}
+
+//			h1 = (hitters->hitters[i] & (0xff << 24)) >> 24;
+//			h2 = (hitters->hitters[i] & (0xff << 16)) >> 16;
+//			h3 = (hitters->hitters[i] & (0xff << 8)) >> 8;
+//			h4 = (hitters->hitters[i] & 0xff);
+//			printf("%s,%03"PRIu8".%03"PRIu8".%03"PRIu8".%03"PRIu8",%"PRIu32"\n",
+//				long_options[alg[k].index].name, h1, h2, h3, h4, hitters->hitters[i]);
+			
 		}
+
+		printf("%s,%f,%f,%"PRIu32",%f,%f,%f",long_options[alg[k].index].name, (double)recalled/exact_cnt, (double)recalled/hitters->count, m, delta, epsilon, phi);
+		if (width != 0) {
+			printf(",%"PRIu32, width);
+		}
+		if (depth != 0) {
+			printf(",%"PRIu32, depth);
+		}
+		printf("\n");
+
+		recalled = 0;
 
 		heavy_hitter_destroy(impl[k]);
 	}
-	printf("\n");
-
 	stream_close(stream);
 	free(filename);
+	free(exact);
 
 	return EXIT_SUCCESS;
 }

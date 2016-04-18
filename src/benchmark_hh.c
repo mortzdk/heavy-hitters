@@ -383,7 +383,7 @@ int main (int argc, char **argv) {
 		start = false;
 	} while ( !stream_eof(stream) );
 
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < 1000; i++) {
 		for (k = 0; k < impl_cnt; k++) {
 			measure_with_sideeffects(
 					filename, 
