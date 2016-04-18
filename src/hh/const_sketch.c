@@ -49,7 +49,7 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 	hh->hash           = p->hash;
 	hh->fifo           = fifo_create(ceil(3./phi));
 	hh->result.hitters = xmalloc(result_size);
-	hh->result.size    = result_size;
+	hh->result.size    = ceil(2./phi);
 	memset(hh->result.hitters, '\0', result_size);
 	hh->sketch         = s;
 	hh->exact_cnt      = np2_base;
@@ -156,6 +156,14 @@ void hh_const_sketch_update(hh_const_sketch_t *restrict hh, const uint32_t idx,
 }
 
 // Query
+static inline void hh_const_sketch_resize_result(heavy_hitter_t *res) {
+	if ( unlikely(res->count >= res->size) ) { 
+		res->hitters = xrealloc(res->hitters, res->size*2*sizeof(uint32_t));
+		memset(res->hitters+res->size, '\0', res->size*sizeof(uint32_t));
+		res->size += res->size;
+	}
+}
+
 static void hh_const_sketch_query_bottom_recursive(
 		hh_const_sketch_t *restrict hh, const uint8_t layer, uint32_t x, 
 		const double th) {
@@ -188,13 +196,7 @@ static void hh_const_sketch_query_bottom_recursive(
 
 					hh->result.count++;
 
-					if ( unlikely(hh->result.count >= hh->result.size) ) { 
-						hh->result.hitters = xrealloc(hh->result.hitters, 
-								hh->result.size*2);
-						memset(hh->result.hitters+hh->result.size, '\0', 
-								hh->result.size);
-						hh->result.size += hh->result.size;
-					}
+					hh_const_sketch_resize_result(&hh->result);
 				}
 			} else {
 				hh_const_sketch_query_bottom_recursive(hh, layer+1, x, th);
@@ -223,13 +225,7 @@ static void hh_const_sketch_query_top_recursive(hh_const_sketch_t *restrict hh,
 
 				hh->result.count++;
 
-				if ( unlikely(hh->result.count >= hh->result.size) ) { 
-					hh->result.hitters = xrealloc(hh->result.hitters, 
-							hh->result.size*2);
-					memset(hh->result.hitters+hh->result.size, '\0', 
-							hh->result.size);
-					hh->result.size += hh->result.size;
-				}
+				hh_const_sketch_resize_result(&hh->result);
 			} else if ( unlikely(layer == exact_cnt-1) ) {
 				hh_const_sketch_query_bottom_recursive(hh, 0, x, th);
 			} else {
@@ -239,13 +235,6 @@ static void hh_const_sketch_query_top_recursive(hh_const_sketch_t *restrict hh,
 	}
 }
 
-static inline void hh_const_sketch_resize_result(heavy_hitter_t *res) {
-	if ( unlikely(res->count >= res->size) ) { 
-		res->hitters = xrealloc(res->hitters, res->size*2);
-		memset(res->hitters+res->size, '\0', res->size);
-		res->size += res->size;
-	}
-}
 
 heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *restrict hh) {
 	uint32_t x, idx, offset, a, b, h;
