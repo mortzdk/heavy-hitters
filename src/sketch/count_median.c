@@ -79,11 +79,10 @@ void count_median_destroy(count_median_t *restrict s) {
 
 void count_median_update(count_median_t *restrict s, const uint32_t i, 
 		const int64_t c) {
-	int64_t wi;
-	uint32_t di;
-	const uint32_t d        = s->size.d;
+	uint32_t wi, di;
 	const uint32_t w        = s->size.w;
 	const uint8_t  M        = s->size.M;
+	const uint32_t d        = s->size.d;
 	int64_t *restrict table = s->table;
 	hash hash               = s->hash->hash;
 

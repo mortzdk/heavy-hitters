@@ -33,22 +33,22 @@ CMH_type *hh_cormode_cmh_create(heavy_hitter_params_t *restrict p) {
 	int gran           = 1;
 	const uint8_t logm = ceil(log2(params->m)/log2(2*gran));
 	double delta       = (double)((params->delta*params->phi)/(2.*gran*logm));
+	int U              = xceil_log2(params->m);
 
 	if (width == 0) {
 		w = ceil(params->b / params->epsilon) * p->hash->c;
 	} else {
 		w = width;
 	}
+
 	if (depth == 0) {
-		d     = ceil(log2(1 / delta) / log2(params->b));
+		d = ceil(log2(1 / delta) / log2(params->b));
 	} else {
 		d = depth;
 	}
 
-	int U              = xceil_log2(params->m);
-
 	// CMH_type * CMH_Init(int width, int depth, int U, int gran)
-	//CMH_type *hh = CMH_Init(w, d, xceil_log2(params->m), 1);
+	// CMH_type *hh = CMH_Init(w, d, xceil_log2(params->m), 1);
 
 ///////////////////////////////////////////////////////////////////////////////
 	CMH_type * cmh;
@@ -113,13 +113,12 @@ CMH_type *hh_cormode_cmh_create(heavy_hitter_params_t *restrict p) {
 	}
 ///////////////////////////////////////////////////////////////////////////////
 
-
 #ifdef SPACE
 	printf("Space: %d\n", CMH_Size(hh));
 #endif
 
 	cmh->phi = params->phi;
-	cmh->L1 = 0;
+	cmh->L1  = 0;
 
 	return cmh;
 }
@@ -127,7 +126,7 @@ CMH_type *hh_cormode_cmh_create(heavy_hitter_params_t *restrict p) {
 // Destruction
 void hh_cormode_cmh_destroy(CMH_type *restrict cmh) {
 	// void CMH_Destroy(CMH_type * cmh)
-	//CMH_Destroy(hh);
+	// CMH_Destroy(hh);
 
 ///////////////////////////////////////////////////////////////////////////////
 	int i;
@@ -157,7 +156,7 @@ void hh_cormode_cmh_destroy(CMH_type *restrict cmh) {
 void hh_cormode_cmh_update(CMH_type *restrict cmh, const uint32_t idx, 
 		const int64_t diff) {
 	// void CMH_Update(CMH_type * cmh, unsigned int item, int diff)
-	//CMH_Update(hh, idx, c);
+	// CMH_Update(hh, idx, c);
 
 	uint32_t item = idx;
 ///////////////////////////////////////////////////////////////////////////////
@@ -188,10 +187,7 @@ void hh_cormode_cmh_update(CMH_type *restrict cmh, const uint32_t idx,
 	cmh->L1 += diff;
 }
 
-
-
-// Helpers
-//
+///////////////////////////////////////////////////////////////////////////////
 static int CMH_count(CMH_type * cmh, int depth, int item)
 {
 	// return an estimate of item at level depth
@@ -220,7 +216,9 @@ static int CMH_count(CMH_type * cmh, int depth, int item)
 	}
 	return(estimate);
 }
+///////////////////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////////////////
 static void CMH_recursive(CMH_type * cmh, int depth, int start, 
 //		    int thresh, std::map<uint32_t, uint32_t>& res)
 			int thresh, int * results)
@@ -258,16 +256,15 @@ static void CMH_recursive(CMH_type * cmh, int depth, int start,
 		}
 	}
 }
-
-
+///////////////////////////////////////////////////////////////////////////////
 
 // Query
 heavy_hitter_t *hh_cormode_cmh_query(CMH_type *restrict cmh) {
 	int threshold = cmh->L1 * cmh->phi;
 	int i;
 
-	//int * CMH_FindHH(CMH_type * cmh, int thresh)
-	//int *results = CMH_FindHH(hh, threshold);
+	// int * CMH_FindHH(CMH_type * cmh, int thresh)
+	// int *results = CMH_FindHH(hh, threshold);
 ///////////////////////////////////////////////////////////////////////////////
 	int * results;
 	results=(int *) calloc(cmh->width,sizeof(int));

@@ -20,9 +20,10 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	const uint8_t logm         = xceil_log2(m);
 	const double phi           = params->phi;
 	const double epsilon       = params->epsilon;
+	const uint32_t twophi      = ceil(2./phi);
 	double delta               = (double)((params->delta*phi)/(2.*logm));
 	const uint32_t b           = params->b;
-	const uint32_t result_size = sizeof(uint32_t) * ceil(2./phi);
+	const uint32_t result_size = sizeof(uint32_t) * twophi;
 	hh_sketch_t *restrict hh   = xmalloc( sizeof(hh_sketch_t) );
 	sketch_t    *restrict s    = sketch_create(params->f, p->hash, b, epsilon, 
 			delta);
@@ -38,8 +39,8 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	hh->params         = params;
 	hh->norm           = 0;
 	hh->result.count   = 0; 
-	hh->fifo           = fifo_create(ceil(2./phi));
-	hh->result.size    = ceil(2./phi);
+	hh->fifo           = fifo_create(twophi);
+	hh->result.size    = twophi;
 	hh->result.hitters = xmalloc( result_size );
 	memset(hh->result.hitters, '\0', result_size);
 

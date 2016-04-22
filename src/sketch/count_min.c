@@ -66,10 +66,11 @@ void count_min_update(count_min_t *restrict s, const uint32_t i,
 	uint32_t di, wi;
 	const uint32_t w         = s->size.w;
 	const uint8_t  M         = s->size.M;
+	const uint32_t d         = s->size.d;
 	uint64_t *restrict table = s->table;
 	hash hash                = s->hash->hash;                  
 
-	for (di = 0; di < s->size.d; di++) {
+	for (di = 0; di < d; di++) {
 		wi = hash(w, M, i, (uint64_t)table[di*(w+2)], 
 				(uint64_t)table[di*(w+2)+1]);
 
@@ -82,6 +83,7 @@ void count_min_update(count_min_t *restrict s, const uint32_t i,
 uint64_t count_min_point(count_min_t *restrict s, const uint32_t i) {
 	uint32_t di, wi;
 	uint64_t estimate, e;
+	const uint32_t d         = s->size.d;
 	const uint32_t w         = s->size.w;
 	const uint8_t  M         = s->size.M;
 	uint64_t *restrict table = s->table;
@@ -92,7 +94,7 @@ uint64_t count_min_point(count_min_t *restrict s, const uint32_t i) {
 	assert( wi < w );
 
 	estimate  = table[COUNT_MIN_INDEX(w, 0, wi)];
-	for (di = 1; di < s->size.d; di++) {
+	for (di = 1; di < d; di++) {
 		wi = hash(w, M, i, (uint64_t)table[di*(w+2)], 
 				(uint64_t)table[di*(w+2)+1]);
 
@@ -122,12 +124,13 @@ uint64_t count_min_point_partial(count_min_t *restrict s, const uint32_t i,
 bool count_min_above_thresshold(count_min_t *restrict s, const uint32_t i, 
 		const uint64_t th) {
 	uint32_t di, wi;
+	const uint32_t d         = s->size.d;
 	const uint32_t w         = s->size.w;
 	const uint32_t M         = s->size.M;
 	uint64_t *restrict table = s->table;
 	hash hash                = s->hash->hash;                  
 
-	for (di = 0; di < s->size.d; di++) {
+	for (di = 0; di < d; di++) {
 		wi = hash(w, M, i, (uint64_t)table[di*(w+2)], 
 				(uint64_t)table[di*(w+2)+1]);
 
