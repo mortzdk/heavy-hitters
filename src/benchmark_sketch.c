@@ -69,6 +69,7 @@ int main (int argc, char **argv) {
 	double    epsilon  = 1./64.;
 	double    delta    = 0.25;
 	uint32_t  m        = UINT32_MAX;
+	const uint8_t b   = 2;
 
 	/* getopt */
 	int option_index = 0;
@@ -172,14 +173,14 @@ int main (int argc, char **argv) {
 			impl_cnt*N_EVENTS*runs);
 
 	sketch_measure_create_t params_min = {
-		.b       = 2,
+		.b       = b,
 		.epsilon = epsilon,
 		.delta   = delta,
 		.f       = &countMin,
 		.hash    = &multiplyShift,
 	};
 	sketch_measure_create_t params_median = {
-		.b       = 4,
+		.b       = b,
 		.epsilon = epsilon,
 		.delta   = delta,
 		.f       = &countMedian,

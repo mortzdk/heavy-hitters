@@ -77,6 +77,7 @@ int main (int argc, char **argv) {
 	double    delta    = 0.25;
 	double    phi      = 0.05;
 	uint32_t  m        = UINT32_MAX;
+	const uint8_t  b   = 2;
 
 	/* getopt */
 	int option_index = 0;
@@ -194,7 +195,7 @@ int main (int argc, char **argv) {
 			impl_cnt*N_EVENTS*runs);
 
 	hh_sketch_params_t params_min = {
-		.b       = 2,
+		.b       = b,
 		.epsilon = epsilon,
 		.delta   = delta,
 		.m       = m,
@@ -202,7 +203,7 @@ int main (int argc, char **argv) {
 		.f       = &countMin,
 	};
 	hh_sketch_params_t params_median = {
-		.b       = 4,
+		.b       = b,
 		.epsilon = epsilon,
 		.delta   = delta,
 		.m       = m,
