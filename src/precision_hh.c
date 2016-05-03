@@ -186,17 +186,23 @@ int main (int argc, char **argv) {
 				break;
 			case 'w':
 				width = strtoll(optarg, NULL, 10);
-				epsilon = (double)2./width;
 				break;
 			case 'h':
 				depth = strtoll(optarg, NULL, 10);
-				delta = (2. * log2(m)) / (pow(2., depth)*phi); // branch = 2
 				break;
 			case 'i':
 			default:
 				printusage(argv);
 				exit(EXIT_FAILURE);
 		}
+	}
+
+	if (depth > 0) {
+		delta = (2. * log2(m)) / (pow(2., depth)*phi); // branch = 2
+	}
+
+	if (width > 0) {
+		epsilon = (double)2./width;
 	}
 
 	if ( NULL == filename ) {
