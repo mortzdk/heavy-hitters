@@ -314,7 +314,7 @@ int main (int argc, char **argv) {
 			}
 			
 			if ( 2 == sscanf(line, "#%"SCNu32": %lf", &id, &frq) ) {
-				printf("%"PRIu32": %f\n", id, frq);
+//				printf("%"PRIu32": %f\n", id, frq);
 				if ( frq >= phi ) {	
 					exact[exact_cnt] = id;
 					exact_cnt++;
@@ -345,8 +345,8 @@ int main (int argc, char **argv) {
 		}
 
 		do {
-			printf(".");
-			fflush(stdout);
+//			printf(".");
+//			fflush(stdout);
 
 			if (!start) {
 				buffer = stream_read(stream);
@@ -595,7 +595,20 @@ int main (int argc, char **argv) {
 			
 		}
 
-		printf("%s,%f,%f,%"PRIu32",%f,%f,%f,%"PRIu32",%"PRIu32",%"PRIu32",%"PRIu32,long_options[alg[k].index].name, (double)recalled/exact_cnt, errs/(double)recalled/hitters->count, m, delta, epsilon, phi, hitters->count, errs, exact_cnt, allowed_cnt);
+		printf("%s,", long_options[alg[k].index].name);
+		if (exact_cnt == 0) {
+			printf("1.0,");
+		} else {
+			printf("%f,", (double)recalled/exact_cnt);
+		}
+
+		if (hitters->count == 0) {
+			printf("1.0,");
+		} else {
+			printf("%f,", (double)recalled/hitters->count);
+		}
+
+		printf("%"PRIu32",%f,%f,%f,%"PRIu32",%"PRIu32",%"PRIu32",%"PRIu32, m, delta, epsilon, phi, hitters->count, errs, exact_cnt, allowed_cnt);
 		if (width != 0) {
 			printf(",%"PRIu32, width);
 		}
