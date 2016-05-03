@@ -87,7 +87,7 @@ int main (int argc, char **argv) {
 	char      buf[256];
 	char      line[256];
 	char     *buffer;
-	uint32_t *exact;
+	uint32_t *exact, *allowed;
 	uint32_t  i, j, k, uid;
 	uint8_t   h1, h2, h3, h4;
 	stream_t *stream;
@@ -209,7 +209,8 @@ int main (int argc, char **argv) {
 		xerror("Epsilon cannot be bigger than phi", __LINE__, __FILE__);
 	}
 
-	exact = xmalloc( (double)1./phi * sizeof(uint32_t) );
+	exact   = xmalloc( (double)1./phi * sizeof(uint32_t) );
+	allowed = xmalloc( (double)1./(phi-epsilon) * sizeof(uint32_t) );
 
 	// This only work since the implementations appear first in long_options
 	if ( impl_cnt == 0 ) {
@@ -279,12 +280,15 @@ int main (int argc, char **argv) {
 			default:
 				stream_close(stream);
 				free(filename);
+				free(exact);
+				free(allowed);
 				xerror("Unknown heavy hitter implementation.", __LINE__, __FILE__);
 		}
 	}
 
 	uint32_t id;
 	uint32_t exact_cnt = 0;
+	uint32_t allowed_cnt = 0;
 	double frq;
 
 	if ( format == BINARY ) {
@@ -314,6 +318,11 @@ int main (int argc, char **argv) {
 				if ( frq >= phi ) {	
 					exact[exact_cnt] = id;
 					exact_cnt++;
+				}
+
+				if ( frq >= phi-epsilon ) {
+					allowed[allowed_cnt] = id;
+					allowed_cnt++;
 				}
 			}
 
@@ -543,9 +552,10 @@ int main (int argc, char **argv) {
 
 	heavy_hitter_t *hitters;
 	uint32_t recalled = 0;
+	uint32_t errs = 0;
 
 	printf("\n");
-	printf("Implementation,Recall,Precision,M,Delta,Epsilon,Phi");
+	printf("Implementation,Recall,Precision,M,Delta,Epsilon,Phi,Hits,Errors,Exact,Allowed");
 	if (width != 0) {
 		printf(",Width");
 	}
@@ -558,11 +568,22 @@ int main (int argc, char **argv) {
 		hitters = heavy_hitter_query(impl[k]);
 
 		for (i = 0; i < hitters->count; i++) {
+
 			for (j = 0; j < exact_cnt; j++) {
 				if (hitters->hitters[i] == exact[j]) {
 					recalled++;
 					break;
 				}
+			}
+
+			for (j = 0; j < allowed_cnt; j++) {
+				if (hitters->hitters[i] == allowed[j]) {
+					break;
+				}
+			}
+
+			if (j == allowed_cnt) {
+				errs++;
 			}
 
 //			h1 = (hitters->hitters[i] & (0xff << 24)) >> 24;
@@ -574,7 +595,7 @@ int main (int argc, char **argv) {
 			
 		}
 
-		printf("%s,%f,%f,%"PRIu32",%f,%f,%f",long_options[alg[k].index].name, (double)recalled/exact_cnt, (double)recalled/hitters->count, m, delta, epsilon, phi);
+		printf("%s,%f,%f,%"PRIu32",%f,%f,%f,%"PRIu32",%"PRIu32",%"PRIu32",%"PRIu32,long_options[alg[k].index].name, (double)recalled/exact_cnt, errs/(double)recalled/hitters->count, m, delta, epsilon, phi, hitters->count, errs, exact_cnt, allowed_cnt);
 		if (width != 0) {
 			printf(",%"PRIu32, width);
 		}
@@ -590,6 +611,7 @@ int main (int argc, char **argv) {
 	stream_close(stream);
 	free(filename);
 	free(exact);
+	free(allowed);
 
 	return EXIT_SUCCESS;
 }
