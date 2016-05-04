@@ -144,8 +144,8 @@ Test(hh_cormode, hh_top_and_bottom_close_non_hh, .disabled=0) {
 		.f      = &hh_cormode_cmh,
 	};
 
-	hh_t *hh = heavy_hitter_create(&p);
-	double *x       = xmalloc( m*sizeof(double) );
+	hh_t *hh   = heavy_hitter_create(&p);
+	double *x  = xmalloc( m*sizeof(double) );
 
 	for (uint32_t i = 0; i < m; i++) {
 		x[i] = (1-hh_mass)/(m-7);
