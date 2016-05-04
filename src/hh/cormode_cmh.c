@@ -25,27 +25,38 @@
 #include "hh/sketch.h"
 #include "util/cormode_prng.h"
 
+///////////////////////////////////////////////////////////////////////////////
+static int CMH_Size(CMH_type * cmh)
+{ // return the size used in bytes
+	int counts, hashes, admin,i;
+	if (!cmh) return 0;
+	admin=sizeof(CMH_type);
+	counts=cmh->levels*sizeof(int **);
+	for (i=0;i<cmh->levels;i++)
+		if (i>=cmh->freelim)
+			counts+=(1<<(cmh->gran*(cmh->levels-i)))*sizeof(int);
+		else
+			counts+=cmh->width*cmh->depth*sizeof(int);
+	hashes=(cmh->levels-cmh->freelim)*cmh->depth*2*sizeof(unsigned int);
+	hashes+=(cmh->levels)*sizeof(unsigned int *);
+	return(admin + hashes + counts);
+}
+///////////////////////////////////////////////////////////////////////////////
+
 // Initialization
 CMH_type *hh_cormode_cmh_create(heavy_hitter_params_t *restrict p) {
-	uint32_t w,d;
-
 	hh_cormode_cmh_params_t *restrict params = (hh_cormode_cmh_params_t *) p->params;
 	int gran           = 1;
 	const uint8_t logm = ceil(log2(params->m)/log2(2*gran));
 	double delta       = (double)((params->delta*params->phi)/(2.*gran*logm));
 	int U              = xceil_log2(params->m);
+	uint32_t w         = ceil(params->b / params->epsilon) * p->hash->c;
+	uint32_t d         = ceil(log2(1 / delta) / log2(params->b));
 
-	if (width == 0) {
-		w = ceil(params->b / params->epsilon) * p->hash->c;
-	} else {
-		w = width;
-	}
+	sketch_fixed_size(&d, &w);
 
-	if (depth == 0) {
-		d = ceil(log2(1 / delta) / log2(params->b));
-	} else {
-		d = depth;
-	}
+//	printf("WIDTH:%"PRIu32"\n", w);
+//	printf("DEPTH:%"PRIu32"\n", d);
 
 	// CMH_type * CMH_Init(int width, int depth, int U, int gran)
 	// CMH_type *hh = CMH_Init(w, d, xceil_log2(params->m), 1);
@@ -114,7 +125,7 @@ CMH_type *hh_cormode_cmh_create(heavy_hitter_params_t *restrict p) {
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef SPACE
-	printf("Space: %d\n", CMH_Size(hh));
+	printf("Space: %d\n", CMH_Size(cmh));
 #endif
 
 	cmh->phi = params->phi;
