@@ -16,6 +16,7 @@
 #include "hh/hh.h"
 #include "hh/hh_measure.h"
 #include "hh/sketch.h"
+#include "hh/cormode_cmh.h"
 #include "util/xutil.h"
 
 #define AMOUNT_OF_IMPLEMENTATIONS 4
@@ -194,6 +195,13 @@ int main (int argc, char **argv) {
 	params = xmalloc( sizeof(heavy_hitter_params_t *) * 
 			impl_cnt*N_EVENTS*runs);
 
+	hh_cormode_cmh_params_t params_cmh = {
+		.b       = b,
+		.epsilon = epsilon,
+		.delta   = delta,
+		.m       = m,
+		.phi     = phi,
+	};
 	hh_sketch_params_t params_min = {
 		.b       = b,
 		.epsilon = epsilon,
@@ -228,7 +236,7 @@ int main (int argc, char **argv) {
 	};
 	heavy_hitter_params_t p_cormode = {
 		.hash   = &multiplyShift,
-		.params = &params_min,
+		.params = &params_cmh,
 		.f      = &hh_cormode_cmh,
 	};
 
