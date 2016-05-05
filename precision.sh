@@ -55,32 +55,29 @@ if [ "$TYPE" == "hh" ]; then
 	echo -n "# "         >> ${OUT}.cormode
 	date                 >> ${OUT}.cormode
 
-	limit=2048
-	p=2
-	for ((i=1; p<limit; i++));
+	phis=(0.0001, 0.005, 0.001, 0.05, 0.01)
+	for i in "${phis[@]}"
 	do
-		PHI=$(echo "1/${p}" | bc -l)
-		e=$((p*2))
+		DELTA=0.25
+		PHI=${i}
+		EPSILON=0.0005
 
-		for ((j=1; e<=limit; j++));
-		do
-			SEED1=$[ 1 + $[ RANDOM % 32768 ]]
-			SEED2=$[ 1 + $[ RANDOM % 32768 ]]
-			WIDTH=$(echo "2/(1/${e})" | bc -l)
-			HEIGHT=4
+		h=$(echo "l((2*(l(${UNIVERSE})/l(2)))/(${PHI}*${DELTA}))/l(2)" | bc -l)
+		w=$(echo "2/(1/${EPSILON})" | bc -l)
 
-			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w $(WIDTH) \
-				-d ${HEIGHT} -p ${PHI} -f ${FILE} --const   >> ${OUT}.const
-			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w $(WIDTH) \
-				-d ${HEIGHT} -p ${PHI} -f ${FILE} --min     >> ${OUT}.min
-			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-				-d ${HEIGHT} -p ${PHI} -f ${FILE} --median  >> ${OUT}.median
-			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-				-d ${HEIGHT} -p ${PHI} -f ${FILE} --cormode >> ${OUT}.cormode
+		SEED1=$[ 1 + $[ RANDOM % 32768 ]]
+		SEED2=$[ 1 + $[ RANDOM % 32768 ]]
+		WIDTH=$(echo "(${w}+0.5)/1" | bc)
+		HEIGHT=$(echo "(${h}+0.5)/1" | bc)
 
-			((e*=2))
-		done
-		((p*=2))
+		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w $(WIDTH) \
+			-h ${HEIGHT} -p ${PHI} -f ${FILE} --const   >> ${OUT}.const
+		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w $(WIDTH) \
+			-h ${HEIGHT} -p ${PHI} -f ${FILE} --min     >> ${OUT}.min
+		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+			-h ${HEIGHT} -p ${PHI} -f ${FILE} --median  >> ${OUT}.median
+		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+			-h ${HEIGHT} -p ${PHI} -f ${FILE} --cormode >> ${OUT}.cormode
 	done
 else
 	echo "Name,L1 Error,L2 Error,Epsilon,Delta,Width,Depth,M,L1,L2" >> ${OUT}.min
