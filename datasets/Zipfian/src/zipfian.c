@@ -15,6 +15,17 @@
 #define BUFFER (1024*512)
 #define TOPK 1024
 
+static void shuffle(uint32_t *array, uint64_t n) {
+	if (n > 1) {
+		uint64_t i;
+		for (i = 0; i < n - 1; i++) {
+			uint64_t j = xuni_rand()*(i+1);
+			uint32_t t = array[j];
+			array[j]   = array[i];
+			array[i]   = t;
+		}
+	}
+}
 
 static void printusage(char *argv[]) {
     fprintf(stderr, "Usage: %s \n"
@@ -126,9 +137,18 @@ int main (int argc, char**argv) {
 	}
 	c = 1./c;
 
-	for (i = 1; i <= N; i++) {
-		map[i-1]   = xuni_rand()*m;
-		table[i-1] = (c / table[i-1]);
+	for (i = 0; i < N; i++) {
+		map[i] = i;
+		table[i] = (c / table[i]);
+	}
+
+	shuffle(map, N);
+
+	for (i = N; i < m; i++) {
+		j = xuni_rand()*m;
+		if (j <= i) {
+			map[j] = i;
+		}
 	}
 
 	// Print the weights of the top k probabilities into header of file
