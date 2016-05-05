@@ -145,8 +145,8 @@ int main (int argc, char**argv) {
 	shuffle(map, N);
 
 	for (i = N; i < m; i++) {
-		j = xuni_rand()*m;
-		if (j <= i) {
+		j = xuni_rand()*(i+1);
+		if (j < N) {
 			map[j] = i;
 		}
 	}

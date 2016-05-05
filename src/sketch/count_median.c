@@ -32,7 +32,7 @@ count_median_t *count_median_create(hash_t *restrict hash, const uint8_t b,
 	const uint32_t table_size  = sizeof(int64_t) * ((w+4)*d);
 	const uint32_t median_size = sizeof(int64_t) * d;
 
-	assert( b > 2 && d > 1 );
+	assert( b >= 2 && d > 1 );
 
 	s->table   = xmalloc(table_size);
 	s->median  = xmalloc(median_size);

@@ -45,6 +45,15 @@ echo -n "# "         >> ${OUT}.median
 date                 >> ${OUT}.median
 
 if [ "$TYPE" == "hh" ]; then
+
+	function ceil {
+		res=$(echo "($1 + 0.5)/1" | bc)
+		if [ $(echo "${res} < $1" | bc) -eq 1 ]; then
+			res=$((${res}+1))
+		fi
+		echo ${res}
+	}
+
 	echo -n "# COMMIT: " >> ${OUT}.const
 	git log -1 --oneline >> ${OUT}.const
 	echo -n "# "         >> ${OUT}.const
@@ -55,24 +64,24 @@ if [ "$TYPE" == "hh" ]; then
 	echo -n "# "         >> ${OUT}.cormode
 	date                 >> ${OUT}.cormode
 
-	phis=(0.0001, 0.005, 0.001, 0.05, 0.01)
-	for i in "${phis[@]}"
+	limit=1024
+	for ((i=2; i<=limit; i*=2));
 	do
 		DELTA=0.25
-		PHI=${i}
-		EPSILON=0.0005
+		PHI=$(echo "1/${i}" | bc -l)
+		EPSILON=$(echo "1/2^11" | bc -l) # 2^11
 
 		h=$(echo "l((2*(l(${UNIVERSE})/l(2)))/(${PHI}*${DELTA}))/l(2)" | bc -l)
-		w=$(echo "2/(1/${EPSILON})" | bc -l)
+		w=$(echo "2/${EPSILON}" | bc -l)
 
 		SEED1=$[ 1 + $[ RANDOM % 32768 ]]
 		SEED2=$[ 1 + $[ RANDOM % 32768 ]]
-		WIDTH=$(echo "(${w}+0.5)/1" | bc)
-		HEIGHT=$(echo "(${h}+0.5)/1" | bc)
+		WIDTH=$(ceil ${h})
+		HEIGHT=$(ceil ${w})
 
-		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w $(WIDTH) \
+		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
 			-h ${HEIGHT} -p ${PHI} -f ${FILE} --const   >> ${OUT}.const
-		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w $(WIDTH) \
+		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
 			-h ${HEIGHT} -p ${PHI} -f ${FILE} --min     >> ${OUT}.min
 		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
 			-h ${HEIGHT} -p ${PHI} -f ${FILE} --median  >> ${OUT}.median

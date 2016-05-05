@@ -39,54 +39,63 @@ done
 # HEIGHT and WIDTH is those satisfying the Count Min Sketch guarantees
 if [ "$TYPE" == "hh" ]; then
 
-	phis=(0.0001, 0.005, 0.001, 0.05, 0.01)
-	for i in "${phis[@]}"
+	function ceil {
+		res=$(echo "($1 + 0.5)/1" | bc)
+		if [ $(echo "${res} < $1" | bc) -eq 1 ]; then
+			res=$((${res}+1))
+		fi
+		echo ${res}
+	}
+
+	limit=1024
+	for ((i=2; i<=limit; i*=2));
 	do
-		echo -n "# COMMIT: " >> ${OUT}.${PHI}.const
-		git log -1 --oneline >> ${OUT}.${PHI}.const
-		echo -n "# "         >> ${OUT}.${PHI}.const
-		date                 >> ${OUT}.${PHI}.const
-
-		echo -n "# COMMIT: " >> ${OUT}.${PHI}.min
-		git log -1 --oneline >> ${OUT}.${PHI}.min
-		echo -n "# "         >> ${OUT}.${PHI}.min
-		date                 >> ${OUT}.${PHI}.min
-
-		echo -n "# COMMIT: " >> ${OUT}.${PHI}.median
-		git log -1 --oneline >> ${OUT}.${PHI}.median
-		echo -n "# "         >> ${OUT}.${PHI}.median
-		date                 >> ${OUT}.${PHI}.median
-
-		echo -n "# COMMIT: " >> ${OUT}.${PHI}.cmh
-		git log -1 --oneline >> ${OUT}.${PHI}.cmh
-		echo -n "# "         >> ${OUT}.${PHI}.cmh
-		date                 >> ${OUT}.${PHI}.cmh
-
-		EPSILON=0.0005
 		DELTA=0.25
-		PHI=${i}
+		PHI=$(echo "1/${i}" | bc -l)
+		EPSILON=$(echo "1/2^11" | bc -l) # 2^11
+
+		echo -n "# COMMIT: " >> ${OUT}.${i}.const
+		git log -1 --oneline >> ${OUT}.${i}.const
+		echo -n "# "         >> ${OUT}.${i}.const
+		date                 >> ${OUT}.${i}.const
+
+		echo -n "# COMMIT: " >> ${OUT}.${i}.min
+		git log -1 --oneline >> ${OUT}.${i}.min
+		echo -n "# "         >> ${OUT}.${i}.min
+		date                 >> ${OUT}.${i}.min
+
+		echo -n "# COMMIT: " >> ${OUT}.${i}.median
+		git log -1 --oneline >> ${OUT}.${i}.median
+		echo -n "# "         >> ${OUT}.${i}.median
+		date                 >> ${OUT}.${i}.median
+
+		echo -n "# COMMIT: " >> ${OUT}.${i}.cmh
+		git log -1 --oneline >> ${OUT}.${i}.cmh
+		echo -n "# "         >> ${OUT}.${i}.cmh
+		date                 >> ${OUT}.${i}.cmh
 
 		h=$(echo "l((2*(l(${UNIVERSE})/l(2)))/(${PHI}*${DELTA}))/l(2)" | bc -l)
-		w=$(echo "2/(1/${EPSILON})" | bc -l)
+		w=$(echo "2/${EPSILON}" | bc -l)
 
 		SEED1=$[ 1 + $[ RANDOM % 32768 ]]
 		SEED2=$[ 1 + $[ RANDOM % 32768 ]]
-		WIDTH=$(echo "(${w}+0.5)/1" | bc)
-		HEIGHT=$(echo "(${h}+0.5)/1" | bc)
+		RUNS=10
+		WIDTH=$(ceil ${w})
+		HEIGHT=$(ceil ${h})
 
 
 		./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
 			-h ${HEIGHT} -p ${PHI} -f ${FILE} --const  -r ${RUNS} \
-			-o ${OUT}.${PHI}.const
+			-o ${OUT}.${i}.const
 		./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
 			-h ${HEIGHT} -p ${PHI} -f ${FILE} --min    -r ${RUNS} \
-			-o ${OUT}.${PHI}.min
+			-o ${OUT}.${i}.min
 		./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
 			-h ${HEIGHT} -p ${PHI} -f ${FILE} --median -r ${RUNS} \
-			-o ${OUT}.${PHI}.median
+			-o ${OUT}.${i}.median
 		./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
 			-h ${HEIGHT} -p ${PHI} -f ${FILE} --cormode -r ${RUNS} \
-			-o ${OUT}.${PHI}.cmh
+			-o ${OUT}.${i}.cmh
 	done
 else
 	limit=16777216
