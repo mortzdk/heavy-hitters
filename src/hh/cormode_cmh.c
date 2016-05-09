@@ -31,12 +31,12 @@ static int CMH_Size(CMH_type * cmh)
 	int counts, hashes, admin,i;
 	if (!cmh) return 0;
 	admin=sizeof(CMH_type);
-	counts=cmh->levels*sizeof(int **);
+	counts=cmh->levels*sizeof(int64_t **);
 	for (i=0;i<cmh->levels;i++)
 		if (i>=cmh->freelim)
-			counts+=(1<<(cmh->gran*(cmh->levels-i)))*sizeof(int);
+			counts+=(1<<(cmh->gran*(cmh->levels-i)))*sizeof(int64_t);
 		else
-			counts+=cmh->width*cmh->depth*sizeof(int);
+			counts+=cmh->width*cmh->depth*sizeof(int64_t);
 	hashes=(cmh->levels-cmh->freelim)*cmh->depth*2*sizeof(unsigned int);
 	hashes+=(cmh->levels)*sizeof(unsigned int *);
 	return(admin + hashes + counts);
@@ -92,7 +92,7 @@ CMH_type *hh_cormode_cmh_create(heavy_hitter_params_t *restrict p) {
 		//find the level up to which it is cheaper to keep exact counts
 		cmh->freelim=cmh->levels-cmh->freelim;
 
-		cmh->counts=(int **) calloc(sizeof(int *), 1+cmh->levels);
+		cmh->counts=(int64_t **) calloc(sizeof(int64_t *), 1+cmh->levels);
 		cmh->hasha=(unsigned int **)calloc(sizeof(unsigned int *),1+cmh->levels);
 		cmh->hashb=(unsigned int **)calloc(sizeof(unsigned int *),1+cmh->levels);
 		j=1;
@@ -100,14 +100,14 @@ CMH_type *hh_cormode_cmh_create(heavy_hitter_params_t *restrict p) {
 		{
 			if (i>=cmh->freelim)
 			{ // allocate space for representing things exactly at high levels
-				cmh->counts[i]=(int *) calloc(1<<(cmh->gran*j),sizeof(int));
+				cmh->counts[i]=(int64_t *) calloc(1<<(cmh->gran*j),sizeof(int64_t));
 				j++;
 				cmh->hasha[i]=NULL;
 				cmh->hashb[i]=NULL;
 			}
 			else 
 			{ // allocate space for a sketch
-				cmh->counts[i]=(int *)calloc(sizeof(int), cmh->depth*cmh->width);
+				cmh->counts[i]=(int64_t *) calloc(sizeof(int64_t), cmh->depth*cmh->width);
 				cmh->hasha[i]=(unsigned int *)
 					calloc(sizeof(unsigned int),cmh->depth);
 				cmh->hashb[i]=(unsigned int *)
@@ -125,7 +125,7 @@ CMH_type *hh_cormode_cmh_create(heavy_hitter_params_t *restrict p) {
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef SPACE
-	printf("Space: %d\n", CMH_Size(cmh));
+	fprintf(stderr, "Space CORMODE: %d\n", CMH_Size(cmh));
 #endif
 
 	cmh->phi = params->phi;

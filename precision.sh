@@ -32,7 +32,7 @@ done
 
 # Run heavy hitter if sketch is not defined
 : "${TYPE:="hh"}"
-: "${UNIVERSE:=4294967295}"
+: "${UNIVERSE:=2147483647}"
 
 echo -n "# COMMIT: " >> ${OUT}.min
 git log -1 --oneline >> ${OUT}.min
@@ -76,8 +76,8 @@ if [ "$TYPE" == "hh" ]; then
 
 		SEED1=$[ 1 + $[ RANDOM % 32768 ]]
 		SEED2=$[ 1 + $[ RANDOM % 32768 ]]
-		WIDTH=$(ceil ${h})
-		HEIGHT=$(ceil ${w})
+		WIDTH=$(ceil ${w})
+		HEIGHT=$(ceil ${h})
 
 		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
 			-h ${HEIGHT} -p ${PHI} -f ${FILE} --const   >> ${OUT}.const

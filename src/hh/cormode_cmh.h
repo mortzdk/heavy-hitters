@@ -23,7 +23,7 @@ typedef struct CMH_type{
   int freelim; // up to which level to keep exact counts
   int depth;
   int width;
-  int ** counts;
+  int64_t **counts;
   unsigned int **hasha, **hashb;
   int L1;
   double phi;

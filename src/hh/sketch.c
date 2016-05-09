@@ -130,12 +130,11 @@ void hh_sketch_update(hh_sketch_t *restrict hh, const uint32_t idx,
 		x   = 2*x;
 		if (mid < idx) {
 			x++;
-			top[x+(1 << (i+1))-2] += c;
 			left = mid+1;
 		} else {
-			top[x+(1 << (i+1))-2] += c;
 			right = mid;
 		}
+		top[x+(1 << (i+1))-2] += c;
 	}
 
 	// Use sketches to estimate count instead
@@ -144,12 +143,11 @@ void hh_sketch_update(hh_sketch_t *restrict hh, const uint32_t idx,
 		x  *= 2;
 		if (mid < idx) {
 			x++;
-			sketch_update(tree[i], x, c);
 			left = mid+1;
 		} else {
-			sketch_update(tree[i], x, c);
 			right = mid;
 		}
+		sketch_update(tree[i], x, c);
 	}
 
 	hh->norm += c;
