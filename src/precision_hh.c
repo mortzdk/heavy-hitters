@@ -11,6 +11,7 @@
 
 #include "stream/stream.h"
 #include "sketch/sketch.h"
+#include "hh/cormode_cmh.h"
 #include "hh/hh.h"
 #include "hh/sketch.h"
 #include "util/xutil.h"
@@ -231,6 +232,13 @@ int main (int argc, char **argv) {
 	stream = stream_open(filename);
 	stream_set_data_size(stream, 1048576);
 
+	hh_cormode_cmh_params_t params_cmh = {
+		.b       = b,
+		.epsilon = epsilon,
+		.delta   = delta,
+		.m       = m,
+		.phi     = phi,
+	};
 	hh_sketch_params_t params_min = {
 		.b       = b,
 		.epsilon = epsilon,
@@ -265,7 +273,7 @@ int main (int argc, char **argv) {
 	};
 	heavy_hitter_params_t p_cormode = {
 		.hash   = &multiplyShift,
-		.params = &params_min,
+		.params = &params_cmh,
 		.f      = &hh_cormode_cmh,
 	};
 
