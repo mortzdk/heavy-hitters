@@ -69,7 +69,7 @@ int main (int argc, char **argv) {
 	double    epsilon  = 1./64.;
 	double    delta    = 0.25;
 	uint32_t  m        = UINT32_MAX;
-	const uint8_t b   = 2;
+	const uint8_t b    = 4;
 
 	/* getopt */
 	int option_index = 0;

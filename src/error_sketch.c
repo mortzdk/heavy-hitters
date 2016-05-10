@@ -67,6 +67,7 @@ int main (int argc, char **argv) {
 	double    epsilon  = 1./64.;
 	double    delta    = 0.25;
 	uint32_t  m        = UINT32_MAX;
+	const uint8_t b    = 4;
 
 	/* getopt */
 	int option_index = 0;
@@ -156,11 +157,12 @@ int main (int argc, char **argv) {
 	for (k = 0; k < impl_cnt; k++) {
 		switch (alg[k].impl) {
 			case MIN:
-				impl[k] = sketch_create(&countMin, &multiplyShift, 2, epsilon, 
+				impl[k] = sketch_create(&countMin, &multiplyShift, b, epsilon, 
 						delta);
 				break;
 			case MEDIAN:
-				impl[k] = sketch_create(&countMedian, &multiplyShift, 4, 
+				impl[k] = sketch_create(&countMedian, &multiplyShift, 
+						(b > 2) ? b : 4, 
 						epsilon, delta);
 				break;
 			default:

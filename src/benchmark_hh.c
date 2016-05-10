@@ -78,7 +78,7 @@ int main (int argc, char **argv) {
 	double    delta    = 0.25;
 	double    phi      = 0.05;
 	uint32_t  m        = UINT32_MAX;
-	const uint8_t  b   = 2;
+	const uint8_t  b   = 4;
 
 	/* getopt */
 	int option_index = 0;
