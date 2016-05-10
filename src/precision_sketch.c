@@ -155,7 +155,8 @@ int main (int argc, char **argv) {
 						delta);
 				break;
 			case MEDIAN:
-				impl[k] = sketch_create(&countMedian, &multiplyShift, b, 
+				impl[k] = sketch_create(&countMedian, &multiplyShift, 
+						(b > 2) ? b : 4, // k = 4 is most space efficient
 						epsilon, delta);
 				break;
 			default:

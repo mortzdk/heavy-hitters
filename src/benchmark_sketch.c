@@ -180,7 +180,7 @@ int main (int argc, char **argv) {
 		.hash    = &multiplyShift,
 	};
 	sketch_measure_create_t params_median = {
-		.b       = b,
+		.b       = (b > 2) ? b : 4, // k = 4 is most space efficient
 		.epsilon = epsilon,
 		.delta   = delta,
 		.f       = &countMedian,
