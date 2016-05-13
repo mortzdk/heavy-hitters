@@ -22,7 +22,7 @@ typedef struct {
 
 typedef struct {
 	sketch_t             **restrict tree;
-	uint32_t              *restrict top;
+	uint64_t              *restrict top;
 	uint8_t                top_cnt;
 	uint8_t                logm;
 	uint64_t               norm;

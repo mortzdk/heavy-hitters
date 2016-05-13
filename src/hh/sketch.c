@@ -12,7 +12,7 @@
 #include "sketch/sketch.h"
 
 hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
-	int32_t i;
+	int8_t i;
 	uint8_t np2_base;
 	uint32_t w, d, top_tree_size;
 	hh_sketch_params_t *restrict params = (hh_sketch_params_t *)p->params;
@@ -53,7 +53,7 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 		np2_base = logm;
 	}
 
-	top_tree_size = sizeof(uint32_t) * ((1 << (np2_base+1))-2);
+	top_tree_size = sizeof(uint64_t) * ((1 << (np2_base+1))-2);
 	hh->top       = xmalloc( top_tree_size );
 	memset(hh->top, '\0', top_tree_size );
 	hh->top_cnt   = np2_base;
@@ -116,7 +116,7 @@ void hh_sketch_update(hh_sketch_t *restrict hh, const uint32_t idx,
 	uint8_t i;
 	uint32_t left, right, mid, x;
 	sketch_t **restrict tree = hh->tree;
-	uint32_t  *restrict top  = hh->top;
+	uint64_t  *restrict top  = hh->top;
 	uint8_t    top_cnt       = hh->top_cnt; 
 	uint8_t    logm          = hh->logm;
 
@@ -192,7 +192,7 @@ static void hh_sketch_query_bottom_recursive(hh_sketch_t *restrict hh,
 static void hh_sketch_query_top_recursive(hh_sketch_t *restrict hh, 
 		const uint8_t layer, uint32_t x, const double th) {
 	uint8_t i;
-	uint32_t *restrict top = hh->top;
+	uint64_t *restrict top = hh->top;
 	uint8_t top_cnt        = hh->top_cnt; 
 	uint8_t logm           = hh->logm;
 
@@ -228,7 +228,7 @@ heavy_hitter_t *hh_sketch_query(hh_sketch_t *restrict hh) {
 	const uint8_t logm       = hh->logm;
 	const double threshold   = hh->params->phi*hh->norm;
 	sketch_t **restrict tree = hh->tree;
-	uint32_t  *restrict top  = hh->top;
+	uint64_t  *restrict top  = hh->top;
 	fifo_t    *restrict fifo = hh->fifo;
 
 	hh->result.count         = 0;

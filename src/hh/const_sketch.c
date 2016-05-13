@@ -31,7 +31,7 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 
 	hh_const_sketch_t *restrict hh  = xmalloc( sizeof(hh_const_sketch_t) );
 	sketch_t          *restrict s   = sketch_create(params->f, p->hash, b,
-			epsilon, (double)((delta*phi)/(logm * 2.)));
+			epsilon, (double)((delta*phi)/(5.)));
 
 
 	hash_init(&hh->M, w);

@@ -411,17 +411,26 @@ int main (int argc, char **argv) {
 		}
 	}
 
-//	for (k = 0; k < impl_cnt; k++) {
-//		heavy_hitter_t *res = heavy_hitter_measure_query(
-//			impl[IDX(runs, k, 2, 0)]
-//		);
-//
-//		printf("%s\n", long_options[alg[k].index].name);
-//		for (j = 0; j < res->count; j++) {
-//			printf("%"PRIu32"\n", res->hitters[j]);
-//		}
-//		printf("\n");
-//	}
+	heavy_hitter_t *res;
+	for (k = 0; k < impl_cnt; k++) {
+		for (k2 = 2; k2 < N_EVENTS; k2++) {
+			for (k3 = 0; k3 < runs; k3++) {
+				if ( NULL == impl[IDX(runs, k, k2, k3)]) {
+					continue;
+				}
+
+				res = heavy_hitter_measure_query(
+					impl[IDX(runs, k, k2, k3)]
+				);
+
+				printf("%s\n", long_options[alg[k].index].name);
+				for (j = 0; j < res->count; j++) {
+					printf("%"PRIu32"\n", res->hitters[j]);
+				}
+				printf("\n");
+			}
+		}
+	}
 
 	for (k = 0; k < impl_cnt; k++) {
 		for (k2 = 0; k2 < N_EVENTS; k2++) {
