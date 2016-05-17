@@ -53,9 +53,10 @@ for ((i=1; e<=limit; i++));
 do
 	for ((j=0; j<10; j++));
 	do
+		B=4
 		SEED1=$[ 1 + $[ RANDOM % 32768 ]]
 		SEED2=$[ 1 + $[ RANDOM % 32768 ]]
-		WIDTH=$(echo "2/(1/${e})" | bc -l)
+		WIDTH=$(echo "${B}/(1/${e})" | bc -l)
 		./error_sketch -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -f ${FILE} \
 			-w ${WIDTH} -h ${HEIGHT} --min    >> ${OUT}.min
 		./error_sketch -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -f ${FILE} \

@@ -50,6 +50,7 @@ if [ "$TYPE" == "hh" ]; then
 	limit=1024
 	for ((i=2; i<=limit; i*=2));
 	do
+		B=4
 		DELTA=0.25
 		PHI=$(echo "1/${i}" | bc -l)
 		EPSILON=$(echo "1/2^11" | bc -l) # 2^11
@@ -74,8 +75,8 @@ if [ "$TYPE" == "hh" ]; then
 		echo -n "# "         >> ${OUT}.${i}.cmh
 		date                 >> ${OUT}.${i}.cmh
 
-		h=$(echo "l((2*(l(${UNIVERSE})/l(2)))/(${PHI}*${DELTA}))/l(2)" | bc -l)
-		w=$(echo "2/${EPSILON}" | bc -l)
+		h=$(echo "l((2*(l(${UNIVERSE})/l(2)))/(${PHI}*${DELTA}))/l(${B})" | bc -l)
+		w=$(echo "${B}/${EPSILON}" | bc -l)
 
 		SEED1=$[ 1 + $[ RANDOM % 32768 ]]
 		SEED2=$[ 1 + $[ RANDOM % 32768 ]]
