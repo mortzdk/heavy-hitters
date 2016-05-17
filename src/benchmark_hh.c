@@ -156,11 +156,11 @@ int main (int argc, char **argv) {
 	}
 
 	if ( width > 0 ) {
-		epsilon = (double)2./width;
+		epsilon = (double)b/width;
 	}
 
 	if ( depth > 0 ) {
-		delta = (2. * log2(m)) / (pow(2., depth)*phi); // branch = 2
+		delta = (2. * log2(m)) / (pow(b, depth)*phi); // branch = 2
 	}
 
 	if ( epsilon > phi ) {

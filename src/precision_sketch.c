@@ -108,11 +108,9 @@ int main (int argc, char **argv) {
 				break;
 			case 'w':
 				width = strtoll(optarg, NULL, 10);
-				epsilon = (double)2/width;
 				break;
 			case 'h':
 				depth = strtoll(optarg, NULL, 10);
-				delta = 1./pow(2., depth);
 				break;
 			case 'i':
 			default:
@@ -124,6 +122,14 @@ int main (int argc, char **argv) {
 	if ( NULL == filename ) {
 		printusage(argv);
 		exit(EXIT_FAILURE);
+	}
+
+	if ( depth > 0 ) {
+		delta = 1./pow(b, depth);
+	}
+
+	if ( width > 0 ) {
+		epsilon = (double)b/width;
 	}
 
 	exact = xmalloc( m * sizeof(uint64_t) );

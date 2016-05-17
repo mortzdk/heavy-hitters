@@ -140,6 +140,14 @@ int main (int argc, char **argv) {
 		exit(EXIT_FAILURE);
 	}
 
+	if ( depth > 0 ) {
+		delta = 1./pow(b, depth);
+	}
+
+	if ( width > 0 ) {
+		epsilon = (double)b/width;
+	}
+
 	if ( impl_cnt == 0 ) {
 		// This only work since the implementations appear first in long_options
 		while (impl_cnt < AMOUNT_OF_IMPLEMENTATIONS) {
