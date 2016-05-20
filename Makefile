@@ -9,6 +9,7 @@ CC = gcc
 PROFILE = -Og -g -DRUPIFY -DNDEBUG
 DEBUG = -Og -g
 RELEASE = -O3 -DNDEBUG
+SPACE = -Os -DNDEBUG
 EXEC = ${RELEASE}
 
 # Which binary to compile
@@ -21,7 +22,7 @@ CFLAGS = -MMD -pipe -fno-exceptions -fstack-protector\
 		-Wreturn-type -Wsign-compare -Wmultichar -Wformat-nonliteral\
 		-Winit-self -Wuninitialized -Wno-deprecated -Wformat-security -Werror\
 		-Winline -pedantic -pedantic-errors ${EXEC} -fPIC -march=native \
-		-funroll-loops ${USERFLAGS}
+		-funroll-loops -falign-functions=16 -freorder-blocks ${USERFLAGS}
 
 CVER = -std=c99
 
