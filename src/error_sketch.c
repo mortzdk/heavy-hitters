@@ -310,8 +310,16 @@ int main (int argc, char **argv) {
 		printf("%0.10lf,", (double)error);
 		printf("%0.10lf,", epsilon);
 		printf("%0.10lf,", delta);
-		printf("%"PRIu32",", width);
-		printf("%"PRIu32",", depth);
+		if (width>0) {
+			printf("%"PRIu32",", width);
+		} else {
+			printf("%"PRIu32",", (uint32_t)ceil((double)b/epsilon));
+		}
+		if (depth>0){
+			printf("%"PRIu32",", depth);
+		} else {
+			printf("%"PRIu32",", (uint32_t)ceil((double)log2((double)1/delta)/log2(b)));
+		}
 		printf("%"PRIu32",", m);
 		printf("%"PRIu64",", L1);
 		printf("%"PRIu64"\n", L2);
