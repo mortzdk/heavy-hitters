@@ -117,8 +117,8 @@ void hh_sketch_update(hh_sketch_t *restrict hh, const uint32_t idx,
 	uint32_t left, right, mid, x;
 	sketch_t **restrict tree = hh->tree;
 	uint64_t  *restrict top  = hh->top;
-	uint8_t    top_cnt       = hh->top_cnt; 
-	uint8_t    logm          = hh->logm;
+	const uint8_t top_cnt    = hh->top_cnt; 
+	const uint8_t logm       = hh->logm;
 
 	x     = 0;
 	left  = 0;
@@ -166,8 +166,8 @@ static void hh_sketch_query_bottom_recursive(hh_sketch_t *restrict hh,
 		const uint8_t layer, uint32_t x, const double th) {
 	uint8_t i;
 	sketch_t **restrict tree = hh->tree;
-	uint8_t top_cnt          = hh->top_cnt; 
-	uint8_t logm             = hh->logm;
+	const uint8_t top_cnt          = hh->top_cnt; 
+	const uint8_t logm             = hh->logm;
 
 	x *= 2;
 
@@ -193,8 +193,8 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *restrict hh,
 		const uint8_t layer, uint32_t x, const double th) {
 	uint8_t i;
 	uint64_t *restrict top = hh->top;
-	uint8_t top_cnt        = hh->top_cnt; 
-	uint8_t logm           = hh->logm;
+	const uint8_t top_cnt        = hh->top_cnt; 
+	const uint8_t logm           = hh->logm;
 
 	x *= 2;
 
