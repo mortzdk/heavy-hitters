@@ -127,6 +127,7 @@ Test(hh_sketch, hh_top_and_bottom_min, .disabled=0) {
 	}
 
 	heavy_hitter_destroy(hh);
+	alias_free(a);
 }
 
 Test(hh_sketch, hh_top_and_bottom_close_non_hh_min, .disabled=0) {
@@ -198,4 +199,5 @@ Test(hh_sketch, hh_top_and_bottom_close_non_hh_min, .disabled=0) {
 	}
 
 	heavy_hitter_destroy(hh);
+	alias_free(a);
 }

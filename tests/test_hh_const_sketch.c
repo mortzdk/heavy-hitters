@@ -126,6 +126,7 @@ Test(hh_const_sketch, hh_top_and_bottom, .disabled=0) {
 		);
 	}
 
+	alias_free(a);
 	heavy_hitter_destroy(hh);
 }
 
@@ -197,5 +198,6 @@ Test(hh_const_sketch, hh_top_and_bottom_close_non_hh, .disabled=0) {
 		);
 	}
 
+	alias_free(a);
 	heavy_hitter_destroy(hh);
 }
