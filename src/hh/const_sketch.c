@@ -22,7 +22,7 @@ hh_const_sketch_t *hh_const_sketch_create(heavy_hitter_params_t *restrict p) {
 	const uint32_t m           = params->m;
 	const uint32_t b           = params->b;
 	const double error         = 0.25; // 1./4.
-	const uint8_t logm         = xceil_log2(m);
+	const uint8_t logm         = log2((uint64_t)m+1);
 	const uint32_t result_size = sizeof(uint32_t) * ceil(2./phi);
 	const uint32_t w           = ceil(1. / (epsilon * error)); // b/(epsilon*error*b)
 	uint8_t np2_base           = MultiplyDeBruijnBitPosition2[

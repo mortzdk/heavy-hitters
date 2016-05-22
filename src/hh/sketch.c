@@ -17,7 +17,7 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	uint32_t w, d, top_tree_size;
 	hh_sketch_params_t *restrict params = (hh_sketch_params_t *)p->params;
 	const uint32_t m           = params->m;
-	const uint8_t logm         = xceil_log2(m);
+	const uint8_t logm         = floor(log2((uint64_t)m+1));
 	const double phi           = params->phi;
 	const double epsilon       = params->epsilon;
 	const uint32_t twophi      = ceil(2./phi);
@@ -113,41 +113,24 @@ void hh_sketch_destroy(hh_sketch_t *restrict hh) {
 // Update
 void hh_sketch_update(hh_sketch_t *restrict hh, const uint32_t idx, 
 		const int64_t c) {
-	uint8_t i;
-	uint32_t left, right, mid, x;
+	int8_t i;
+	uint32_t x;
 	sketch_t **restrict tree = hh->tree;
 	uint64_t  *restrict top  = hh->top;
 	const uint8_t top_cnt    = hh->top_cnt; 
 	const uint8_t logm       = hh->logm;
 
-	x     = 0;
-	left  = 0;
-	right = hh->params->m-1;
-
-	// Update exact counts as long as |x| <= next_pow_2(wd)
-	for (i = 0; i < top_cnt; i++) {
-		mid = left + ( (right - left)/2 );
-		x   = 2*x;
-		if (mid < idx) {
-			x++;
-			left = mid+1;
-		} else {
-			right = mid;
-		}
-		top[x+(1 << (i+1))-2] += c;
-	}
+	x = idx;
 
 	// Use sketches to estimate count instead
-	for (i = 0; i < logm-top_cnt; i++) {
-		mid = left + ( (right - left)/2 );
-		x  *= 2;
-		if (mid < idx) {
-			x++;
-			left = mid+1;
-		} else {
-			right = mid;
-		}
+	for (i = logm-top_cnt-1; i > -1; i--) {
 		sketch_update(tree[i], x, c);
+		x >>= 1;
+	}
+
+	for (i = top_cnt-1; i > -1; i--) {
+		top[x + (uint32_t)(2 << i)-2] += c;
+		x >>= 1;
 	}
 
 	hh->norm += c;
@@ -193,8 +176,8 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *restrict hh,
 		const uint8_t layer, uint32_t x, const double th) {
 	uint8_t i;
 	uint64_t *restrict top = hh->top;
-	const uint8_t top_cnt        = hh->top_cnt; 
-	const uint8_t logm           = hh->logm;
+	const uint8_t top_cnt  = hh->top_cnt; 
+	const uint8_t logm     = hh->logm;
 
 	x *= 2;
 
