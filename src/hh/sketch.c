@@ -160,7 +160,7 @@ static void hh_sketch_query_bottom_recursive(hh_sketch_t *restrict hh,
 			if ( unlikely( layer+top_cnt == logm-1 ) ) {
 				hh->result.hitters[hh->result.count] = x;
 
-				assert( x < hh->params->m );
+				assert( x <= hh->params->m );
 
 				hh->result.count++;
 
@@ -188,7 +188,7 @@ static void hh_sketch_query_top_recursive(hh_sketch_t *restrict hh,
 			if ( unlikely(layer == logm-1) ) {
 				hh->result.hitters[hh->result.count] = x;
 
-				assert( x < hh->params->m );
+				assert( x <= hh->params->m );
 
 				hh->result.count++;
 
@@ -233,7 +233,7 @@ heavy_hitter_t *hh_sketch_query(hh_sketch_t *restrict hh) {
 					if ( unlikely(layer == logm-1) ) {
 						hh->result.hitters[hh->result.count] = x;
 
-						assert( x < hh->params->m );
+						assert( x <= hh->params->m );
 
 						hh->result.count++;
 
@@ -247,7 +247,7 @@ heavy_hitter_t *hh_sketch_query(hh_sketch_t *restrict hh) {
 					if ( unlikely( layer == logm-1 ) ) {
 						hh->result.hitters[hh->result.count] = x;
 
-						assert( x < hh->params->m );
+						assert( x <= hh->params->m );
 
 						hh->result.count++;
 

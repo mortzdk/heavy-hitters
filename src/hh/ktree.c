@@ -189,7 +189,7 @@ heavy_hitter_t *hh_ktree_query(hh_ktree_t *restrict hh) {
 					if ( unlikely(layer == logm-1) ) {
 						hh->result.hitters[hh->result.count] = x;
 
-						assert( x < hh->params->m );
+						assert( x <= hh->params->m );
 
 						hh->result.count++;
 
@@ -203,7 +203,7 @@ heavy_hitter_t *hh_ktree_query(hh_ktree_t *restrict hh) {
 					if ( unlikely( layer == logm-1 ) ) {
 						hh->result.hitters[hh->result.count] = x;
 
-						assert( x < hh->params->m );
+						assert( x <= hh->params->m );
 
 						hh->result.count++;
 

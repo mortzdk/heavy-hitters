@@ -268,7 +268,7 @@ heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *restrict hh) {
 					if ( unlikely(layer == logm-1) ) {
 						hh->result.hitters[hh->result.count] = x;
 
-						assert( x < hh->params->m );
+						assert( x <= hh->params->m );
 
 						hh->result.count++;
 
@@ -290,7 +290,7 @@ heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *restrict hh) {
 									threshold) ) {
 							hh->result.hitters[hh->result.count] = x;
 
-							assert( x < hh->params->m );
+							assert( x <= hh->params->m );
 
 							hh->result.count++;
 
