@@ -5,6 +5,7 @@
 #include "hh/hh.h"
 #include "hh/const_sketch.h"
 #include "hh/cormode_cmh.h"
+#include "hh/ktree.h"
 #include "hh/sketch.h"
 #include "util/xutil.h"
 
@@ -13,6 +14,7 @@ hh_func_t hh_sketch = {
 	.destroy    = (hh_destroy) hh_sketch_destroy,
 	.update     = (hh_update)  hh_sketch_update,
 	.query      = (hh_query)   hh_sketch_query,
+//	.query      = (hh_query)   hh_sketch_query_recursive,
 };
 
 hh_func_t hh_const_sketch = {
@@ -20,6 +22,7 @@ hh_func_t hh_const_sketch = {
 	.destroy  = (hh_destroy) hh_const_sketch_destroy,
 	.update   = (hh_update)  hh_const_sketch_update,
 	.query    = (hh_query)   hh_const_sketch_query,
+//	.query    = (hh_query)   hh_const_sketch_query_recursive,
 };
 
 hh_func_t hh_cormode_cmh = {
@@ -27,6 +30,13 @@ hh_func_t hh_cormode_cmh = {
 	.destroy  = (hh_destroy) hh_cormode_cmh_destroy,
 	.update   = (hh_update)  hh_cormode_cmh_update,
 	.query    = (hh_query)   hh_cormode_cmh_query,
+};
+
+hh_func_t hh_ktree = {
+	.create   = (hh_create)  hh_ktree_create,
+	.destroy  = (hh_destroy) hh_ktree_destroy,
+	.update   = (hh_update)  hh_ktree_update,
+	.query    = (hh_query)   hh_ktree_query,
 };
 
 hh_t *heavy_hitter_create(heavy_hitter_params_t *restrict params) {

@@ -49,5 +49,6 @@ heavy_hitter_t *heavy_hitter_query(hh_t *restrict hh);
 extern hh_func_t hh_sketch;
 extern hh_func_t hh_const_sketch;
 extern hh_func_t hh_cormode_cmh;
+extern hh_func_t hh_ktree;
 
 #endif

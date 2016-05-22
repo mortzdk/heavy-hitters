@@ -15,11 +15,13 @@
 #include "sketch/sketch.h"
 #include "hh/hh.h"
 #include "hh/hh_measure.h"
+#include "hh/ktree.h"
+#include "hh/const_sketch.h"
 #include "hh/sketch.h"
 #include "hh/cormode_cmh.h"
 #include "util/xutil.h"
 
-#define AMOUNT_OF_IMPLEMENTATIONS 4
+#define AMOUNT_OF_IMPLEMENTATIONS 6
 #define IDX(STEP, x, y, z)  (z) + ((y) * (STEP)) + (N_EVENTS * (STEP) * (x))
 
 typedef enum {
@@ -27,6 +29,8 @@ typedef enum {
 	MEDIAN,
 	CONST,
 	CORMODE,
+	KMIN,
+	KMEDIAN,
 } hh_impl_t;
 
 typedef struct {
@@ -48,6 +52,8 @@ static void printusage(char *argv[]) {
             "\t[--median                 {OPTIONAL} (Run HH with Count Median Sketch)]\n"
             "\t[--const                  {OPTIONAL} (Run HH with Constant Count Min Sketch)]\n"
             "\t[--cormode                {OPTIONAL} (Run HH with Cormode et al.'s Count Min Sketch)]\n"
+            "\t[--kmin                   {OPTIONAL} (Run HH with k-tree using Count Min Sketch)]\n"
+            "\t[--kmedian                {OPTIONAL} (Run HH with k-tree using Count Median Sketch)]\n"
             "\t[-1 --seed1    [uint32_t] {OPTIONAL} (First seed value)]\n"
             "\t[-2 --seed2    [uint32_t] {OPTIONAL} (Second seed value)]\n"
             "\t[-r --runs     [uint32_t] {OPTIONAL} (Amount of runs to average over)]\n"
@@ -79,6 +85,7 @@ int main (int argc, char **argv) {
 	double    phi      = 0.05;
 	uint32_t  m        = UINT32_MAX;
 	const uint8_t  b   = 4;
+	const uint8_t gran = 8;
 
 	/* getopt */
 	int option_index = 0;
@@ -89,6 +96,8 @@ int main (int argc, char **argv) {
 		{"median",         no_argument, &flag,  MEDIAN },
 		{"const",          no_argument, &flag,   CONST },
 		{"cormode",        no_argument, &flag, CORMODE },
+		{"kmin",           no_argument, &flag,    KMIN },
+		{"kmedian",        no_argument, &flag, KMEDIAN },
 		{"epsilon",  required_argument,     0,      'e'},
 		{"delta",    required_argument,     0,      'd'},
 		{"phi",      required_argument,     0,      'p'},
@@ -224,6 +233,24 @@ int main (int argc, char **argv) {
 		.phi     = phi,
 		.f       = &countMedian,
 	};
+	hh_ktree_params_t params_kmin = {
+		.b       = b,
+		.epsilon = epsilon,
+		.delta   = delta,
+		.m       = m,
+		.phi     = phi,
+		.gran    = gran,
+		.f       = &countMin,
+	};
+	hh_ktree_params_t params_kmedian = {
+		.b       = b,
+		.epsilon = epsilon,
+		.delta   = delta,
+		.m       = m,
+		.phi     = phi,
+		.gran    = gran,
+		.f       = &countMedian,
+	};
 
 	heavy_hitter_params_t p_min = {
 		.hash   = &multiplyShift,
@@ -245,6 +272,16 @@ int main (int argc, char **argv) {
 		.params = &params_cmh,
 		.f      = &hh_cormode_cmh,
 	};
+	heavy_hitter_params_t p_kmin = {
+		.hash   = &multiplyShift,
+		.params = &params_kmin,
+		.f      = &hh_ktree,
+	};
+	heavy_hitter_params_t p_kmedian = {
+		.hash   = &multiplyShift,
+		.params = &params_kmedian,
+		.f      = &hh_ktree,
+	};
 
 	for (k = 0; k < impl_cnt; k++) {
 		for (k2 = 0; k2 < N_EVENTS; k2++) {
@@ -262,6 +299,12 @@ int main (int argc, char **argv) {
 						break;
 					case CORMODE:
 						params[IDX(runs, k, k2, k3)] = &p_cormode;
+						break;
+					case KMIN:
+						params[IDX(runs, k, k2, k3)] = &p_kmin;
+						break;
+					case KMEDIAN:
+						params[IDX(runs, k, k2, k3)] = &p_kmedian;
 						break;
 					default:
 						free(output);
