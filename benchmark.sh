@@ -36,24 +36,23 @@ done
 # Universe
 : "${UNIVERSE:=2147483647}"
 
+function ceil {
+	res=$(echo "($1 + 0.5)/1" | bc)
+	if [ $(echo "${res} < $1" | bc) -eq 1 ]; then
+		res=$((${res}+1))
+	fi
+	echo ${res}
+}
+
 # HEIGHT and WIDTH is those satisfying the Count Min Sketch guarantees
 if [ "$TYPE" == "hh" ]; then
-
-	function ceil {
-		res=$(echo "($1 + 0.5)/1" | bc)
-		if [ $(echo "${res} < $1" | bc) -eq 1 ]; then
-			res=$((${res}+1))
-		fi
-		echo ${res}
-	}
-
 	limit=1024
 	for ((i=2; i<=limit; i*=2));
 	do
 		B=4
 		DELTA=0.25
 		PHI=$(echo "1/${i}" | bc -l)
-		EPSILON=$(echo "1/2^11" | bc -l) # 2^11
+		EPSILON=$(echo "1/(${i}*2)" | bc -l)
 
 		echo -n "# COMMIT: " >> ${OUT}.${i}.const
 		git log -1 --oneline >> ${OUT}.${i}.const
@@ -99,15 +98,23 @@ if [ "$TYPE" == "hh" ]; then
 			-o ${OUT}.${i}.cmh
 	done
 else
-	limit=16777216
-	e=32
+	limit=$(echo "2^10" | bc)
+	e=2
 	for ((i=1; e<limit; i++));
 	do
+		B=4
 		SEED1=$[ 1 + $[ RANDOM % 32768 ]]
 		SEED2=$[ 1 + $[ RANDOM % 32768 ]]
-		WIDTH=$(echo "2/(1/${e})" | bc -l)
-		HEIGHT=4
-		RUNS=10
+		EPSILON=$(echo "(1/${e})" | bc -l)
+		DELTA=$(echo "(1/(2^18))" | bc -l)
+
+		h=$(echo "scale=10;l(1/${DELTA})/l(${B})" | bc -l)
+		w=$(echo "${B}/${EPSILON}" | bc -l)
+
+		WIDTH=$(ceil ${w})
+		HEIGHT=$(ceil ${h})
+
+		RUNS=5
 
 		echo -n "# COMMIT: " >> ${OUT}.${e}.min
 		git log -1 --oneline >> ${OUT}.${e}.min
@@ -119,13 +126,21 @@ else
 		echo -n "# "         >> ${OUT}.${e}.median
 		date                 >> ${OUT}.${e}.median
 
+		# Measure Theoretically
 		./benchmark_sketch -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} \
-			-w ${WIDTH} -h ${HEIGHT} -f ${FILE} --min \
+			-d ${DELTA} -e ${EPSILON} -f ${FILE} --min \
 			-r ${RUNS} -o ${OUT}.${e}.min
 		./benchmark_sketch -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} \
-			-w ${WIDTH} -h ${HEIGHT} -f ${FILE} --median \
+			-d ${DELTA} -e ${EPSILON} -f ${FILE} --median \
 			-r ${RUNS} -o ${OUT}.${e}.median
 
+		# Measure Equally
+	#	./benchmark_sketch -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} \
+	#		-w ${WIDTH} -h ${HEIGHT} -f ${FILE} --min \
+	#		-r ${RUNS} -o ${OUT}.${e}.min
+	#	./benchmark_sketch -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} \
+	#		-w ${WIDTH} -h ${HEIGHT} -f ${FILE} --median \
+	#		-r ${RUNS} -o ${OUT}.${e}.median
 
 		((e*=2))
 	done

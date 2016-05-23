@@ -64,6 +64,16 @@ if [ "$TYPE" == "hh" ]; then
 	echo -n "# "         >> ${OUT}.cormode
 	date                 >> ${OUT}.cormode
 
+	echo -n "# COMMIT: " >> ${OUT}.kmin
+	git log -1 --oneline >> ${OUT}.kmin
+	echo -n "# "         >> ${OUT}.kmin
+	date                 >> ${OUT}.kmin
+
+	echo -n "# COMMIT: " >> ${OUT}.kmedian
+	git log -1 --oneline >> ${OUT}.kmedian
+	echo -n "# "         >> ${OUT}.kmedian
+	date                 >> ${OUT}.kmedian
+
 	limit=1024
 	for ((i=2; i<=limit; i*=2));
 	do
@@ -88,22 +98,36 @@ if [ "$TYPE" == "hh" ]; then
 			-h ${HEIGHT} -p ${PHI} -f ${FILE} --median  >> ${OUT}.median
 		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
 			-h ${HEIGHT} -p ${PHI} -f ${FILE} --cormode >> ${OUT}.cormode
+		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+			-h ${HEIGHT} -p ${PHI} -f ${FILE} --kmin     >> ${OUT}.kmin
+		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+			-h ${HEIGHT} -p ${PHI} -f ${FILE} --kmedian  >> ${OUT}.kmedian
 	done
 else
 	echo "Name,L1 Error,L2 Error,Epsilon,Delta,Width,Depth,M,L1,L2" >> ${OUT}.min
 	echo "Name,L1 Error,L2 Error,Epsilon,Delta,Width,Depth,M,L1,L2" >> ${OUT}.median
-	limit=16777216
+	limit=$(echo "2^20" | bc)
 	e=2;
 	for ((i=1; e<=limit; i++));
 	do
 		for ((j=0; j<10; j++));
 		do
+			B=4
+			DELTA=0.25
+			EPSILON=$(echo "1/(${e})" | bc -l)
+
+			h=$(echo "scale=10; l(1/${DELTA})/l(${B})" | bc -l)
+			w=$(echo "${B}/${EPSILON}" | bc -l)
+
 			SEED1=$[ 1 + $[ RANDOM % 32768 ]]
 			SEED2=$[ 1 + $[ RANDOM % 32768 ]]
-			WIDTH=$(echo "2/(1/${e})" | bc -l)
-			HEIGHT=1
-			./precision_sketch -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -f ${FILE} -w ${WIDTH} -h ${HEIGHT} --min    >> ${OUT}.min
-			./precision_sketch -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -f ${FILE} -w ${WIDTH} -h ${HEIGHT} --median >> ${OUT}.median
+			WIDTH=$(ceil ${w})
+			HEIGHT=$(ceil ${h})
+
+			./precision_sketch -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} \
+				-f ${FILE} -w ${WIDTH} -h ${HEIGHT} --min    >> ${OUT}.min
+			./precision_sketch -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} \
+				-f ${FILE} -w ${WIDTH} -h ${HEIGHT} --median >> ${OUT}.median
 		done
 		((e*=2))
 	done
