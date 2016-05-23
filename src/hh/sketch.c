@@ -59,7 +59,6 @@ hh_sketch_t *hh_sketch_create(heavy_hitter_params_t *restrict p) {
 	hh->top_cnt   = np2_base;
 
 	if ( np2_base < logm ) {
-		delta    = (double)((params->delta*phi)/(2.*(logm-np2_base)));
 		hh->tree = xmalloc( sizeof(sketch_t *) * (logm-np2_base) );
 		for (i = 0; i < (logm-1)-np2_base; i++) {
 			hh->tree[i] = sketch_create(params->f, p->hash, b, epsilon, delta);
