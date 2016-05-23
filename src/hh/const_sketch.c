@@ -100,57 +100,35 @@ void hh_const_sketch_destroy(hh_const_sketch_t *restrict hh) {
 // Update
 void hh_const_sketch_update(hh_const_sketch_t *restrict hh, const uint32_t idx, 
 		const int64_t c) {
-	uint8_t i;
-	uint32_t left, right, mid, offset, h, x, a, b;
-	uint8_t  exact_cnt      = hh->exact_cnt;
-	uint8_t  logm           = hh->logm;
-	uint8_t  M              = hh->M;
-	uint32_t w              = hh->w;
-	uint64_t *restrict tree = hh->tree;
-	hash hash               = hh->hash->hash;
+	int8_t i;
+	uint32_t off, offset, h, x, a, b;
+	const uint8_t  exact_cnt = hh->exact_cnt;
+	const uint8_t  logm      = hh->logm;
+	const uint8_t  M         = hh->M;
+	const uint32_t w         = hh->w;
+	uint64_t *restrict tree  = hh->tree;
+	hash hash                = hh->hash->hash;
 
-	x     = 0;
-	left  = 0;
-	right = hh->params->m-1;
-
-	// Update exact counts as long as |x| <= next_pow_2(wd)
-	for (i = 0; i < exact_cnt; i++) {
-		mid = left + ( (right - left)/2 );
-		x   = 2*x;
-		if (mid < idx) {
-			x++;
-			tree[x+(1 << (i+1))-2] += c;
-			left = mid+1;
-		} else {
-			tree[x+(1 << (i+1))-2] += c;
-			right = mid;
-		}
-	}
-
-	offset = (1 << (i+1))-2;
-
-	// Use sketches to estimate count instead
-	for (i = 0; i < logm-exact_cnt; i++) {
-		mid  = left + ( (right - left)/2 );
-		x   *= 2;
-		a    = (uint64_t) tree[offset++];
-		b    = (uint64_t) tree[offset++];
-
-		if (mid < idx) {
-			x++;
-			h = hash(w, M, x, a, b);
-			tree[offset + h] += c; 
-			left = mid+1;
-		} else {
-			h = hash(w, M, x, a, b);
-			tree[offset + h] += c; 
-			right = mid;
-		}
-
-		offset += w;
-	}
+	x      = idx;
+	offset = (2 << exact_cnt)-2;
 
 	sketch_update(hh->sketch, x, c);
+
+	// Use sketches to estimate count instead
+	for (i = logm-exact_cnt-1; i > -1; i--) {
+		off = offset + (2+w)*i;
+		a   = (uint64_t) tree[off];
+		b   = (uint64_t) tree[off + 1];
+		h   = hash(w, M, x, a, b);
+		tree[off + 2 + h] += c; 
+		x >>= 1;
+	}
+
+	// Update exact counts as long as |x| <= next_pow_2(wd)
+	for (i = exact_cnt-1; i > -1; i--) {
+		tree[x+(2 << i)-2] += c;
+		x >>= 1;
+	}
 
 	hh->norm += c;
 }
@@ -192,7 +170,7 @@ static void hh_const_sketch_query_bottom_recursive(
 				if ( sketch_above_thresshold(hh->sketch, x, th) ) {
 					hh->result.hitters[hh->result.count] = x;
 
-					assert( x < hh->params->m );
+					assert( x <= hh->params->m );
 
 					hh->result.count++;
 
@@ -221,7 +199,7 @@ static void hh_const_sketch_query_top_recursive(hh_const_sketch_t *restrict hh,
 			if ( unlikely(layer == logm-1) ) {
 				hh->result.hitters[hh->result.count] = x;
 
-				assert( x < hh->params->m );
+				assert( x <= hh->params->m );
 
 				hh->result.count++;
 
@@ -257,14 +235,14 @@ heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *restrict hh) {
 
 	while ( !fifo_empty(fifo) ) {
 		res   = fifo_pop_front(fifo);
-		idx   = 2*res->elm;
+		idx   = res->elm;
 		layer = res->layer;
 
 		for (i = 0; i < 2; i++) { // branch=2
 			x = idx+i;
 
 			if ( layer < exact_cnt ) {
-				if ( tree[x+(1 << (layer+1))-2] >= threshold ) {
+				if ( tree[x+(2 << layer)-2] >= threshold ) {
 					if ( unlikely(layer == logm-1) ) {
 						hh->result.hitters[hh->result.count] = x;
 
@@ -274,16 +252,16 @@ heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *restrict hh) {
 
 						hh_const_sketch_resize_result(&hh->result);
 					} else {
-						fifo_push_back(fifo, x, layer+1);
+						fifo_push_back(fifo, x<<1, layer+1);
 					}
 				}
 			} else {
-				offset = (1 << (exact_cnt+1))-2 + ((w+2) * (layer-exact_cnt));
+				offset = (2 << exact_cnt)-2 + ((w+2) * (layer-exact_cnt));
 				a = (uint64_t) tree[offset];
 				b = (uint64_t) tree[offset+1];
 				h = hash(w, M, x, a, b);
 
-				// Plus one to get away from a and b
+				// Plus two to get away from a and b
 				if ( tree[offset + 2 + h] >= threshold ) {
 					if ( unlikely( layer == logm-1 ) ) {
 						if ( sketch_above_thresshold(hh->sketch, x, 
@@ -297,7 +275,7 @@ heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *restrict hh) {
 							hh_const_sketch_resize_result(&hh->result);
 						}
 					} else {
-						fifo_push_back(fifo, x, layer+1);
+						fifo_push_back(fifo, x<<1, layer+1);
 					}
 				}
 			}

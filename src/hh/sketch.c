@@ -128,7 +128,7 @@ void hh_sketch_update(hh_sketch_t *restrict hh, const uint32_t idx,
 	}
 
 	for (i = top_cnt-1; i > -1; i--) {
-		top[x + (uint32_t)(2 << i)-2] += c;
+		top[x + (2 << i)-2] += c;
 		x >>= 1;
 	}
 

@@ -152,7 +152,7 @@ Test(hh_const_sketch, hh_top_and_bottom_close_non_hh, .disabled=0) {
 	double *x       = xmalloc( m*sizeof(double) );
 
 	for (uint32_t i = 0; i < m; i++) {
-		x[i] = (1-hh_mass)/(m-7);
+		x[i] = (1-hh_mass)/(m-10);
 	}
 
 	/**
