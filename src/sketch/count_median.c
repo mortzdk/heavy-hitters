@@ -81,6 +81,7 @@ void count_median_destroy(count_median_t *restrict s) {
 void count_median_update(count_median_t *restrict s, const uint32_t i, 
 		const int64_t c) {
 	uint32_t wi, di;
+	uint64_t a1, b1, a2, b2;
 	const uint32_t w        = s->size.w;
 	const uint8_t  M        = s->size.M;
 	const uint32_t d        = s->size.d;
@@ -88,19 +89,22 @@ void count_median_update(count_median_t *restrict s, const uint32_t i,
 	hash hash               = s->hash->hash;
 
 	for (di = 0; di < d; di++) {
-		wi = hash(w, M, i, (uint64_t)table[di*(w+4)], 
-				(uint64_t)table[di*(w+4)+1]);
+		a1 = (uint64_t)table[di*(w+4)];
+		b1 = (uint64_t)table[di*(w+4+1)];
+		a2 = (uint64_t)table[di*(w+4+2)];
+		b2 = (uint64_t)table[di*(w+4+3)];
+
+		wi = hash(w, M, i, a1, b1);
 
 		assert( wi < w );
 
-		table[COUNT_MEDIAN_INDEX(w, di, wi)] += c * sign_ms(i, 
-				(uint64_t)table[di*(w+4)+2], 
-				(uint64_t)table[di*(w+4)+3]);
+		table[COUNT_MEDIAN_INDEX(w, di, wi)] += c * sign_ms(i, a2, b2);
 	}
 }
 
 int64_t count_median_point(count_median_t *restrict s, const uint32_t i) {
 	uint32_t di, wi;
+	uint64_t a1, b1, a2, b2;
 	const uint32_t d         = s->size.d;
 	const uint32_t w         = s->size.w;
 	const uint8_t  M         = s->size.M;
@@ -109,14 +113,16 @@ int64_t count_median_point(count_median_t *restrict s, const uint32_t i) {
 	hash hash                = s->hash->hash;
 
 	for (di = 0; di < d; di++) {
-		wi = hash(w, M, i, (uint64_t)table[di*(w+4)], 
-		          	(uint64_t)table[di*(w+4)+1]);
+		a1 = (uint64_t)table[di*(w+4)];
+		b1 = (uint64_t)table[di*(w+4+1)];
+		a2 = (uint64_t)table[di*(w+4+2)];
+		b2 = (uint64_t)table[di*(w+4+3)];
+
+		wi = hash(w, M, i, a1, b1);
 
 		assert( wi < w );
 
-		median[di] = table[COUNT_MEDIAN_INDEX(w, di, wi)] * sign_ms(i, 
-				(uint64_t)table[di*(w+4)+2], 
-				(uint64_t)table[di*(w+4)+3]);
+		median[di] = table[COUNT_MEDIAN_INDEX(w, di, wi)] * sign_ms(i, a2, b2);
 	}
 
 //	return median_quick_select(median, d);
