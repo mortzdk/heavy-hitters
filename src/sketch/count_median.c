@@ -90,9 +90,9 @@ void count_median_update(count_median_t *restrict s, const uint32_t i,
 
 	for (di = 0; di < d; di++) {
 		a1 = (uint64_t)table[di*(w+4)];
-		b1 = (uint64_t)table[di*(w+4+1)];
-		a2 = (uint64_t)table[di*(w+4+2)];
-		b2 = (uint64_t)table[di*(w+4+3)];
+		b1 = (uint64_t)table[di*(w+4)+1];
+		a2 = (uint64_t)table[di*(w+4)+2];
+		b2 = (uint64_t)table[di*(w+4)+3];
 
 		wi = hash(w, M, i, a1, b1);
 
@@ -114,9 +114,9 @@ int64_t count_median_point(count_median_t *restrict s, const uint32_t i) {
 
 	for (di = 0; di < d; di++) {
 		a1 = (uint64_t)table[di*(w+4)];
-		b1 = (uint64_t)table[di*(w+4+1)];
-		a2 = (uint64_t)table[di*(w+4+2)];
-		b2 = (uint64_t)table[di*(w+4+3)];
+		b1 = (uint64_t)table[di*(w+4)+1];
+		a2 = (uint64_t)table[di*(w+4)+2];
+		b2 = (uint64_t)table[di*(w+4)+3];
 
 		wi = hash(w, M, i, a1, b1);
 

@@ -73,7 +73,7 @@ void count_min_update(count_min_t *restrict s, const uint32_t i,
 
 	for (di = 0; di < d; di++) {
 		a = (uint64_t)table[di*(w+2)];
-		b = (uint64_t)table[di*(w+2+1)];
+		b = (uint64_t)table[di*(w+2)+1];
 
 		wi = hash(w, M, i, a, b);
 
@@ -99,7 +99,7 @@ uint64_t count_min_point(count_min_t *restrict s, const uint32_t i) {
 	estimate  = table[COUNT_MIN_INDEX(w, 0, wi)];
 	for (di = 1; di < d; di++) {
 		a = (uint64_t)table[di*(w+2)];
-		b = (uint64_t)table[di*(w+2+1)];
+		b = (uint64_t)table[di*(w+2)+1];
 
 		wi = hash(w, M, i, a, b);
 
@@ -138,7 +138,7 @@ bool count_min_above_thresshold(count_min_t *restrict s, const uint32_t i,
 
 	for (di = 0; di < d; di++) {
 		a = (uint64_t)table[di*(w+2)];
-		b = (uint64_t)table[di*(w+2+1)];
+		b = (uint64_t)table[di*(w+2)+1];
 
 		wi = hash(w, M, i, a, b);
 
