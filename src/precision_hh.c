@@ -652,19 +652,24 @@ int main (int argc, char **argv) {
 			
 		}
 
+		// Implementation
 		printf("%s,", long_options[alg[k].index].name);
+
+		// Recall
 		if (exact_cnt == 0) {
 			printf("1.0,");
 		} else {
 			printf("%f,", (double)recalled/exact_cnt);
 		}
 
+		// Precision
 		if (hitters->count == 0) {
 			printf("1.0,");
 		} else {
 			printf("%f,", (double)recalled/hitters->count);
 		}
 
+		// M, Delta, Epsilon, Phi, Hits, Errors, Exact, Allowed
 		printf("%"PRIu32",%f,%f,%f,%"PRIu32",%"PRIu32",%"PRIu32",%"PRIu32, m, delta, epsilon, phi, hitters->count, errs, exact_cnt, allowed_cnt);
 		if (width != 0) {
 			printf(",%"PRIu32, width);
