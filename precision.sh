@@ -85,23 +85,27 @@ if [ "$TYPE" == "hh" ]; then
 		h=$(echo "l((2*(l(${UNIVERSE})/l(2)))/(${PHI}*${DELTA}))/l(${B})" | bc -l)
 		w=$(echo "${B}/${EPSILON}" | bc -l)
 
-		SEED1=$[ 1 + $[ RANDOM % 32768 ]]
-		SEED2=$[ 1 + $[ RANDOM % 32768 ]]
 		WIDTH=$(ceil ${w})
 		HEIGHT=$(ceil ${h})
 
-		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --const   >> ${OUT}.const
-		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --min     >> ${OUT}.min
-		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --median  >> ${OUT}.median
-		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --cormode >> ${OUT}.cormode
-		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --kmin     >> ${OUT}.kmin
-		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --kmedian  >> ${OUT}.kmedian
+		for ((j=1; j<=5; j++));
+		do
+			SEED1=$[ 1 + $[ RANDOM % 32768 ]]
+			SEED2=$[ 1 + $[ RANDOM % 32768 ]]
+
+			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+				-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --const   >> ${OUT}.const
+			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+				-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --min     >> ${OUT}.min
+			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+				-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --median  >> ${OUT}.median
+			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+				-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --cormode >> ${OUT}.cormode
+			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+				-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --kmin     >> ${OUT}.kmin
+			./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+				-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --kmedian  >> ${OUT}.kmedian
+		done
 	done
 else
 	echo "Name,L1 Error,L2 Error,Epsilon,Delta,Width,Depth,M,L1,L2" >> ${OUT}.min
