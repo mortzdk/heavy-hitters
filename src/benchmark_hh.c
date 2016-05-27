@@ -79,6 +79,7 @@ int main (int argc, char **argv) {
 	hh_measure_t          **impl;
 	heavy_hitter_params_t **params;
 
+	uint8_t logm;
 	uint8_t   impl_cnt = 0;
 	double    epsilon  = 1./64.;
 	double    delta    = 0.25;
@@ -314,7 +315,8 @@ int main (int argc, char **argv) {
 			switch(alg[k].impl) {
 				case KMIN:
 				case KMEDIAN:
-					depth = ceil(log((double)(((1 << gran)*log2(m))/(delta*phi)))/log(b));
+					logm = floor(log((uint64_t)m)/log((1 << gran))+1);
+					depth = ceil(log((double)(((1 << gran)*logm)/(delta*phi)))/log(b));
 					break;
 				case CONST:
 					depth = ceil(log((double)(16./(pow(delta,2)*phi)))/log(b));

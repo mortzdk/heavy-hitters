@@ -106,6 +106,7 @@ int main (int argc, char **argv) {
 
 	alg_t     alg[AMOUNT_OF_IMPLEMENTATIONS];
 	hh_t     *impl[AMOUNT_OF_IMPLEMENTATIONS];
+	uint8_t logm;
 	uint8_t   impl_cnt = 0;
 	double    epsilon  = 1./64.;
 	double    delta    = 0;
@@ -338,13 +339,15 @@ int main (int argc, char **argv) {
 				break;
 			case KMIN:
 				if (depth > 0) {
-					depth = ceil(log((double)(((1 << gran)*log2(m))/(delta*phi)))/log(b));
+					logm = floor(log((uint64_t)m)/log((1 << gran))+1);
+					depth = ceil(log((double)(((1 << gran)*logm)/(delta*phi)))/log(b));
 				}
 				impl[k] = heavy_hitter_create(&p_kmin);
 				break;
 			case KMEDIAN:
 				if (depth > 0) {
-					depth = ceil(log((double)(((1 << gran)*log2(m))/(delta*phi)))/log(b));
+					logm = floor(log((uint64_t)m)/log((1 << gran))+1);
+					depth = ceil(log((double)(((1 << gran)*logm)/(delta*phi)))/log(b));
 				}
 				impl[k] = heavy_hitter_create(&p_kmedian);
 				break;
@@ -687,7 +690,8 @@ int main (int argc, char **argv) {
 			switch(alg[k].impl) {
 				case KMIN:
 				case KMEDIAN:
-					depth = ceil(log((double)(((1 << gran)*log2(m))/(delta*phi)))/log(b));
+					logm = floor(log((uint64_t)m)/log((1 << gran))+1);
+					depth = ceil(log((double)(((1 << gran)*logm)/(delta*phi)))/log(b));
 					break;
 				case CONST:
 					depth = ceil(log((double)(16./(pow(delta,2)*phi)))/log(b));
