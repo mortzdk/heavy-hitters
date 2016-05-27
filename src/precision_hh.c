@@ -108,7 +108,7 @@ int main (int argc, char **argv) {
 	hh_t     *impl[AMOUNT_OF_IMPLEMENTATIONS];
 	uint8_t   impl_cnt = 0;
 	double    epsilon  = 1./64.;
-	double    delta    = 0.25;
+	double    delta    = 0;
 	double    phi      = 0.05;
 	uint32_t  m        = UINT32_MAX;
 	const uint8_t b    = 4;
@@ -207,15 +207,11 @@ int main (int argc, char **argv) {
 		}
 	}
 
-	if (depth > 0) {
-		delta = (2. * log2(m)) / (pow(b, depth)*phi); // branch = 2
-	}
-
 	if (width > 0) {
 		epsilon = (double)b/width;
 	}
 
-	if ( NULL == filename ) {
+	if ( NULL == filename || delta == 0 ) {
 		printusage(argv);
 		exit(EXIT_FAILURE);
 	}
@@ -317,21 +313,39 @@ int main (int argc, char **argv) {
 	for (k = 0; k < impl_cnt; k++) {
 		switch (alg[k].impl) {
 			case MIN:
+				if (depth > 0) {
+					depth = ceil(log((double)((2.*log2(m))/(delta*phi)))/log(b));
+				}
 				impl[k] = heavy_hitter_create(&p_min);
 				break;
 			case MEDIAN:
+				if (depth > 0) {
+					depth = ceil(log((double)((2.*log2(m))/(delta*phi)))/log(b));
+				}
 				impl[k] = heavy_hitter_create(&p_median);
 				break;
 			case CONST:
+				if (depth > 0) {
+					depth = ceil(log((double)(16./(pow(delta,2)*phi)))/log(b));
+				}
 				impl[k] = heavy_hitter_create(&p_const);
 				break;
 			case CORMODE:
+				if (depth > 0) {
+					depth = ceil(log((double)((2.*log2(m))/(delta*phi)))/log(b));
+				}
 				impl[k] = heavy_hitter_create(&p_cormode);
 				break;
 			case KMIN:
+				if (depth > 0) {
+					depth = ceil(log((double)(((1 << gran)*log2(m))/(delta*phi)))/log(b));
+				}
 				impl[k] = heavy_hitter_create(&p_kmin);
 				break;
 			case KMEDIAN:
+				if (depth > 0) {
+					depth = ceil(log((double)(((1 << gran)*log2(m))/(delta*phi)))/log(b));
+				}
 				impl[k] = heavy_hitter_create(&p_kmedian);
 				break;
 			default:
@@ -669,9 +683,21 @@ int main (int argc, char **argv) {
 		if (width != 0) {
 			printf(",%"PRIu32, width);
 		}
-		if (depth != 0) {
+		if (depth > 0) {
+			switch(alg[k].impl) {
+				case KMIN:
+				case KMEDIAN:
+					depth = ceil(log((double)(((1 << gran)*log2(m))/(delta*phi)))/log(b));
+					break;
+				case CONST:
+					depth = ceil(log((double)(16./(pow(delta,2)*phi)))/log(b));
+					break;
+				default:
+					depth = ceil(log((double)((2.*log2(m))/(delta*phi)))/log(b));
+			}
 			printf(",%"PRIu32, depth);
 		}
+
 		printf("\n");
 
 		recalled = 0;

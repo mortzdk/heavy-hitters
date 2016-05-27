@@ -159,17 +159,13 @@ int main (int argc, char **argv) {
 		}
 	}
 
-	if ( NULL == filename || NULL == output ) {
+	if ( NULL == filename || NULL == output || delta == 0) {
 		printusage(argv);
 		exit(EXIT_FAILURE);
 	}
 
 	if ( width > 0 ) {
 		epsilon = (double)b/width;
-	}
-
-	if ( depth > 0 ) {
-		delta = (2. * log2(m)) / (pow(b, depth)*phi); // branch = 2
 	}
 
 	if ( epsilon > phi ) {
@@ -314,6 +310,20 @@ int main (int argc, char **argv) {
 			}
 		}
 
+		if (depth > 0) {
+			switch(alg[k].impl) {
+				case KMIN:
+				case KMEDIAN:
+					depth = ceil(log((double)(((1 << gran)*log2(m))/(delta*phi)))/log(b));
+					break;
+				case CONST:
+					depth = ceil(log((double)(16./(pow(delta,2)*phi)))/log(b));
+					break;
+				default:
+					depth = ceil(log((double)((2.*log2(m))/(delta*phi)))/log(b));
+			}
+		}
+
 		measure_with_sideeffects_and_values(
 				filename, 
 				(char *)long_options[alg[k].index].name, 
@@ -324,7 +334,6 @@ int main (int argc, char **argv) {
 				(void **)&impl[IDX(runs, k, 0, 0)]
 		);
 	}
-
 
 	i = 0;
 	j = 0;

@@ -46,7 +46,7 @@ function ceil {
 
 # HEIGHT and WIDTH is those satisfying the Count Min Sketch guarantees
 if [ "$TYPE" == "hh" ]; then
-	limit=1024
+	limit=$(echo "2^12" | bc)
 	for ((i=2; i<=limit; i*=2));
 	do
 		B=4
@@ -74,28 +74,47 @@ if [ "$TYPE" == "hh" ]; then
 		echo -n "# "         >> ${OUT}.${i}.cmh
 		date                 >> ${OUT}.${i}.cmh
 
-		h=$(echo "l((2*(l(${UNIVERSE})/l(2)))/(${PHI}*${DELTA}))/l(${B})" | bc -l)
+		echo -n "# COMMIT: " >> ${OUT}.${i}.kmin
+		git log -1 --oneline >> ${OUT}.${i}.kmin
+		echo -n "# "         >> ${OUT}.${i}.kmin
+		date                 >> ${OUT}.${i}.kmin
+
+		echo -n "# COMMIT: " >> ${OUT}.${i}.kmedian
+		git log -1 --oneline >> ${OUT}.${i}.kmedian
+		echo -n "# "         >> ${OUT}.${i}.kmedian
+		date                 >> ${OUT}.${i}.kmedian
+
+		h=$(echo "scale=10;l((2*(l(${UNIVERSE})/l(2)))/(${PHI}*${DELTA}))/l(${B})" | bc -l)
 		w=$(echo "${B}/${EPSILON}" | bc -l)
 
 		SEED1=$[ 1 + $[ RANDOM % 32768 ]]
 		SEED2=$[ 1 + $[ RANDOM % 32768 ]]
-		RUNS=10
+		RUNS=1
 		WIDTH=$(ceil ${w})
 		HEIGHT=$(ceil ${h})
 
+#		echo "Height: ${HEIGHT}"
+#		echo "Width: ${WIDTH}"
+
 
 		./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --const  -r ${RUNS} \
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --const  -r ${RUNS} \
 			-o ${OUT}.${i}.const
 		./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --min    -r ${RUNS} \
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --min    -r ${RUNS} \
 			-o ${OUT}.${i}.min
 		./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --median -r ${RUNS} \
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --median -r ${RUNS} \
 			-o ${OUT}.${i}.median
 		./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --cormode -r ${RUNS} \
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --cormode -r ${RUNS} \
 			-o ${OUT}.${i}.cmh
+		./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --kmin    -r ${RUNS} \
+			-o ${OUT}.${i}.kmin
+		./benchmark_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --kmedian -r ${RUNS} \
+			-o ${OUT}.${i}.kmedian
 	done
 else
 	limit=$(echo "2^10" | bc)

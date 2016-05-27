@@ -74,7 +74,7 @@ if [ "$TYPE" == "hh" ]; then
 	echo -n "# "         >> ${OUT}.kmedian
 	date                 >> ${OUT}.kmedian
 
-	limit=1024
+	limit=$(echo "2^12" | bc)
 	for ((i=2; i<=limit; i*=2));
 	do
 		B=4
@@ -91,17 +91,17 @@ if [ "$TYPE" == "hh" ]; then
 		HEIGHT=$(ceil ${h})
 
 		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --const   >> ${OUT}.const
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --const   >> ${OUT}.const
 		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --min     >> ${OUT}.min
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --min     >> ${OUT}.min
 		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --median  >> ${OUT}.median
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --median  >> ${OUT}.median
 		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --cormode >> ${OUT}.cormode
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --cormode >> ${OUT}.cormode
 		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --kmin     >> ${OUT}.kmin
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --kmin     >> ${OUT}.kmin
 		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --kmedian  >> ${OUT}.kmedian
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --kmedian  >> ${OUT}.kmedian
 	done
 else
 	echo "Name,L1 Error,L2 Error,Epsilon,Delta,Width,Depth,M,L1,L2" >> ${OUT}.min
