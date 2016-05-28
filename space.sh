@@ -64,17 +64,17 @@ if [ "$TYPE" == "hh" ]; then
 		HEIGHT=$(ceil ${h})
 
 		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --const   2>> space/space.hh.${i}.const
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --const   2>> space/space.hh.${i}.const
 		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --min     2>> space/space.hh.${i}.min
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --min     2>> space/space.hh.${i}.min
 		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --median  2>> space/space.hh.${i}.median
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --median  2>> space/space.hh.${i}.median
 		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --cormode 2>> space/space.hh.${i}.cmh
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --cormode 2>> space/space.hh.${i}.cmh
 		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --kmin    2>> space/space.hh.${i}.kmin
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --kmin    2>> space/space.hh.${i}.kmin
 		./precision_hh -m ${UNIVERSE} -1 ${SEED1} -2 ${SEED2} -w ${WIDTH} \
-			-h ${HEIGHT} -p ${PHI} -f ${FILE} --kmedian 2>> space/space.hh.${i}.kmedian
+			-h ${HEIGHT} -p ${PHI} -d ${DELTA} -f ${FILE} --kmedian 2>> space/space.hh.${i}.kmedian
 	done
 else
 	B=4

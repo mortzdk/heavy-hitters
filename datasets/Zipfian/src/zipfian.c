@@ -9,11 +9,12 @@
 #include <inttypes.h>
 #include <errno.h>
 
+#include "qsort.h"
 #include "xutil.h"
 #include "alias.h"
 
 #define BUFFER (1024*512)
-#define TOPK 1024
+#define TOPK 4096
 
 static void shuffle(uint32_t *array, uint64_t n) {
 	if (n > 1) {
@@ -42,9 +43,12 @@ static void printusage(char *argv[]) {
 
 int main (int argc, char**argv) {
 	FILE *file;
+	FILE *tmp;
 	uint64_t j, i = 0;
 	uint32_t *res;
 	uint32_t *map;
+	uint32_t *cnt;
+	uint32_t draw;
 	double   *table;
 	double c = 0;
 
@@ -111,13 +115,17 @@ int main (int argc, char**argv) {
 		exit(EXIT_FAILURE);
 	}
 
+	cnt   = xmalloc( sizeof(uint32_t) * N );
 	map   = xmalloc( sizeof(uint32_t) * N );
 	table = xmalloc( sizeof(double) * N );
 	res   = xmalloc( sizeof(uint32_t) * BUFFER );
 
+	tmp   = tmpfile();
 	file  = fopen(filename, "wb");
 	if ( file == NULL ) {
+		free(cnt);
 		free(res);
+		free(map);
 		free(filename);
 		free(table);
 		xerror("Failed to open/create file.", __LINE__, __FILE__);
@@ -138,6 +146,7 @@ int main (int argc, char**argv) {
 	c = 1./c;
 
 	for (i = 0; i < N; i++) {
+		cnt[i] = 0;
 		map[i] = i;
 		table[i] = (c / table[i]);
 	}
@@ -151,36 +160,57 @@ int main (int argc, char**argv) {
 		}
 	}
 
-	// Print the weights of the top k probabilities into header of file
-	fprintf(file, "#====== TOP %d ======\n", TOPK);
-	for (i = 0; i < TOPK && i < N; i++) {
-		fprintf(file, "#%"PRIu32": %lf\n", map[i], table[i]);
-	}
-	fprintf(file, "\n");
-
 	alias_t *a = alias_preprocess(N, table);
+	free(table);
 
 	i = 0;
 	while ( likely(i < count) ) {
 		memset(res, '\0', sizeof(uint32_t)*BUFFER);
 		for (j = 0; likely( (i < count && j < BUFFER) ); j++, i++) {
-			res[j] = map[(uint32_t)alias_draw(a)];
+			draw = (uint32_t)alias_draw(a);
+			cnt[draw] += 1;
+			res[j] = map[draw];
 		}
 
-		if ( unlikely(fwrite(res, sizeof(uint32_t), j, file) < j) ) {
+		if ( unlikely(fwrite(res, sizeof(uint32_t), j, tmp) < j) ) {
 			fclose(file);
+			fclose(tmp);
 			free(res);
 			free(filename);
-			free(table);
+			free(map);
 			xerror("Failed to write all data.", __LINE__, __FILE__);
 		}
 	}
 
 	alias_free(a);
+
+	quicksort_map(cnt, 0, N-1, map); 
+
+	// Print the weights of the top k probabilities into header of file
+	fprintf(file, "#====== TOP %d ======\n", TOPK);
+	for (i = 0; i < TOPK && i < N; i++) {
+		fprintf(file, "#%"PRIu32": %lf\n", map[i], (double)cnt[i]/count);
+	}
+
+	rewind(tmp);
+
+	memset(res, '\0', sizeof(uint32_t)*BUFFER);
+	uint32_t err;
+	while ( (err = fread(res, sizeof(uint32_t), BUFFER, tmp)) > 0 ) {
+		if ( unlikely(fwrite(res, sizeof(uint32_t), err, file) < err) ) {
+			fclose(file);
+			fclose(tmp);
+			free(res);
+			free(filename);
+			free(map);
+			xerror("Failed to write all data.", __LINE__, __FILE__);
+		}
+	}
+
 	fclose(file);
+	fclose(tmp);
 	free(res);
 	free(filename);
-	free(table);
 	free(map);
 
 	return EXIT_SUCCESS;

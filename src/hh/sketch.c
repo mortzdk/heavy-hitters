@@ -118,6 +118,7 @@ void hh_sketch_update(hh_sketch_t *restrict hh, const uint32_t idx,
 	uint64_t  *restrict top  = hh->top;
 	const uint8_t top_cnt    = hh->top_cnt; 
 	const uint8_t logm       = hh->logm;
+	hh->norm                += c;
 
 	x = idx;
 
@@ -131,8 +132,6 @@ void hh_sketch_update(hh_sketch_t *restrict hh, const uint32_t idx,
 		top[x + (2 << i)-2] += c;
 		x >>= 1;
 	}
-
-	hh->norm += c;
 }
 	
 //Query
