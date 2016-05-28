@@ -191,6 +191,7 @@ int main (int argc, char**argv) {
 	for (i = 0; i < TOPK && i < N; i++) {
 		fprintf(file, "#%"PRIu32": %.10lf\n", map[i], (double)cnt[i]/count);
 	}
+	fprintf(file, "\n");
 
 	rewind(tmp);
 
