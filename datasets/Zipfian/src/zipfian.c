@@ -189,7 +189,7 @@ int main (int argc, char**argv) {
 	// Print the weights of the top k probabilities into header of file
 	fprintf(file, "#====== TOP %d ======\n", TOPK);
 	for (i = 0; i < TOPK && i < N; i++) {
-		fprintf(file, "#%"PRIu32": %lf\n", map[i], (double)cnt[i]/count);
+		fprintf(file, "#%"PRIu32": %.10lf\n", map[i], (double)cnt[i]/count);
 	}
 
 	rewind(tmp);
