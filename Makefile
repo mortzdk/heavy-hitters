@@ -6,10 +6,14 @@ CC = gcc
 #CC = clang
 
 # Debug or Release
-PROFILE = -g -DRUPIFY
-DEBUG = -g
+PROFILE = -Og -g -DRUPIFY -DNDEBUG
+DEBUG = -Og -g
 RELEASE = -O3 -DNDEBUG
-EXEC = ${DEBUG}
+SPACE = -Os -DNDEBUG
+EXEC = ${RELEASE}
+
+# Which binary to compile
+NAME = precision_hh precision_sketch benchmark_hh benchmark_sketch error_sketch
 
 # Compiler options
 CFLAGS = -MMD -pipe -fno-exceptions -fstack-protector\
@@ -18,20 +22,23 @@ CFLAGS = -MMD -pipe -fno-exceptions -fstack-protector\
 		-Wreturn-type -Wsign-compare -Wmultichar -Wformat-nonliteral\
 		-Winit-self -Wuninitialized -Wno-deprecated -Wformat-security -Werror\
 		-Winline -pedantic -pedantic-errors ${EXEC} -fPIC -march=native \
-		-funroll-loops ${USERFLAGS}
+		-funroll-loops -falign-functions=16 -freorder-blocks ${USERFLAGS}
 
 CVER = -std=c99
 
-SRC_FOLDER   = src
-BUILD_FOLDER = build
-BIN_FOLDER   = bin
-TESTS_FOLDER = tests
-
 DIR = $(shell pwd)
 
+SRC_FOLDER     = ${DIR}/src
+BUILD_FOLDER   = ${DIR}/build
+BIN_FOLDER     = ${DIR}/bin
+TESTS_FOLDER   = ${DIR}/tests
+MODULES_FOLDER = ${DIR}/modules
+UTIL_FOLDER    = ${DIR}/util
+
 # FLAGS
-FLAGS_GENERAL = -I${DIR}/${SRC_FOLDER} 
-FLAGS_LD      = -Wl,-z,relro -Wl,-z,now -lm
+FLAGS_GENERAL = -I${SRC_FOLDER} -I${MODULES_FOLDER} -I${UTIL_FOLDER}
+FLAGS_LD      = -Wl,-z,relro -Wl,-z,now -lm -L ${MODULES_FOLDER}/libmeasure \
+				-lmeasure -Wl,-rpath=${MODULES_FOLDER}/libmeasure
 LD_TEST       = -lcriterion
 FLAGS_TEST    = -I ${SRC_FOLDER}
 
@@ -65,15 +72,6 @@ DEPS = ${ALL:%.o=%.d}
 # log name
 LOG = VALGRIND_LOG
 
-# executeable name
-ifeq (${EXEC}, -g -DRUPIFY)
-	NAME = profile
-	FILTER = ${BUILD_FOLDER}/main.o
-else
-	NAME = main
-	FILTER = ${BUILD_FOLDER}/profile.o
-endif
-
 # what we are trying to build
 all:  build $(NAME)
 asm:  build $(OBJ) $(ASM)
@@ -96,8 +94,8 @@ $(NAME): ${OBJ}
 	@echo ================ [Linking] ================
 	@echo
 	$(CC) ${CFLAGS} ${CVER} -o $@ \
-		$(filter-out ${FILTER}, $^) ${FLAGS_LD} \
-		$(FLAGS_GENERAL)
+		$(filter-out $(filter-out ${BUILD_FOLDER}/$@.o, $(addsuffix .o, $(addprefix ${BUILD_FOLDER}/, ${NAME}))), $^) \
+		${FLAGS_LD} $(FLAGS_GENERAL)
 	@echo
 	@echo ================ [$@ compiled succesfully] ================
 	@echo
@@ -154,7 +152,7 @@ clean:
 	@echo ================ [Cleaning $(NAME)] ================
 	@echo
 	rm -f ${OBJ} ${TEST} ${DEPS} ${ASM} ${addprefix bin/,${TEST_NAMES}}
-	rm -f gmon.out callgrind.* $(LOG) ${TESTS:.c=} main profile
+	rm -f gmon.out callgrind.* $(LOG) ${TESTS:.c=} ${NAME}
 	if [[ -d build ]] ; then rmdir --ignore-fail-on-non-empty $(addprefix ${BUILD_FOLDER}, ${SRC_DIRS}); rmdir --ignore-fail-on-non-empty build; fi
 	if [[ -d bin ]] ; then rmdir --ignore-fail-on-non-empty bin; fi
 	#$(MAKE) -C libmeasure clean
@@ -176,7 +174,7 @@ ${TEST_NAMES}: bin build ${OBJ} ${TEST}
 	@echo ================ [Linking Tests] ================
 	@echo
 	$(CC) ${CFLAGS} ${CVER} -o ${BIN_FOLDER}/$@ ${BUILD_FOLDER}/$@.o\
-		$(filter-out ${FILTER}, $(filter-out ${BUILD_FOLDER}/$(NAME).o, $(filter-out ${BUILD_FOLDER}/test_%.o, $(ALL))))\
+		$(filter-out $(addsuffix .o, $(addprefix ${BUILD_FOLDER}/, ${NAME})), $(filter-out ${BUILD_FOLDER}/test_%.o, $(ALL)))\
 		${FLAGS_LD} $(FLAGS_GENERAL) $(LD_TEST)
 	@echo
 	@echo ================ [$@ compiled succesfully] ================
@@ -184,4 +182,4 @@ ${TEST_NAMES}: bin build ${OBJ} ${TEST}
 ${addprefix run_,${TEST_NAMES}}: ${TEST_NAMES}
 	@echo ================ [Running test ${patsubst run_%,%,$@}] ================
 	@echo
-	./${BIN_FOLDER}/${patsubst run_%,%,$@}
+	${BIN_FOLDER}/${patsubst run_%,%,$@} --verbose --no-early-exit

@@ -5,9 +5,10 @@
 #include <stdint.h>
 
 // User defined libraries
-#include "hash.h"
 #include "hh/hh.h"
 #include "sketch/sketch.h"
+#include "util/fifo.h"
+#include "util/hash.h"
 
 // Structures
 typedef struct {
@@ -25,9 +26,11 @@ typedef struct {
 	hash_t                   *restrict hash;
 	uint8_t                   exact_cnt;
 	uint32_t                  w;
-	short                     logm;
+	uint8_t                   M;
+	uint8_t                   logm;
 	uint64_t                  norm;
 	hh_const_sketch_params_t *restrict params;
+	fifo_t                   *restrict fifo;
 	heavy_hitter_t            result;
 } hh_const_sketch_t; 
 
@@ -43,5 +46,6 @@ void hh_const_sketch_update(hh_const_sketch_t *restrict hh, const uint32_t idx,
 
 // Query
 heavy_hitter_t *hh_const_sketch_query(hh_const_sketch_t *restrict hh);
+heavy_hitter_t *hh_const_sketch_query_recursive(hh_const_sketch_t *restrict hh);
 
 #endif

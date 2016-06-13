@@ -3,54 +3,68 @@
 #include <assert.h>
 #include <math.h>
 
-#include "xutil.h"
 #include "hash.h"
-
-static uint32_t *restrict w;
+#include "xutil.h"
 
 /*****************************************************************************
- *        HASH_31 by MASSDAL: http://www.cs.rutgers.edu/~muthu/prng.c        *
+ *                              CARTER-WEGMAN                                *
  *****************************************************************************/
 
-static inline uint32_t h31_internal(uint32_t x, uint32_t a, uint32_t b) {
-	uint64_t result;
+uint32_t cw(uint32_t w, uint8_t M, uint32_t x, uint64_t a, uint64_t b) {
+	(void) M;
+	
+	uint64_t res = a * (uint64_t)x + b;
+	res = (res & MOD_P);
 
-	result   = (a * x) + b;
-	result   = ( (result >> 31) + result ) & MOD_P;
+	assert( a > 0 );
 
-	return (uint32_t) result;
+	assert( a < MOD_P );
+
+	assert( b < MOD_P );
+
+	assert( res < MOD_P );
+
+	return (uint32_t)(res % (uint64_t)w);
 }
 
-uint32_t h31(uint32_t x, uint32_t a, uint32_t b) {
-	uint32_t res = h31_internal(x, a, b);
+uint32_t cwp2(uint32_t w, uint8_t M, uint32_t x, uint64_t a, uint64_t b) {
+	(void) M;
+	assert( a > 0 );
 
-	return res % *w;
-}
+	assert( a < MOD_P );
 
-uint32_t h31p2(uint32_t x, uint32_t a, uint32_t b) {
-	uint32_t res = h31_internal(x, a, b);
+	assert( b < MOD_P );
 
 	// Amount of bins must be power of 2
 	assert( w && !(w & (w - 1)) );
 
-	return res & (*w - 1);
+	return ((((a*x)+b) & MOD_P) & (w-1));
+}
+
+uint64_t cw_agen () {
+	uint64_t a = 1 + (uint64_t)(xuni_rand()*(MOD_P-1));
+
+	assert(a < MOD_P);
+	assert(a > 0);
+
+	return a;
+}
+
+uint64_t cw_bgen (uint8_t M) {
+	(void) M;
+	uint64_t b = (uint64_t)(xuni_rand() * MOD_P);
 	
-}
-
-uint32_t h31_agen () {
-	return 1 + (xuni_rand() * (MOD_P - 1));
-}
-
-uint32_t h31_bgen () {
-	return xuni_rand() * (MOD_P - 1);
+	assert(b < MOD_P);
+	
+	return b;
 }
 
 /*****************************************************************************
  *                              MULTIPLY-SHIFT                               *
  *****************************************************************************/
-static uint8_t *restrict M;
+uint32_t ms(uint32_t w, uint8_t M, uint32_t x, uint64_t a, uint64_t b) {
+	(void) w;
 
-uint32_t ms(uint32_t x, uint32_t a, uint32_t b) {
 	// a < 2^w
 	assert( a <= UINT32_MAX ) ;
 
@@ -58,28 +72,29 @@ uint32_t ms(uint32_t x, uint32_t a, uint32_t b) {
 	assert( a&1 ) ;
 
 	// b < 2^w-M
-	assert( b <= pow(2, sizeof(uint32_t)*BYTE-M) ) ;
+	assert( b < pow(2, sizeof(uint32_t)*BYTE-M) ) ;
 
 	// Amount of bins must be power of 2
 	assert( w && !(w & (w - 1)) );
 
-	return (uint32_t) (a*x+b) >> (sizeof(uint32_t)*BYTE-*M);
+	return (uint32_t) (a*x+b) >> (sizeof(uint32_t)*BYTE-M);
 }
 
-uint32_t ms_agen () {
+uint64_t ms_agen () {
 	return (uint32_t)0x1 |(uint32_t)(xuni_rand() * UINT32_MAX);
 }
 
-uint32_t ms_bgen () {
-	return xuni_rand() * (1 << (sizeof(uint32_t)*BYTE-*M));
+uint64_t ms_bgen (uint8_t M) {
+	return xuni_rand() * (1 << (sizeof(uint32_t)*BYTE-M));
 }
 
 /*****************************************************************************
  *                              MULTIPLY-SHIFT-2                             *
  *****************************************************************************/
 
-uint32_t ms2(uint32_t x, uint32_t a, uint32_t b) {
+uint32_t ms2(uint32_t w, uint8_t M, uint32_t x, uint64_t a, uint64_t b) {
 	(void) b;
+	(void) w;
 
 	// a < 2^w
 	assert( a <= UINT32_MAX ) ;
@@ -90,34 +105,40 @@ uint32_t ms2(uint32_t x, uint32_t a, uint32_t b) {
 	// Amount of bins must be power of 2
 	assert( w && !(w & (w - 1)) );
 
-	return (uint32_t) (a*x) >> (sizeof(uint32_t)*BYTE-*M);
+	return (uint32_t) (a*x) >> (sizeof(uint32_t)*BYTE-M);
 }
 
-uint32_t ms2_agen () {
+uint64_t ms2_agen () {
 	return (uint32_t)0x1 |(uint32_t)(xuni_rand() * UINT32_MAX);
 }
 
-uint32_t ms2_bgen () {
+uint64_t ms2_bgen (uint8_t M) {
+	(void) M;
 	return 0;
 }
 
 /*****************************************************************************
  *                              CARTER-WEGMAN                                *
  *****************************************************************************/
-uint32_t cw(uint32_t x, uint32_t a, uint32_t b) {
+uint32_t cw2(uint32_t w, uint8_t M, uint32_t x, uint64_t a, uint64_t b) {
 	(void) b;
+	(void) M;
+
+	return ((a*x) & MOD_P) % w;
+}
+
+uint32_t cw2p2(uint32_t w, uint8_t M, uint32_t x, uint64_t a, uint64_t b) {
+	(void) b;
+	(void) M;
 
 	// Amount of bins must be power of 2
 	assert( w && !(w & (w - 1)) );
 
-	return (((a*x) >> 31) & MOD_P) & *w;
+	return ((a*x) & MOD_P) & (w-1);
 }
 
-uint32_t cw_agen () {
-	return 1 + (xuni_rand() * (MOD_P - 1));
-}
-
-uint32_t cw_bgen () {
+uint64_t cw2_bgen (uint8_t M) {
+	(void) M;
 	return 0;
 }
 
@@ -125,36 +146,17 @@ uint32_t cw_bgen () {
  *                                    SIGN                                   *
  *****************************************************************************/
 
-uint8_t s(uint32_t x, uint8_t a, uint8_t b) {
-	return (((a*x)+b) & MOD_SIGN);
-}
+extern inline int8_t   sign_ms(uint32_t x, uint64_t a, uint64_t b);
+extern inline uint64_t sign_ms_agen();
+extern inline uint64_t sign_ms_bgen();
 
-uint8_t s_agen () {
-	return 1 + (xuni_rand() >= 0.5);
-}
-
-uint8_t s_bgen () {
-	double rand = xuni_rand();
-	return (rand >= 0.66) + (rand >= 0.33);
-}
+extern inline int8_t   sign_cw(uint32_t x, uint64_t a, uint64_t b);
+extern inline uint64_t sign_cw_agen();
+extern inline uint64_t sign_cw_bgen();
 
 /*****************************************************************************
  *                           HASH_T STRUCTURES                               *
  *****************************************************************************/
-
-hash_t hash31 = {
-	.hash = (hash) h31,
-	.agen = (agen) h31_agen,
-	.bgen = (bgen) h31_bgen,
-	.c    = 1,
-};
-
-hash_t hash31p2 = {
-	.hash = (hash) h31p2,
-	.agen = (agen) h31_agen,
-	.bgen = (bgen) h31_bgen,
-	.c    = 1,
-};
 
 hash_t multiplyShift = {
 	.hash = (hash) ms,
@@ -174,32 +176,30 @@ hash_t carterWegman = {
 	.hash = (hash) cw,
 	.agen = (agen) cw_agen,
 	.bgen = (bgen) cw_bgen,
-	.c    = 2,
-};
-
-hash_t sign = {
-	.hash = (hash) s,
-	.agen = (agen) s_agen,
-	.bgen = (bgen) s_bgen,
 	.c    = 1,
 };
 
-void hash_width(hash_t *hash, uint32_t width) {
-	if ( unlikely(!hash->w[0]) ) {
-		w = &hash->w[0];
-		M = &hash->M[0];
-		*M = (uint8_t)floor(log2(width));
-		*w = width;
-	} else if ( unlikely(!hash->w[1]) ) {
-		w = &hash->w[1];
-		M = &hash->M[1];
-		*M = (uint8_t)floor(log2(width));
-		*w = width;
-	} else if ( hash->w[0] == width ) {
-		w = &hash->w[0];
-		M = &hash->M[0];
-	} else {
-		w = &hash->w[1];
-		M = &hash->M[1];
-	} 
+hash_t carterWegmanp2 = {
+	.hash = (hash) cwp2,
+	.agen = (agen) cw_agen,
+	.bgen = (bgen) cw_bgen,
+	.c    = 1,
+};
+
+hash_t carterWegman2 = {
+	.hash = (hash) cw2,
+	.agen = (agen) cw_agen,
+	.bgen = (bgen) cw2_bgen,
+	.c    = 2,
+};
+
+hash_t carterWegman2p2 = {
+	.hash = (hash) cw2p2,
+	.agen = (agen) cw_agen,
+	.bgen = (bgen) cw2_bgen,
+	.c    = 2,
+};
+
+void hash_init(uint8_t *restrict M, uint32_t width) {
+	*M = (uint8_t)floor(log2(width));
 }

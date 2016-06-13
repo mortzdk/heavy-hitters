@@ -15,7 +15,7 @@ extern uint32_t I1, I2;
 
 extern const uint8_t MultiplyDeBruijnBitPosition2[32];
 
-inline uint32_t next_pow_2(uint32_t v) {
+inline uint32_t next_pow_2(register uint32_t v) {
 	v--;
 	v |= v >> 1;
 	v |= v >> 2;
@@ -42,12 +42,12 @@ inline uint8_t xceil_log2(uint64_t x) {
         0x0000000000000002ull
     };
 
-    uint8_t y = (((x & (x - 1)) == 0) ? 0 : 1);
-    uint8_t j = 32;
-    uint8_t i;
-
+    register uint8_t y = (((x & (x - 1)) == 0) ? 0 : 1);
+    register uint8_t j = 32;
+    register uint8_t i;
+	register uint8_t k;
     for (i = 0; i < 6; i++) {
-        uint8_t k = (((x & t[i]) == 0) ? 0 : j);
+        k = (((x & t[i]) == 0) ? 0 : j);
         y += k;
         x >>= k;
         j >>= 1;

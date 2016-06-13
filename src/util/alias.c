@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include "xutil.h"
 #include "alias.h"
@@ -16,7 +17,7 @@ alias_t *alias_preprocess(uint32_t n, double *x) {
 	double   *q;
 	uint32_t  i, j, k;
 	double    sum      = 0;
-	uint32_t  intSize  = n * sizeof(int); 
+	uint32_t  intSize  = n * sizeof(uint32_t); 
 
 	alias_t *alias = xmalloc(sizeof(alias_t));
 	alias->alias   = a = xmalloc(intSize);
@@ -79,6 +80,9 @@ alias_t *alias_preprocess(uint32_t n, double *x) {
 int alias_draw(alias_t *restrict alias) {
 	double rU = (double) xuni_rand() * alias->n;
 	uint32_t i = (uint32_t) rU;
+	
+	assert(i < alias->n);
+
 	return (rU < alias->probs[i]) ? i : alias->alias[i];
 }
 

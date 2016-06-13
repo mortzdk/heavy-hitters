@@ -89,6 +89,8 @@ flags = [
 '-I',
 os.path.dirname(os.path.abspath(__file__)) + '/src',
 '-I',
+os.path.dirname(os.path.abspath(__file__)) + '/modules',
+'-I',
 '../iaca-lin64/include',
 '-I',
 './ClangCompleter',
